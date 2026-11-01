@@ -2110,6 +2110,8 @@ ol.rank-list li > span {
   margin: 0;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
+  /* Le signe « − » reste collé au montant. */
+  white-space: nowrap;
 }
 
 .recap-total {

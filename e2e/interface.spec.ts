@@ -55,6 +55,32 @@ test('petit écran : onglets sans mot coupé, bilan et formulaire rapide lisible
   await expect(page.getByRole('row', { name: /Dépenses variables/ }).locator('.delta-mobile')).toBeVisible();
 });
 
+test('configuration sur mobile : chaque montant du récapitulatif tient sur une ligne', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await preparer(page);
+  await page.goto('./');
+  await page.getByLabel('Prénom ou pseudonyme').fill('Test');
+  await page.getByRole('button', { name: /Continuer/ }).click();
+  await page.getByLabel('Montant mensuel').nth(0).fill('1 250,00');
+  for (let i = 0; i < 2; i++) await page.getByRole('button', { name: /Continuer/ }).click();
+  await page.getByLabel('Estimation de vos dépenses variables par mois').fill('1 250,00');
+  await page.getByLabel('Objectif d’épargne mensuel').fill('250');
+  for (let i = 0; i < 2; i++) await page.getByRole('button', { name: /Continuer/ }).click();
+  await expect(page.getByRole('heading', { name: 'Tout est prêt !' })).toBeVisible();
+  // Montants dont le texte s'étale sur plusieurs lignes (ex. « − » seul sur la première)
+  const coupes = await page.locator('.recap dd').evaluateAll((dds) =>
+    dds
+      .filter((dd) => {
+        const r = document.createRange();
+        r.selectNodeContents(dd);
+        const tops = new Set(Array.from(r.getClientRects()).map((x) => Math.round(x.top)));
+        return tops.size > 1;
+      })
+      .map((dd) => dd.textContent),
+  );
+  expect(coupes).toEqual([]);
+});
+
 test('clavier : lien d’évitement en premier, contour de focus visible, fenêtre accessible', async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 900 });
   await preparer(page);
