@@ -126,6 +126,15 @@ export function monthLabel(month: MonthKey, withYear = true): string {
   return withYear ? `${name} ${year}` : name;
 }
 
+/**
+ * Mois précédé de la préposition, avec élision devant une voyelle :
+ * « de novembre 2026 », mais « d’octobre 2026 », « d’avril », « d’août ».
+ */
+export function ofMonth(month: MonthKey, withYear = true): string {
+  const label = monthLabel(month, withYear);
+  return /^[aeiouéèêâîôû]/i.test(label) ? `d’${label}` : `de ${label}`;
+}
+
 export function monthLabelShort(month: MonthKey): string {
   const { year, month: m } = parseMonth(month);
   return `${MONTH_SHORT[m - 1]} ${String(year).slice(2)}`;

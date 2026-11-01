@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Icon } from './Icon';
 import { Toasts } from './ui';
@@ -34,10 +34,16 @@ export function Layout({ children }: { children: ReactNode }) {
   const { data } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const firstRender = useRef(true);
 
   useEffect(() => {
     setMenuOpen(false);
-    // Remonte en haut de page et annonce la nouvelle page aux lecteurs d'écran.
+    // Au premier affichage, on laisse le focus en haut de page (lien « Aller au contenu »).
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    // Changement de page : remonte en haut et place le focus sur le contenu (lecteurs d'écran).
     window.scrollTo?.(0, 0);
     document.getElementById('contenu')?.focus({ preventScroll: true });
   }, [location.pathname]);

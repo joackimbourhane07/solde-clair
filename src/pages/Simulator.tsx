@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useApp } from '../state/AppState';
 import { simulatePurchase, VERDICT_LABELS } from '../lib/simulator';
 import { parseAmount } from '../lib/money';
-import { monthLabel, monthOf } from '../lib/dates';
+import { monthOf, ofMonth } from '../lib/dates';
 import { BUDGET_LEVEL_LABELS } from '../lib/budget';
 import { Card, CategoryOptions, MoneyField, Notice, PageHeader, SelectField, Stat } from '../components/ui';
 import { Icon } from '../components/Icon';
@@ -26,7 +26,7 @@ export function Simulator() {
     <div className="page">
       <PageHeader
         title="Simulateur d’achat"
-        description={`Avant de craquer, regardez l’effet d’un achat sur votre budget de ${monthLabel(monthOf(today))}.`}
+        description={`Avant de craquer, regardez l’effet d’un achat sur votre budget ${ofMonth(monthOf(today))}.`}
       />
       <Card title="Achat envisagé">
         <form className="form-row" onSubmit={(e) => e.preventDefault()} noValidate>

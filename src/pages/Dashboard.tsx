@@ -9,7 +9,7 @@ import {
   spendingByCategory,
   upcomingCharges,
 } from '../lib/budget';
-import { capitalize, defaultDateFor, formatDate, monthLabel, monthOf, parseISO } from '../lib/dates';
+import { defaultDateFor, formatDate, monthOf, ofMonth, parseISO } from '../lib/dates';
 import { formatMoneyShort } from '../lib/money';
 import { PROFILE_LABELS } from '../lib/categories';
 import { Card, MonthSwitcher, Notice, ProgressBar, SignedAmount, Stat } from '../components/ui';
@@ -69,7 +69,7 @@ export function Dashboard() {
 
       <section className={`hero ${s.available < 0 ? 'hero-negatif' : ''}`} aria-labelledby="hero-titre">
         <h2 id="hero-titre" className="sr-only">
-          Reste à vivre de {monthLabel(month)}
+          Reste à vivre {ofMonth(month)}
         </h2>
         <p className="hero-text">{headline}</p>
         {subline && <p className="hero-sub">{subline}</p>}
@@ -122,7 +122,7 @@ export function Dashboard() {
 
       <section aria-labelledby="chiffres-titre">
         <h2 id="chiffres-titre" className="section-title">
-          Les chiffres de {monthLabel(month)}
+          Les chiffres {ofMonth(month)}
         </h2>
         <div className="stats-grid">
           <Stat label="Revenus" value={fmt(s.income)} />
@@ -229,7 +229,7 @@ export function Dashboard() {
 
       <p className="page-footer-links">
         <Link to="/historique?vue=bilan" className="link">
-          Voir le bilan de {capitalize(monthLabel(month))}
+          Voir le bilan {ofMonth(month)}
         </Link>
         {' · '}
         <Link to="/simulateur" className="link">

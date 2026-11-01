@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useApp } from '../state/AppState';
 import type { Income } from '../types';
 import { categoryName, monthTransactions } from '../lib/budget';
-import { defaultDateFor, formatDate, monthLabel } from '../lib/dates';
+import { defaultDateFor, formatDate, ofMonth } from '../lib/dates';
 import { sum } from '../lib/money';
 import { FREQUENCY_LABELS } from '../lib/recurrence';
 import { Button, Card, CheckboxField, ConfirmDialog, EmptyState, IconButton, Modal, MonthSwitcher, PageHeader, Stat } from '../components/ui';
@@ -36,7 +36,7 @@ export function Incomes() {
       />
       <MonthSwitcher />
       <div className="stats-grid stats-compact">
-        <Stat label={`Revenus de ${monthLabel(month)}`} value={fmt(total)} />
+        <Stat label={`Revenus ${ofMonth(month)}`} value={fmt(total)} />
         <Stat label="Dont revenus récurrents" value={fmt(recurringTotal)} />
         <Stat label="Dont revenus exceptionnels" value={fmt(total - recurringTotal)} />
       </div>

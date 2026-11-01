@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { Cents, TransactionType } from '../types';
 import { earliestDate, monthReport, monthsHistory, spendingByCategory, transactionsInRange } from '../lib/budget';
-import { capitalize, firstDay, formatDate, lastDay, monthLabel, monthLabelShort, monthOf } from '../lib/dates';
+import { capitalize, firstDay, formatDate, lastDay, monthLabel, monthLabelShort, monthOf, ofMonth } from '../lib/dates';
 import { sum } from '../lib/money';
 import { KIND_LABELS } from '../lib/categories';
 import { downloadFile, exportCSV } from '../lib/storage';
@@ -161,9 +161,9 @@ function Report() {
             : 'Ce mois n’a pas encore commencé : seuls les éléments prévus sont comptés.'}
         </Notice>
       )}
-      <Card title={`Bilan de ${monthLabel(month)}`}>
-        <div className="table-scroll">
-          <table className="table">
+      <Card title={`Bilan ${ofMonth(month)}`}>
+        <div className="table-scroll" tabIndex={0} role="region" aria-label={`Bilan ${ofMonth(month)} comparé ${ofMonth(p.month)}`}>
+          <table className="table table-bilan">
             <caption className="sr-only">Comparaison avec {monthLabel(p.month)}</caption>
             <thead>
               <tr>
@@ -174,16 +174,24 @@ function Report() {
                 <th scope="col" className="num">
                   {capitalize(monthLabel(p.month, false))}
                 </th>
-                <th scope="col">Évolution</th>
+                <th scope="col" className="col-evolution">
+                  Évolution
+                </th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
                 <tr key={row.label} className={row.label === 'Solde final' ? 'row-total' : ''}>
-                  <th scope="row">{row.label}</th>
+                  <th scope="row">
+                    {row.label}
+                    {/* Sur petit écran, l'évolution s'affiche sous le libellé (colonne masquée). */}
+                    <span className="delta-mobile">
+                      <Delta value={row.delta} goodWhenUp={row.goodWhenUp} />
+                    </span>
+                  </th>
                   <td className="num">{fmt(row.cur)}</td>
                   <td className="num">{fmt(row.prev)}</td>
-                  <td>
+                  <td className="col-evolution">
                     <Delta value={row.delta} goodWhenUp={row.goodWhenUp} />
                   </td>
                 </tr>

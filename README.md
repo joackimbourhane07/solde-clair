@@ -66,7 +66,8 @@ répartition des dépenses par catégorie, revenus et dépenses sur 6 mois, évo
 - **React 19 + TypeScript**, outillé par **Vite 7**.
 - **React Router** (mode `HashRouter`) pour la navigation.
 - **localStorage** pour la sauvegarde locale.
-- **Vitest + Testing Library** pour les tests.
+- **Vitest + Testing Library** pour les tests rapides (calculs et interface).
+- **Playwright + axe-core** pour les tests dans un vrai navigateur (parcours, affichage, accessibilité).
 - Graphiques en **SVG faits maison** (aucune bibliothèque de graphiques).
 
 **Pourquoi ce choix ?**
@@ -133,7 +134,7 @@ Vérification des types TypeScript :
 npm run typecheck
 ```
 
-**127 tests** couvrent notamment :
+**132 tests** couvrent notamment :
 
 - la saisie et l’arrondi des montants (virgule, espaces, deux décimales, 0,1 + 0,2) ;
 - les dates (années bissextiles, fins de mois, passage d’année, jours restants) ;
@@ -146,7 +147,29 @@ npm run typecheck
 - le **simulateur d’achat** (trois appréciations, impact sur l’épargne, sur une catégorie, sur les objectifs) ;
 - les **exports CSV et JSON**, l’**import** (aller-retour sans perte, fichiers invalides refusés avec un message clair, protection contre les formules dans les tableurs) ;
 - les **données de démonstration** (validité, cohérence, plusieurs mois d’historique) ;
-- l’interface : parcours de configuration complet, ajout rapide, **modification et suppression** avec confirmation, messages d’erreur, statut des charges, limites, simulateur, import, effacement en deux étapes, thème, filtres de l’historique, bilan.
+- l’interface : parcours de configuration complet, ajout rapide, **modification et suppression** avec confirmation, messages d’erreur, statut des charges, limites, simulateur, import, effacement en deux étapes, thème, filtres de l’historique, bilan ;
+- les textes (« d’octobre » et non « de octobre ») et l’accessibilité (lien d’évitement, listes, zones défilables).
+
+### Tests dans un vrai navigateur (facultatif)
+
+Ces tests construisent la version de production, la lancent, puis l’utilisent comme un vrai utilisateur dans Chromium (date simulée : 12 novembre 2026). La première fois, installez le navigateur de test (gratuit, environ 150 Mo) :
+
+```bash
+npx playwright install chromium
+```
+
+Puis :
+
+```bash
+npm run test:e2e
+```
+
+Ils vérifient :
+
+- un parcours complet de nouvel utilisateur : configuration, tableau de bord, dépense, changement de mois, budget dépassé, simulateur sans effet sur les données, export JSON, effacement et réimport ;
+- toutes les pages aux formats petit mobile (320 px), mobile, tablette et ordinateur, en mode clair et sombre : aucune erreur dans la console, aucun débordement ni texte coupé ;
+- l’accessibilité WCAG 2.1 AA avec axe-core (contrastes, libellés, rôles…) ;
+- la navigation au clavier (lien d’évitement, contour de focus, fenêtres) et les trois thèmes.
 
 ## Organisation des fichiers
 
@@ -155,7 +178,10 @@ solde-clair/
 ├── index.html                 Page HTML d’entrée
 ├── package.json               Dépendances et commandes
 ├── vite.config.ts             Configuration Vite et Vitest
-├── tsconfig.json              Configuration TypeScript
+├── playwright.config.ts       Configuration des tests navigateur
+├── tsconfig.json              Configuration TypeScript (application)
+├── tsconfig.node.json         Configuration TypeScript (tests navigateur)
+├── e2e/                       Tests dans un vrai navigateur (Playwright)
 ├── public/favicon.svg         Icône
 └── src/
     ├── main.tsx               Démarrage de l’application
@@ -259,5 +285,5 @@ Tous les calculs se font en centimes entiers ; la conversion en euros n’a lieu
 8. **Rappels** avant les prélèvements importants et en cas de dépassement.
 9. **Comptes multiples** (courant, livret…) et transferts entre comptes.
 10. **Bilan annuel** et graphiques sur 12 mois, export PDF du bilan.
-11. **Tests de bout en bout automatisés** (Playwright) intégrés à une intégration continue GitHub Actions.
+11. **Intégration continue** (GitHub Actions, gratuite pour les dépôts publics) lançant `npm test` et `npm run test:e2e` à chaque modification.
 12. **Traductions** (anglais, espagnol…) et adaptation des catégories par pays.

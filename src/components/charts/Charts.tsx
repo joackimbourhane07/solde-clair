@@ -80,7 +80,7 @@ export function ChartFrame({
         </ul>
       )}
       {showTable ? (
-        <div className="table-scroll">
+        <div className="table-scroll" tabIndex={0} role="region" aria-label={`${title} (tableau)`}>
           <table className="table">
             <thead>
               <tr>

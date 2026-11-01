@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useApp } from '../state/AppState';
 import type { FixedCharge } from '../types';
 import { monthSummary, monthTransactions } from '../lib/budget';
-import { defaultDateFor, formatDate, monthLabel } from '../lib/dates';
+import { defaultDateFor, formatDate, ofMonth } from '../lib/dates';
 import { FREQUENCY_LABELS } from '../lib/recurrence';
 import { Button, Card, ConfirmDialog, EmptyState, IconButton, Modal, MonthSwitcher, PageHeader, Stat } from '../components/ui';
 import { ChargeForm } from '../components/forms';
@@ -33,12 +33,12 @@ export function FixedCharges() {
       />
       <MonthSwitcher />
       <div className="stats-grid stats-compact">
-        <Stat label={`Charges de ${monthLabel(month)}`} value={fmt(s.fixed)} />
+        <Stat label={`Charges ${ofMonth(month)}`} value={fmt(s.fixed)} />
         <Stat label="Déjà payées" value={fmt(s.fixedPaid)} />
         <Stat label="À venir" value={fmt(s.fixedUpcoming)} />
       </div>
 
-      <Card title={`Échéances de ${monthLabel(month)}`}>
+      <Card title={`Échéances ${ofMonth(month)}`}>
         {occurrences.length === 0 ? (
           <EmptyState title="Aucune charge fixe ce mois-ci">Ajoutez votre loyer, votre forfait téléphone, vos assurances…</EmptyState>
         ) : (

@@ -298,6 +298,12 @@ a {
   color: var(--primary);
 }
 
+@media (max-width: 359px) {
+  .bottom-link {
+    font-size: 0.68rem;
+  }
+}
+
 .bottom-link.active svg {
   stroke-width: 2.4;
 }
@@ -747,6 +753,13 @@ a {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Très petits écrans : un champ par ligne pour que la date reste lisible. */
+@media (max-width: 359px) {
+  .form-quick .form-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .form-quick .form-actions {
   margin-top: 12px;
 }
@@ -793,7 +806,9 @@ a {
   font-size: 1rem; /* évite le zoom automatique sur iOS */
 }
 
-.input:focus-visible {
+.input:focus-visible,
+.input[type='date']:focus-within {
+  /* :focus-within couvre le bouton calendrier interne des champs date. */
   outline: 3px solid var(--focus);
   outline-offset: 0;
   border-color: var(--focus);
@@ -1510,9 +1525,11 @@ ol.rank-list li > span {
 }
 
 .tab {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   min-height: 42px;
-  padding: 8px 14px;
+  padding: 8px 10px;
+  line-height: 1.2;
   border: 0;
   border-radius: 9px;
   background: transparent;
@@ -1520,7 +1537,16 @@ ol.rank-list li > span {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  white-space: nowrap;
+  /* Les libellés longs passent à la ligne entre deux mots au lieu de sortir de l'écran. */
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+@media (max-width: 599px) {
+  .tab {
+    padding: 8px 4px;
+    font-size: 0.875rem;
+  }
 }
 
 .tab[aria-selected='true'] {
@@ -1573,6 +1599,51 @@ ol.rank-list li > span {
 .row-total td {
   font-weight: 750;
   border-bottom: 0;
+}
+
+.table-scroll:focus-visible {
+  outline-offset: 2px;
+}
+
+/* Bilan : sur petit écran, l'évolution passe sous le libellé. */
+.delta-mobile {
+  display: block;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.table-bilan .col-evolution {
+  display: none;
+}
+
+@media (max-width: 599px) {
+  .table-bilan {
+    font-size: 0.875rem;
+  }
+
+  .table-bilan th,
+  .table-bilan td {
+    padding: 8px 4px;
+  }
+
+  .table-bilan .delta-mobile .delta {
+    display: inline;
+    white-space: normal;
+  }
+
+  .table-bilan .delta-mobile .delta svg {
+    vertical-align: -2px;
+  }
+}
+
+@media (min-width: 600px) {
+  .delta-mobile {
+    display: none;
+  }
+
+  .table-bilan .col-evolution {
+    display: table-cell;
+  }
 }
 
 .delta {

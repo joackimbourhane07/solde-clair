@@ -127,6 +127,45 @@ describe('tableau de bord', () => {
   });
 });
 
+describe('textes et accessibilité (corrections du test navigateur)', () => {
+  it('titres avec élision : « Échéances d’octobre 2026 »', async () => {
+    const user = renderApp(fixture(), '/charges');
+    await user.click(screen.getByRole('button', { name: 'Mois précédent' }));
+    expect(screen.getByRole('heading', { name: 'Échéances d’octobre 2026' })).toBeInTheDocument();
+    expect(screen.getByText('Charges d’octobre 2026')).toBeInTheDocument();
+    expect(screen.queryByText(/de octobre/)).not.toBeInTheDocument();
+  });
+
+  it('au chargement, le focus n’est pas déplacé (lien « Aller au contenu » atteignable en premier)', async () => {
+    const user = renderApp();
+    expect(document.activeElement).not.toHaveAttribute('id', 'contenu');
+    await user.tab();
+    expect(document.activeElement).toHaveTextContent('Aller au contenu');
+    // Après un changement de page, le focus va sur le contenu principal.
+    await user.click(screen.getAllByRole('link', { name: /Dépenses/ })[0]);
+    expect(document.activeElement).toHaveAttribute('id', 'contenu');
+  });
+
+  it('paramètres : les catégories sont une vraie liste dans le panneau d’onglet', () => {
+    renderApp(fixture(), '/parametres');
+    const panel = screen.getByRole('tabpanel', { name: 'Dépenses variables' });
+    const list = within(panel).getByRole('list');
+    expect(within(list).getAllByRole('listitem')).toHaveLength(3);
+  });
+
+  it('bilan : tableau défilable accessible au clavier, évolution aussi lisible sur mobile', async () => {
+    const user = renderApp(fixture(), '/historique?vue=bilan');
+    const region = screen.getByRole('region', { name: /Bilan de novembre 2026 comparé d’octobre 2026/ });
+    expect(region).toHaveAttribute('tabindex', '0');
+    const row = screen.getByRole('row', { name: /Dépenses variables/ });
+    expect(row.querySelector('.delta-mobile')).toHaveTextContent('en hausse de 18,00');
+    expect(row.querySelector('.col-evolution')).toHaveTextContent('en hausse de 18,00');
+    const chart = screen.getByText('Revenus et dépenses sur 6 mois').closest('figure')!;
+    await user.click(within(chart as HTMLElement).getByRole('button', { name: 'Voir le tableau' }));
+    expect(screen.getByRole('region', { name: /Revenus et dépenses sur 6 mois \(tableau\)/ })).toHaveAttribute('tabindex', '0');
+  });
+});
+
 describe('modification et suppression', () => {
   it('modifie puis supprime une dépense avec confirmation', async () => {
     const user = renderApp(fixture(), '/depenses');

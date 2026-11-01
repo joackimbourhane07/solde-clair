@@ -9,6 +9,7 @@ import {
   isValidISODate,
   monthDiff,
   monthLabel,
+  ofMonth,
 } from '../dates';
 
 describe('dates', () => {
@@ -39,6 +40,14 @@ describe('dates', () => {
     expect(daysRemainingInMonth('2026-11', '2026-11-30')).toBe(1);
     expect(daysRemainingInMonth('2026-10', '2026-11-12')).toBe(0); // mois passé
     expect(daysRemainingInMonth('2026-12', '2026-11-12')).toBe(31); // mois futur
+  });
+
+  it('élision devant les mois commençant par une voyelle (« d’octobre », pas « de octobre »)', () => {
+    expect(ofMonth('2026-11')).toBe('de novembre 2026');
+    expect(ofMonth('2026-10')).toBe('d’octobre 2026');
+    expect(ofMonth('2027-04')).toBe('d’avril 2027');
+    expect(ofMonth('2027-08')).toBe('d’août 2027');
+    expect(ofMonth('2027-01', false)).toBe('de janvier');
   });
 
   it('validation et affichage en français', () => {

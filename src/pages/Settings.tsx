@@ -155,20 +155,22 @@ function CategoriesSection() {
           </button>
         ))}
       </div>
-      <ul className="item-list" role="tabpanel">
-        {list.map((c) => (
-          <li key={c.id} className="item">
-            <div className="item-main">
-              <p className="item-title">{c.name}</p>
-              <p className="item-meta">{usage(c)} élément(s)</p>
-            </div>
-            <div className="item-actions">
-              <IconButton icon="edit" label={`Renommer ${c.name}`} onClick={() => setEditing(c)} />
-              <IconButton icon="trash" label={`Supprimer ${c.name}`} onClick={() => setToDelete(c)} disabled={list.length <= 1} />
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div role="tabpanel" aria-label={KIND_LABELS[kind]}>
+        <ul className="item-list">
+          {list.map((c) => (
+            <li key={c.id} className="item">
+              <div className="item-main">
+                <p className="item-title">{c.name}</p>
+                <p className="item-meta">{usage(c)} élément(s)</p>
+              </div>
+              <div className="item-actions">
+                <IconButton icon="edit" label={`Renommer ${c.name}`} onClick={() => setEditing(c)} />
+                <IconButton icon="trash" label={`Supprimer ${c.name}`} onClick={() => setToDelete(c)} disabled={list.length <= 1} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
       {editing && <CategoryEditor kind={kind} category={editing === 'new' ? undefined : editing} onClose={() => setEditing(null)} />}
       {toDelete && (
         <ConfirmDialog

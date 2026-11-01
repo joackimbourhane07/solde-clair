@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useApp } from '../state/AppState';
 import type { Expense } from '../types';
-import { defaultDateFor, formatDate, monthLabel, monthOf } from '../lib/dates';
+import { defaultDateFor, formatDate, monthOf, ofMonth } from '../lib/dates';
 import { sum } from '../lib/money';
 import { categoryName } from '../lib/budget';
 import { Button, Card, ConfirmDialog, EmptyState, IconButton, Modal, MonthSwitcher, PageHeader, SelectField, Stat, TextField, CategoryOptions } from '../components/ui';
@@ -44,7 +44,7 @@ export function Expenses() {
       <MonthSwitcher />
 
       <div className="stats-grid stats-compact">
-        <Stat label={`Total de ${monthLabel(month)}`} value={fmt(total)} />
+        <Stat label={`Total ${ofMonth(month)}`} value={fmt(total)} />
         <Stat label="Nombre de dépenses" value={String(monthExpenses.length)} />
       </div>
 
