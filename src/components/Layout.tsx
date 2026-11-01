@@ -1,0 +1,128 @@
+import { useEffect, useState, type ReactNode } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { Icon } from './Icon';
+import { Toasts } from './ui';
+import { useApp } from '../state/AppState';
+
+export const NAV_ITEMS = [
+  { to: '/', label: 'Tableau de bord', short: 'Accueil', icon: 'home' },
+  { to: '/depenses', label: 'Dépenses', short: 'Dépenses', icon: 'expense' },
+  { to: '/revenus', label: 'Revenus', short: 'Revenus', icon: 'income' },
+  { to: '/charges', label: 'Charges fixes', short: 'Charges', icon: 'calendar' },
+  { to: '/budgets', label: 'Budgets par catégorie', short: 'Budgets', icon: 'gauge' },
+  { to: '/objectifs', label: 'Objectifs d’épargne', short: 'Objectifs', icon: 'piggy' },
+  { to: '/simulateur', label: 'Simulateur d’achat', short: 'Simulateur', icon: 'calculator' },
+  { to: '/historique', label: 'Historique et bilan', short: 'Historique', icon: 'history' },
+  { to: '/parametres', label: 'Paramètres', short: 'Paramètres', icon: 'settings' },
+];
+
+const MOBILE_MAIN = ['/', '/depenses', '/budgets', '/objectifs'];
+
+function Logo() {
+  return (
+    <span className="logo">
+      <svg viewBox="0 0 64 64" width="28" height="28" aria-hidden="true">
+        <rect width="64" height="64" rx="14" fill="currentColor" />
+        <path d="M18 40c3 4 8 6 14 6 8 0 13-4 13-10 0-12-25-7-25-17 0-4 4-7 11-7 5 0 9 2 11 5" fill="none" stroke="var(--logo-ink)" strokeWidth="6" strokeLinecap="round" />
+      </svg>
+      <span className="logo-text">SoldeClair</span>
+    </span>
+  );
+}
+
+export function Layout({ children }: { children: ReactNode }) {
+  const { data } = useApp();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    setMenuOpen(false);
+    // Remonte en haut de page et annonce la nouvelle page aux lecteurs d'écran.
+    window.scrollTo?.(0, 0);
+    document.getElementById('contenu')?.focus({ preventScroll: true });
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMenuOpen(false);
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [menuOpen]);
+
+  return (
+    <div className="app">
+      <a className="skip-link" href="#contenu" onClick={(e) => { e.preventDefault(); document.getElementById('contenu')?.focus(); }}>
+        Aller au contenu
+      </a>
+      <aside className="sidebar" aria-label="Navigation principale">
+        <Logo />
+        <nav>
+          <ul>
+            {NAV_ITEMS.map((item) => (
+              <li key={item.to}>
+                <NavLink to={item.to} end={item.to === '/'} className="nav-link">
+                  <Icon name={item.icon} />
+                  <span>{item.label}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <p className="sidebar-privacy">
+          <Icon name="lock" size={16} /> Vos données restent sur cet appareil.
+        </p>
+      </aside>
+
+      <header className="topbar">
+        <Logo />
+        {data.profile && <span className="topbar-user">{data.profile.name}</span>}
+      </header>
+
+      <main id="contenu" className="main" tabIndex={-1}>
+        {children}
+      </main>
+
+      <nav className="bottom-nav" aria-label="Navigation principale (mobile)">
+        <ul>
+          {NAV_ITEMS.filter((i) => MOBILE_MAIN.includes(i.to)).map((item) => (
+            <li key={item.to}>
+              <NavLink to={item.to} end={item.to === '/'} className="bottom-link">
+                <Icon name={item.icon} size={22} />
+                <span>{item.short}</span>
+              </NavLink>
+            </li>
+          ))}
+          <li>
+            <button
+              type="button"
+              className={`bottom-link ${menuOpen ? 'active' : ''}`}
+              aria-expanded={menuOpen}
+              aria-controls="menu-plus"
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              <Icon name={menuOpen ? 'close' : 'menu'} size={22} />
+              <span>Plus</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+      {menuOpen && (
+        <div className="sheet-backdrop" onClick={() => setMenuOpen(false)}>
+          <div id="menu-plus" className="sheet" role="dialog" aria-label="Autres pages" onClick={(e) => e.stopPropagation()}>
+            <ul>
+              {NAV_ITEMS.filter((i) => !MOBILE_MAIN.includes(i.to)).map((item) => (
+                <li key={item.to}>
+                  <NavLink to={item.to} className="nav-link">
+                    <Icon name={item.icon} />
+                    <span>{item.label}</span>
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+      <Toasts />
+    </div>
+  );
+}
