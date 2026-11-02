@@ -204,8 +204,8 @@ function CategoriesSection() {
           title="Supprimer cette catégorie ?"
           message={
             usage(toDelete) > 0
-              ? `« ${toDelete.name} » contient ${usage(toDelete)} élément(s). Ils seront déplacés vers une catégorie « Autre » : aucun montant ne sera perdu.`
-              : `« ${toDelete.name} » sera supprimée.`
+              ? `« ${toDelete.name} » contient ${usage(toDelete)} élément(s). Ils seront déplacés vers une catégorie « Autre » : aucun montant ne sera perdu.`
+              : `« ${toDelete.name} » sera supprimée.`
           }
           onCancel={() => setToDelete(null)}
           onConfirm={() => {
@@ -371,7 +371,7 @@ export function DataSection({
       {parts.includes('reset') && (
         <Card title="Effacer toutes les données" className="danger-zone">
           <p>
-            Supprime définitivement {data.profile ? `le profil « ${data.profile.name} »` : 'votre profil'} : transactions, budgets et objectifs, de ce
+            Supprime définitivement {data.profile ? `le profil « ${data.profile.name} »` : 'votre profil'} : transactions, budgets et objectifs, de ce
             navigateur.{profils.length > 1 ? ' Les autres profils de cet appareil sont conservés.' : ''}
           </p>
           <Button variant="danger" icon="trash" onClick={() => setResetStep(1)}>
@@ -435,6 +435,41 @@ export function DataSection({
   );
 }
 
+/** Comment ajouter SoldeClair à l'écran d'accueil, comme une application (sans boutique ni compte). */
+function InstallSection() {
+  return (
+    <Card title="Installer comme une application">
+      <p className="muted">
+        SoldeClair s’ouvre alors en plein écran depuis son icône, sans barre d’adresse. C’est gratuit et rien n’est envoyé sur Internet.
+      </p>
+      <details className="disclosure">
+        <summary>Sur iPhone ou iPad (Safari)</summary>
+        <div className="disclosure-body">
+          <ol className="etapes-installation">
+            <li>Faites d’abord une sauvegarde complète (JSON) ci-dessus.</li>
+            <li>Touchez le bouton Partager (le carré avec une flèche), puis « Sur l’écran d’accueil ».</li>
+            <li>Laissez activée l’option qui ouvre le site comme une app web, puis touchez « Ajouter ».</li>
+            <li>
+              Ouvrez SoldeClair depuis la nouvelle icône. L’application installée a sa propre mémoire : si elle est vide, choisissez
+              « Importer une sauvegarde » et sélectionnez le fichier enregistré à l’étape 1.
+            </li>
+          </ol>
+        </div>
+      </details>
+      <details className="disclosure">
+        <summary>Sur Android (Chrome)</summary>
+        <div className="disclosure-body">
+          <ol className="etapes-installation">
+            <li>Faites d’abord une sauvegarde complète (JSON) ci-dessus.</li>
+            <li>Touchez le menu ⋮, puis « Installer l’application » (ou « Ajouter à l’écran d’accueil »).</li>
+            <li>Ouvrez SoldeClair depuis la nouvelle icône ; importez la sauvegarde si l’application est vide.</li>
+          </ol>
+        </div>
+      </details>
+    </Card>
+  );
+}
+
 export function SettingsPage() {
   return (
     <div className="page">
@@ -446,6 +481,7 @@ export function SettingsPage() {
       </Notice>
       {/* La sauvegarde d'abord : avec un stockage local, c'est la protection principale des données. */}
       <DataSection parts={['export', 'import']} />
+      <InstallSection />
       <ProfileSection />
       <CalculSection />
       <ThemeSection />

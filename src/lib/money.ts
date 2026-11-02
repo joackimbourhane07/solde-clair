@@ -1,7 +1,7 @@
 import type { Cents } from '../types';
 
 /**
- * Convertit une saisie utilisateur (« 12 », « 12,5 », « 1 234,56 », « 12.50 € »)
+ * Convertit une saisie utilisateur (« 12 », « 12,5 », « 1 234,56 », « 12.50 € »)
  * en centimes entiers. Renvoie null si la saisie n'est pas un montant valide.
  * Le calcul se fait sur la chaîne de caractères, sans passer par un nombre à
  * virgule, afin d'éviter toute erreur d'arrondi.
@@ -30,7 +30,7 @@ export function parseAmount(input: string | number | null | undefined): Cents | 
   return negative ? -total : total;
 }
 
-/** Convertit des centimes en chaîne éditable (« 1234,5 » → « 1234,50 »). */
+/** Convertit des centimes en chaîne éditable (« 1234,5 » → « 1234,50 »). */
 export function centsToInput(cents: Cents | null | undefined): string {
   if (cents === null || cents === undefined) return '';
   const negative = cents < 0;
@@ -62,19 +62,20 @@ function formatter(currency: string): Intl.NumberFormat {
 
 /**
  * Intl sépare les milliers par une espace fine insécable (U+202F), presque
- * invisible avec certaines polices (« 1200,00 € »). On utilise l'espace
- * insécable classique (U+00A0), lisible partout : « 1 200,00 € ».
+ * invisible avec certaines polices (« 1200,00 € »). On utilise l'espace
+ * insécable classique (U+00A0), lisible partout : « 1 200,00 € ».
  */
 const lisible = (s: string) => s.replace(/\u202f/g, '\u00a0');
 
-/** Affiche un montant en centimes au format français : « 1 234,56 € ». */
+/** Affiche un montant en centimes au format français : « 1 234,56 € ». */
 export function formatMoney(cents: Cents, currency = 'EUR'): string {
   // Division par 100 uniquement pour l'affichage final : aucun calcul ensuite.
-  return lisible(formatter(currency).format(cents / 100));
+  // « + 0 » plutôt que « −0 » : un zéro négatif (somme vide d'une liste de sorties) s'afficherait « -0,00 € »
+  return lisible(formatter(currency).format((cents === 0 ? 0 : cents) / 100));
 }
 
 /**
- * Version arrondie à l'unité, pour les messages (« environ 18 € »).
+ * Version arrondie à l'unité, pour les messages (« environ 18 € »).
  * - 'arrondi' : au plus proche (axes des graphiques)
  * - 'prudent' : vers zéro, pour ne jamais surestimer ce qu'il reste
  * - 'majore' : loin de zéro, pour ne jamais sous-estimer un dépassement
@@ -86,13 +87,14 @@ export function formatMoneyShort(cents: Cents, currency = 'EUR', mode: 'arrondi'
       : mode === 'majore'
         ? Math.sign(cents) * Math.ceil(Math.abs(cents) / 100)
         : Math.round(cents / 100);
+  const entier = units === 0 ? 0 : units; // jamais « -0 € »
   try {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency,
       maximumFractionDigits: 0,
       minimumFractionDigits: 0,
-    }).format(units).replace(/\u202f/g, '\u00a0');
+    }).format(entier).replace(/\u202f/g, '\u00a0');
   } catch {
     return formatMoney(cents, currency);
   }

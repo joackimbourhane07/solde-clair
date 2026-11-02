@@ -34,7 +34,7 @@ function BudgetEditor({ line, onClose }: { line: CategoryBudgetLine | 'new'; onC
   };
 
   return (
-    <Modal title={isNew ? 'Nouvelle catégorie de dépenses' : `Limite « ${line.category.name} »`} onClose={onClose}>
+    <Modal title={isNew ? 'Nouvelle catégorie de dépenses' : `Limite « ${line.category.name} »`} onClose={onClose}>
       <form onSubmit={submit} noValidate className="form">
         <TextField label="Nom de la catégorie" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} maxLength={60} />
         <MoneyField

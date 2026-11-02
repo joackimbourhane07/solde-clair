@@ -72,7 +72,7 @@ function useConfirmation() {
       notify(texte);
       return;
     }
-    // Formulation neutre (revenu, dépense, charge) : « Mois concerné : … ».
+    // Formulation neutre (revenu, dépense, charge) : « Mois concerné : … ».
     const precision = recurrent
       ? ` Première échéance en ${monthLabel(m)}.`
       : m < month && data.settings.carryOver !== false
@@ -274,7 +274,7 @@ export function IncomeForm({
   const confirmer = useConfirmation();
   const choix = useChoixCategorie('income', initial?.categoryId);
   const [name, setName] = useState(initial?.name ?? '');
-  // Compte crédité : choisi par la personne, sinon déduit de la catégorie ou du nom (« Carte restaurant »).
+  // Compte crédité : choisi par la personne, sinon déduit de la catégorie ou du nom (« Carte restaurant »).
   const [compteChoisi, setCompteChoisi] = useState<AccountId | null>(initial?.account ?? null);
   const nomCategorie = choix.categoryId === '__nouvelle__' ? choix.nouvelle : (data.categories.find((c) => c.id === choix.categoryId)?.name ?? '');
   const compte: AccountId = compteChoisi ?? (isCarteRestaurant(nomCategorie) || isCarteRestaurant(name) ? 'carte-restaurant' : 'compte');
@@ -345,7 +345,7 @@ export function IncomeForm({
               restaurant
             </label>
           </div>
-          <p className="field-hint">La carte restaurant a son propre solde dans l’onglet « Compte » ; le total de vos revenus les compte tous.</p>
+          <p className="field-hint">La carte restaurant a son propre solde dans l’onglet « Compte » ; le total de vos revenus les compte tous.</p>
         </fieldset>
       )}
       <fieldset className="fieldset">

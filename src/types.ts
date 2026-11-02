@@ -3,8 +3,8 @@
  *
  * Tous les montants sont stockés en CENTIMES (nombres entiers) pour éviter
  * les erreurs d'arrondi des nombres à virgule (0,1 + 0,2 ≠ 0,3).
- * Toutes les dates sont des chaînes « AAAA-MM-JJ » (date locale, sans fuseau).
- * Les mois sont des chaînes « AAAA-MM ».
+ * Toutes les dates sont des chaînes « AAAA-MM-JJ » (date locale, sans fuseau).
+ * Les mois sont des chaînes « AAAA-MM ».
  */
 
 export type Cents = number;
@@ -57,7 +57,7 @@ export interface Income {
   /** Dernière date incluse pour un revenu récurrent (facultatif). */
   endDate: ISODate | null;
   note: string;
-  /** Compte crédité ; absent = déduit de la catégorie ou du nom (« Carte restaurant » → carte restaurant). */
+  /** Compte crédité ; absent = déduit de la catégorie ou du nom (« Carte restaurant » → carte restaurant). */
   account?: AccountId;
 }
 
@@ -82,7 +82,7 @@ export interface FixedCharge {
   note: string;
   /**
    * Statut choisi manuellement pour une échéance donnée (clé = date de l'échéance).
-   * Sans choix manuel : « payé » si la date est passée, « à venir » sinon.
+   * Sans choix manuel : « payé » si la date est passée, « à venir » sinon.
    */
   status: Record<ISODate, ChargeStatus>;
 }
@@ -126,7 +126,7 @@ export interface Settings {
   hideAmounts?: boolean;
   /** Version de l'apparence (2 = thème clair par défaut). */
   appearanceVersion?: number;
-  /** Version des catégories proposées (3 = « Carte restaurant » ajoutée aux revenus). */
+  /** Version des catégories proposées (3 = « Carte restaurant » ajoutée aux revenus). */
   presetsVersion?: number;
   /** Actions suggérées que la personne a choisi d'ignorer (tableau de bord). */
   dismissedActions?: string[];

@@ -90,11 +90,11 @@ export function Simulator() {
                 <p className="muted">Choisissez une catégorie pour vérifier son budget.</p>
               ) : result.category.budget === null ? (
                 <p className="muted">
-                  Pas de limite pour « {result.category.name} ». Dépensé après l’achat : {fmt(result.category.spentAfter)}.
+                  Pas de limite pour « {result.category.name} ». Dépensé après l’achat : {fmt(result.category.spentAfter)}.
                 </p>
               ) : (
                 <Notice tone={result.category.levelAfter === 'depasse' ? 'danger' : result.category.levelAfter === 'ok' ? 'succes' : 'attention'}>
-                  « {result.category.name} » : {fmt(result.category.spentAfter)} sur {fmt(result.category.budget)} après l’achat —{' '}
+                  « {result.category.name} » : {fmt(result.category.spentAfter)} sur {fmt(result.category.budget)} après l’achat —{' '}
                   {BUDGET_LEVEL_LABELS[result.category.levelAfter].toLowerCase()}
                   {result.category.remainingAfter !== null && result.category.remainingAfter < 0
                     ? ` (dépassement de ${fmt(-result.category.remainingAfter)}).`

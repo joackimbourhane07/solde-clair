@@ -100,7 +100,7 @@ export function Onboarding() {
   }, [type]);
 
   useEffect(() => {
-    // Depuis la présentation (« Essayer la démonstration ») : on amène directement à la démonstration et à l'import.
+    // Depuis la présentation (« Essayer la démonstration ») : on amène directement à la démonstration et à l'import.
     const alt = (location.state as { demo?: boolean } | null)?.demo && step === 0 ? document.getElementById('alt-titre') : null;
     if (alt) {
       alt.focus();
@@ -356,7 +356,7 @@ export function Onboarding() {
                     </div>
                     <CheckboxField
                       label="Répartir automatiquement mon estimation en limites par catégorie"
-                      hint="Vous pourrez ajuster chaque limite dans « Budgets »."
+                      hint="Vous pourrez ajuster chaque limite dans « Budgets »."
                       checked={splitEstimate}
                       onChange={(e) => setSplitEstimate(e.target.checked)}
                     />

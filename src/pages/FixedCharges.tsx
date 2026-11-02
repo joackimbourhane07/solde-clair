@@ -75,7 +75,7 @@ export function FixedCharges() {
                       aria-label={`${o.label} : ${paid ? 'payé' : 'à venir'}. Cliquer pour marquer comme ${paid ? 'à venir' : 'payé'}`}
                       onClick={() => {
                         dispatch({ type: 'setChargeStatus', id: charge.id, date: o.date, status: paid ? 'a_venir' : 'paye' });
-                        notify(`« ${o.label} » marqué comme ${paid ? 'à venir' : 'payé'}.`, 'info');
+                        notify(`« ${o.label} » marqué comme ${paid ? 'à venir' : 'payé'}.`, 'info');
                       }}
                     >
                       <Icon name={paid ? 'check' : 'calendar'} size={16} />
@@ -133,7 +133,7 @@ export function FixedCharges() {
       {toDelete && (
         <ConfirmDialog
           title="Supprimer cette charge fixe ?"
-          message={`« ${toDelete.name} » sera supprimée de tous les mois, y compris les mois passés. Pour l’arrêter seulement à partir d’une date, modifiez-la et indiquez une date de fin.`}
+          message={`« ${toDelete.name} » sera supprimée de tous les mois, y compris les mois passés. Pour l’arrêter seulement à partir d’une date, modifiez-la et indiquez une date de fin.`}
           onCancel={() => setToDelete(null)}
           onConfirm={() => {
             dispatch({ type: 'remove', collection: 'fixedCharges', id: toDelete.id });

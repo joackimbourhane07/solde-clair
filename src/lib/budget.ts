@@ -38,7 +38,7 @@ export function categoryName(data: AppData, id: string | null): string {
 
 /**
  * Statut d'une échéance de charge fixe : choix manuel s'il existe,
- * sinon « payé » si la date est atteinte, « à venir » sinon.
+ * sinon « payé » si la date est atteinte, « à venir » sinon.
  */
 export function chargeStatus(charge: FixedCharge, date: ISODate, today: ISODate): ChargeStatus {
   return charge.status[date] ?? (date <= today ? 'paye' : 'a_venir');
@@ -50,7 +50,7 @@ export function chargeStatus(charge: FixedCharge, date: ISODate, today: ISODate)
 
 /** Reconnaît la carte restaurant / les titres-restaurant dans un nom (catégorie, revenu, moyen de paiement). */
 export function isCarteRestaurant(nom: string): boolean {
-  // « Restaurants » (catégorie de dépenses) ne doit pas être confondu avec la carte restaurant.
+  // « Restaurants » (catégorie de dépenses) ne doit pas être confondu avec la carte restaurant.
   return /(?:cartes?|titres?|tickets?)[- ]?rest(?:o|aurant)s?\b|swile|edenred|pluxee|sodexo|up d[ée]j|bimpli|apetiz|conecs/i.test(nom);
 }
 
@@ -369,9 +369,9 @@ export type BudgetLevel = 'sans' | 'ok' | 'attention' | 'alerte' | 'depasse';
 
 /**
  * Niveau d'alerte d'une catégorie :
- * - « attention » dès 75 % du budget utilisé
- * - « alerte » dès 90 %
- * - « dépassé » au-delà de 100 %
+ * - « attention » dès 75 % du budget utilisé
+ * - « alerte » dès 90 %
+ * - « dépassé » au-delà de 100 %
  * Comparaisons sur des entiers (centimes) : aucune erreur d'arrondi.
  */
 export function budgetLevel(spent: Cents, budget: Cents | null): BudgetLevel {
@@ -528,12 +528,12 @@ export function monthAlerts(
     if (line.level === 'depasse') {
       alerts.push({
         level: 'danger',
-        message: `Budget « ${line.category.name} » dépassé de ${fmt(-(line.remaining ?? 0))}. Vous pouvez ajuster la limite si elle était trop basse.`,
+        message: `Budget « ${line.category.name} » dépassé de ${fmt(-(line.remaining ?? 0))}. Vous pouvez ajuster la limite si elle était trop basse.`,
       });
     } else if (line.level === 'alerte') {
-      alerts.push({ level: 'attention', message: `Budget « ${line.category.name} » utilisé à ${line.pct}\u00a0% : il reste ${fmt(line.remaining ?? 0)}.` });
+      alerts.push({ level: 'attention', message: `Budget « ${line.category.name} » utilisé à ${line.pct}\u00a0% : il reste ${fmt(line.remaining ?? 0)}.` });
     } else if (line.level === 'attention') {
-      alerts.push({ level: 'info', message: `Budget « ${line.category.name} » utilisé à ${line.pct}\u00a0% : il reste ${fmt(line.remaining ?? 0)}.` });
+      alerts.push({ level: 'info', message: `Budget « ${line.category.name} » utilisé à ${line.pct}\u00a0% : il reste ${fmt(line.remaining ?? 0)}.` });
     }
   }
   const order: Record<AlertLevel, number> = { danger: 0, attention: 1, info: 2 };

@@ -6,7 +6,7 @@ import { sum } from './money';
 /**
  * Comptes façon application bancaire : compte bancaire et carte restaurant.
  * Le solde d'un compte = tous les mouvements jusqu'à la date, ajustements compris.
- * Une charge fixe marquée « à venir » n'est pas encore débitée : elle reste dans les opérations à venir.
+ * Une charge fixe marquée « à venir » n'est pas encore débitée : elle reste dans les opérations à venir.
  */
 export type FiltreCompte = AccountId | 'tout';
 
@@ -30,7 +30,7 @@ export function usesCarteRestaurant(data: AppData): boolean {
 
 const correspond = (t: Transaction, filtre: FiltreCompte) => filtre === 'tout' || t.account === filtre;
 
-/** Débité ou crédité : tout sauf les charges encore « à venir ». */
+/** Débité ou crédité : tout sauf les charges encore « à venir ». */
 export const estPasse = (t: Transaction) => !(t.type === 'charge' && t.status === 'a_venir');
 
 /** Solde d'un compte (ou de tous) à la fin d'une date. */
@@ -82,5 +82,5 @@ export function operationsAVenir(data: AppData, filtre: FiltreCompte, today: ISO
 /** Entrées et sorties d'une liste d'opérations. */
 export function totaux(ops: Transaction[]): { entrees: Cents; sorties: Cents } {
   const signes = ops.map(signedAmount);
-  return { entrees: sum(signes.filter((v) => v > 0)), sorties: -sum(signes.filter((v) => v < 0)) };
+  return { entrees: sum(signes.filter((v) => v > 0)), sorties: Math.abs(sum(signes.filter((v) => v < 0))) };
 }

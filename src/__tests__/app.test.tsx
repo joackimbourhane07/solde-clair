@@ -707,12 +707,14 @@ describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
     const bulles = screen.getByRole('tablist', { name: 'Opérations affichées' });
     const [operations, aVenir] = within(bulles).getAllByRole('tab');
     expect(operations).toHaveAccessibleName('Opérations');
-    expect(aVenir).toHaveAccessibleName('À venir (3 opérations)');
+    // Rien dans les 7 prochains jours (le forfait est le 20) : pas de nombre dans la bulle
+    expect(aVenir).toHaveAccessibleName('À venir');
+    expect(aVenir.querySelector('.bulle-nombre')).toBeNull();
     expect(operations).toHaveAttribute('aria-selected', 'true');
     await user.click(aVenir);
     expect(aVenir).toHaveAttribute('aria-selected', 'true');
     const panneau = screen.getByRole('tabpanel');
-    expect(panneau).toHaveAccessibleName('À venir (3 opérations)');
+    expect(panneau).toHaveAccessibleName('À venir');
     // Forfait (le 20), salaire et loyer de décembre ; plus de relevé ni de recherche
     expect(within(panneau).getByText('Forfait')).toBeInTheDocument();
     expect(within(panneau).getByText('Salaire')).toBeInTheDocument();
@@ -725,6 +727,31 @@ describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
     expect(screen.getByLabelText('Rechercher une opération')).toBeInTheDocument();
   });
 
+  it('bulle « À venir » : un nombre seulement pour les 7 prochains jours', () => {
+    const d = fixture();
+    // Forfait prélevé le 18 (dans 6 jours) au lieu du 20
+    d.fixedCharges = d.fixedCharges.map((c) => (c.id === 'f-tel' ? { ...c, date: '2026-09-18' } : c));
+    renderApp(d, '/compte');
+    const bulle = screen.getByRole('tab', { name: /^À venir/ });
+    expect(bulle).toHaveAccessibleName('À venir (1 opération dans les 7 prochains jours)');
+    expect(bulle.querySelector('.bulle-nombre')?.textContent).toBe('1');
+  });
+
+  it('solde : explication et bouton tant qu’aucun solde réel n’est indiqué ; jamais « -0,00 € »', async () => {
+    const user = renderApp(fixture(), '/compte');
+    expect(screen.getByText(/SoldeClair part de 0 € et ajoute chaque revenu le jour où il est versé/, { normalizer: norm })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Indiquer mon solde réel' }));
+    const dialog = screen.getByRole('dialog', { name: 'Ajuster le solde' });
+    await user.clear(within(dialog).getByLabelText('Solde réel – Compte bancaire'));
+    await user.type(within(dialog).getByLabelText('Solde réel – Compte bancaire'), '3000');
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer le solde' }));
+    expect(screen.queryByRole('button', { name: 'Indiquer mon solde réel' })).not.toBeInTheDocument();
+    // Recherche sans résultat : entrées et sorties à zéro, sans « -0 »
+    await user.type(screen.getByLabelText('Rechercher une opération'), 'introuvable');
+    expect(norm(document.querySelector('.operations-totaux')?.textContent)).toContain('Sorties : − 0,00 €');
+    expect(document.body.textContent).not.toMatch(/-0,00/);
+  });
+
   it('adresse directe vers « À venir » (compte?vue=a-venir)', () => {
     renderApp(fixture(), '/compte?vue=a-venir');
     expect(screen.getByRole('tab', { name: /À venir/ })).toHaveAttribute('aria-selected', 'true');
@@ -733,8 +760,8 @@ describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
 
   it('couleurs : vert pour l’argent qui entre et le solde positif, rouge pour ce qui sort', async () => {
     const user = renderApp(fixture(), '/compte');
-    // Solde positif dans une pastille verte
-    expect(document.querySelector('.solde-montant .pastille-solde')).toHaveClass('pastille-positive');
+    // Solde positif écrit en vert, sans encadré
+    expect(document.querySelector('.solde-montant')).toHaveClass('montant-plus');
     // Le concert (dépense) : pastille et montant rouges ; le salaire : vert
     const concert = screen.getByText('Concert').closest('li')!;
     expect(concert.querySelector('.operation-icone')).toHaveClass('sens-sortie');
@@ -749,7 +776,7 @@ describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
     await user.type(within(dialog).getByLabelText('Solde réel – Compte bancaire'), '20');
     await user.click(within(dialog).getByLabelText('Solde négatif (découvert)'));
     await user.click(within(dialog).getByRole('button', { name: 'Enregistrer le solde' }));
-    expect(document.querySelector('.solde-montant .pastille-solde')).toHaveClass('pastille-negative');
+    expect(document.querySelector('.solde-montant')).toHaveClass('montant-moins');
   });
 
   it('couleurs partout : dépenses et charges en rouge avec « − », revenus en vert avec « + »', () => {
@@ -881,6 +908,9 @@ describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
     expect(pageHtml).toContain('href="/icone-32.png"');
     expect(pageHtml).toContain('rel="apple-touch-icon"');
     expect(pageHtml).not.toContain('favicon.svg');
+    // Installation comme application
+    expect(pageHtml).toContain('rel="manifest" href="/manifest.webmanifest"');
+    expect(pageHtml).toContain('name="apple-mobile-web-app-title" content="SoldeClair"');
     expect(iconeSvg.toLowerCase()).toContain('#2383e2');
   });
 });

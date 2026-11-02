@@ -51,7 +51,7 @@ Permettre à chacun de :
 | **Page d’accueil (présentation)** | Premier écran d’un nouveau visiteur : grand titre « Votre budget devient enfin clair. », boutons « Commencer » et « Découvrir SoldeClair », illustrations originales, sections sur le reste à vivre, les charges à venir, l’épargne, le simulateur, les profils et la confidentialité, appel à l’action et pied de page. Vraies captures de SoldeClair (profil de démonstration, données fictives) dans des cadres d’ordinateur et de téléphone. Si des profils existent déjà sur l’appareil : « Continuer avec … », « Créer un nouveau profil » et les autres profils. Chargée séparément (≈ 10 Ko de code + 220 Ko d’images WebP chargées au fil du défilement) ; accessible à tout moment en cliquant sur le logo. |
 | **Configuration initiale** | Parcours en 6 étapes : prénom ou pseudonyme, situation (étudiant, alternant, salarié, indépendant, autre), devise (euro par défaut), revenu principal et revenus complémentaires, charges fixes, estimation des dépenses variables, objectif d’épargne mensuel, objectif à long terme, choix des catégories proposées selon le profil. Possibilité de charger une démonstration ou d’importer une sauvegarde. |
 | **Tableau de bord** | Dans l’ordre : **carte principale** (« Il vous reste X € pour terminer le mois, soit environ Y € par jour », jours restants, part des revenus dépensée, détail du calcul), **À venir** (« Dans les 7 prochains jours : … », charges et revenus attendus avec des dates relatives), **Ce mois-ci** (revenus, dépenses, dernières opérations), **Épargne du mois** (montant et **pourcentage de l’objectif atteint**, même au-delà de 100 %, puis les objectifs en cours avec leur pourcentage), **À faire** (3 petites actions au maximum : limite dépassée, rythme trop rapide, prélèvement de demain, dépense inhabituelle, versement d’épargne, sauvegarde ; chacune peut être ignorée), **Estimation des 30 prochains jours** (disponible estimé à 7, 15 et 30 jours, point le plus bas, événements pris en compte), ajout rapide (sur ordinateur), **un seul graphique** ; le reste dans « Détail du mois ». Navigation de mois en mois. |
-| **Mon compte** | Vue façon application bancaire : **solde du jour** (total, puis compte bancaire et carte restaurant séparément si elle est utilisée), solde estimé après les opérations des 30 prochains jours, puis deux **bulles** qui ouvrent chacune leur onglet : **Opérations** (toutes les opérations jour par jour (« Aujourd’hui », « Hier », « Mercredi 4 novembre 2026 ») avec ce qui est entré, ce qui est sorti et le **solde en fin de journée** ; recherche, total des entrées et des sorties, mois précédents à la demande) et **À venir** (nombre d’opérations dans la bulle ; prélèvements et revenus attendus sur 30 jours, charges pas encore payées, total entrant et sortant). Adresse directe : `#/compte?vue=a-venir`. Bouton **« Ajuster le solde »** : on indique le solde réel affiché par la banque (ou la carte restaurant, découvert possible) et SoldeClair ajoute un « ajustement du solde » daté du jour pour combler l’écart ; un ajustement se supprime d’un geste. |
+| **Mon compte** | Vue façon application bancaire : **solde du jour** écrit en vert (ou en rouge s’il est négatif) : le total cumulé compte bancaire + carte restaurant, puis chacun séparément si la carte est utilisée. Tant qu’aucun solde réel n’a été indiqué, une aide explique que le solde part de 0 € et propose « Indiquer mon solde réel », solde estimé après les opérations des 30 prochains jours, puis deux **bulles** qui ouvrent chacune leur onglet : **Opérations** (toutes les opérations jour par jour (« Aujourd’hui », « Hier », « Mercredi 4 novembre 2026 ») avec ce qui est entré, ce qui est sorti et le **solde en fin de journée** ; recherche, total des entrées et des sorties, mois précédents à la demande) et **À venir** (nombre d’opérations des 7 prochains jours dans la bulle, rien s’il n’y en a pas ; prélèvements et revenus attendus sur 30 jours, charges pas encore payées, total entrant et sortant). Adresse directe : `#/compte?vue=a-venir`. Bouton **« Ajuster le solde »** : on indique le solde réel affiché par la banque (ou la carte restaurant, découvert possible) et SoldeClair ajoute un « ajustement du solde » daté du jour pour combler l’écart ; un ajustement se supprime d’un geste. |
 | **Revenus** | Ajout, modification, suppression. Nom, montant, date, catégorie, récurrent ou exceptionnel, fréquence, date de fin facultative, note. **Carte restaurant** : catégorie proposée à tous les profils ; un revenu de cette catégorie est « versé sur » la carte restaurant (modifiable). Le total du mois compte **toutes les sources**, puis le détail **sur le compte bancaire** et **sur la carte restaurant**. |
 | **Dépenses** | Ajout, modification, suppression, recherche et filtre par catégorie. Montant, catégorie, date, description et moyen de paiement facultatifs (carte bancaire, **carte restaurant**, espèces, virement…). Une dépense payée par carte restaurant est retirée du solde de la carte, pas du compte bancaire. |
 | **Charges fixes** | Ajout, modification, suppression. Nom, montant, date de prélèvement, catégorie, fréquence (hebdomadaire à annuelle), statut **payé / à venir** modifiable pour chaque échéance, note. |
@@ -207,7 +207,7 @@ solde-clair/
 ├── .github/workflows/         Publication automatique sur GitHub Pages
 ├── e2e/                       Tests dans un vrai navigateur (Playwright)
 ├── docs/                      Recherche, audit, références et plan (avec captures)
-├── public/                   Icônes (SVG, PNG 32 px, icône Apple 180 px)
+├── public/                   Icônes (SVG, PNG 32, 192, 512 px, icône Apple 180 px) et manifeste d’installation
 └── src/
     ├── main.tsx               Démarrage de l’application
     ├── App.tsx                Pages et navigation
@@ -314,11 +314,11 @@ Tous les calculs se font en centimes entiers ; la conversion en euros n’a lieu
 - **Pas de connexion à la banque ni à Apple Pay**, volontairement : cela demanderait un prestataire agréé (DSP2), un serveur et l’envoi des données hors de l’appareil. Le bouton « Ajuster le solde » permet de recaler le solde à la main en quelques secondes.
 - Les limites budgétaires concernent les dépenses variables (pas les charges fixes).
 - Pas d’import de relevés bancaires (CSV de banque) — volontairement, pour cette première version.
-- L’application n’est pas encore installable hors ligne (PWA).
+- L’application s’installe sur l’écran d’accueil mais a besoin d’une connexion pour s’ouvrir (pas encore de fonctionnement hors ligne).
 
 ## Améliorations possibles (version 2)
 
-1. **Application installable et hors ligne (PWA)** : icône sur l’écran d’accueil, fonctionnement sans connexion.
+1. **Fonctionnement hors ligne** : l’application s’installe déjà sur l’écran d’accueil ; il resterait à la faire fonctionner sans connexion (service worker).
 2. **Stockage IndexedDB** avec sauvegarde automatique planifiée et rappel d’export.
 3. **Chiffrement local facultatif** des données par un mot de passe choisi par l’utilisateur.
 4. **Synchronisation optionnelle** entre appareils (chiffrée de bout en bout), toujours sans accès bancaire.
@@ -330,6 +330,15 @@ Tous les calculs se font en centimes entiers ; la conversion en euros n’a lieu
 10. **Bilan annuel** et graphiques sur 12 mois, export PDF du bilan.
 11. **Tests navigateur dans l’intégration continue** : la publication lance déjà la vérification des types et `npm test` ; on pourrait y ajouter `npm run test:e2e`.
 12. **Traductions** (anglais, espagnol…) et adaptation des catégories par pays.
+
+## Installer SoldeClair comme une application
+
+SoldeClair peut s’installer sur l’écran d’accueil d’un téléphone et s’ouvrir en plein écran, comme une application, **sans App Store ni Play Store, gratuitement** (manifeste web `public/manifest.webmanifest`, icônes 192 px, 512 px et « masquable »). Le guide est aussi dans **Paramètres → Installer comme une application**.
+
+- **iPhone / iPad (Safari)** : faire une sauvegarde complète (JSON), puis bouton Partager → « Sur l’écran d’accueil », garder l’option d’ouverture en app web activée → « Ajouter ».
+- **Android (Chrome)** : sauvegarde complète (JSON), puis menu ⋮ → « Installer l’application ».
+
+L’application installée a **sa propre mémoire**, séparée de celle du navigateur : au premier lancement, importer la sauvegarde JSON (« Importer une sauvegarde »). Une vraie application de l’App Store demanderait un compte développeur Apple payant ; elle n’est donc pas prévue.
 
 ## Version en ligne (GitHub Pages)
 

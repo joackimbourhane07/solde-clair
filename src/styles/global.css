@@ -3202,6 +3202,7 @@ ol.rank-list li > span {
 }
 
 .solde-montant {
+  font-variant-numeric: tabular-nums;
   font-size: clamp(2rem, 1.5rem + 2vw, 2.8rem);
   font-weight: 600;
   letter-spacing: -0.03em;
@@ -3209,23 +3210,17 @@ ol.rank-list li > span {
   overflow-wrap: anywhere;
 }
 
-/* Solde du jour dans une pastille : vert vif s'il est positif, rouge vif s'il est négatif */
-.pastille-solde {
-  display: inline-block;
-  max-width: 100%;
-  padding: 0.12em 0.45em;
-  border-radius: 0.4em;
-  font-variant-numeric: tabular-nums;
-}
-
-.pastille-positive {
-  background: var(--entree-vif);
-  color: var(--entree-encre);
-}
-
-.pastille-negative {
-  background: var(--sortie-vif);
-  color: var(--sortie-encre);
+/* Aide affichée tant qu'aucun solde réel n'a été indiqué */
+.solde-astuce {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text-2);
+  font-size: var(--dp-typography-supporting);
 }
 
 .solde-detail {
@@ -3488,3 +3483,12 @@ ol.rank-list li > span {
   overflow-wrap: anywhere;
 }
 
+
+/* Étapes d'installation (paramètres) */
+.etapes-installation {
+  margin: 0;
+  padding-left: 1.3em;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

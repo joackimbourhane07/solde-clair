@@ -29,7 +29,7 @@ export const STORAGE_KEY = 'soldeclair:donnees:v1';
  */
 export const APPEARANCE_VERSION = 2;
 
-/** Version des catégories proposées : 3 = « Carte restaurant » parmi les revenus. */
+/** Version des catégories proposées : 3 = « Carte restaurant » parmi les revenus. */
 export const PRESETS_VERSION = 3;
 
 export function emptyData(): AppData {
@@ -54,7 +54,7 @@ export function emptyData(): AppData {
 
 /**
  * Chaque profil a ses propres données. Le premier profil garde la clé historique
- * (« soldeclair:donnees:v1 ») : les données existantes deviennent ce profil, sans rien perdre.
+ * (« soldeclair:donnees:v1 ») : les données existantes deviennent ce profil, sans rien perdre.
  */
 export const PROFILES_KEY = 'soldeclair:profils:v1';
 export const PREMIER_PROFIL = 'principal';
@@ -161,7 +161,7 @@ function fail(message: string): never {
 
 function checkArray(value: unknown, label: string): unknown[] {
   if (value === undefined) return [];
-  if (!Array.isArray(value)) fail(`La liste « ${label} » est invalide.`);
+  if (!Array.isArray(value)) fail(`La liste « ${label} » est invalide.`);
   return value;
 }
 
@@ -363,7 +363,7 @@ function csvCell(value: string): string {
 }
 
 /**
- * Export CSV des transactions (séparateur « ; », virgule décimale : compatible
+ * Export CSV des transactions (séparateur « ; », virgule décimale : compatible
  * avec les tableurs configurés en français). Les montants sortants sont négatifs.
  * Les éléments récurrents sont inclus jusqu'à la fin du mois en cours.
  */

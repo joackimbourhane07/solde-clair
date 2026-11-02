@@ -12,7 +12,7 @@ export function Expenses() {
   const { data, month, today, fmt, dispatch, notify } = useApp();
   const [editing, setEditing] = useState<Expense | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<Expense | null>(null);
-  // « Voir les dépenses » depuis un budget : la catégorie est présélectionnée (?categorie=…).
+  // « Voir les dépenses » depuis un budget : la catégorie est présélectionnée (?categorie=…).
   const [params] = useSearchParams();
   const [category, setCategory] = useState(() => {
     const id = params.get('categorie') ?? '';

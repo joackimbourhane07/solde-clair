@@ -51,10 +51,10 @@ export interface SimulationResult {
  * Simule l'impact d'un achat envisagé sur le mois en cours.
  *
  * Règles de l'appréciation (indication budgétaire, pas un conseil financier) :
- * - « déséquilibre » : le solde du mois deviendrait négatif ;
- * - « prudence » : l'achat entame l'épargne prévue du mois, fait dépasser le
+ * - « déséquilibre » : le solde du mois deviendrait négatif ;
+ * - « prudence » : l'achat entame l'épargne prévue du mois, fait dépasser le
  *   budget de sa catégorie, ou consomme plus de la moitié du solde disponible ;
- * - « confortable » : sinon.
+ * - « confortable » : sinon.
  */
 export function simulatePurchase(
   data: AppData,
@@ -107,9 +107,9 @@ export function simulatePurchase(
   } else {
     if (savingsImpact > 0) reasons.push('L’achat réduit l’épargne prévue ce mois-ci.');
     if (category && category.levelAfter === 'depasse' && category.levelBefore !== 'depasse')
-      reasons.push(`Le budget « ${category.name} » serait dépassé.`);
+      reasons.push(`Le budget « ${category.name} » serait dépassé.`);
     else if (category && category.levelAfter === 'depasse')
-      reasons.push(`Le budget « ${category.name} » est déjà dépassé.`);
+      reasons.push(`Le budget « ${category.name} » est déjà dépassé.`);
     if (s.available > 0 && amount * 2 > s.available) reasons.push('L’achat représente plus de la moitié de votre solde disponible.');
     if (reasons.length > 0) verdict = 'prudence';
     else reasons.push('L’achat reste compatible avec votre budget et votre épargne prévue.');

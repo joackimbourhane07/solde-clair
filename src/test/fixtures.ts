@@ -2,7 +2,7 @@ import type { AppData } from '../types';
 
 /**
  * Jeu de données fictif utilisé par les tests.
- * « Aujourd'hui » = 12 novembre 2026 (mois de 30 jours → 19 jours restants, aujourd'hui inclus).
+ * « Aujourd'hui » = 12 novembre 2026 (mois de 30 jours → 19 jours restants, aujourd'hui inclus).
  */
 export const TODAY = '2026-11-12';
 

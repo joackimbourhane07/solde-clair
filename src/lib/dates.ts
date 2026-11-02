@@ -128,7 +128,7 @@ export function monthLabel(month: MonthKey, withYear = true): string {
 
 /**
  * Mois précédé de la préposition, avec élision devant une voyelle :
- * « de novembre 2026 », mais « d’octobre 2026 », « d’avril », « d’août ».
+ * « de novembre 2026 », mais « d’octobre 2026 », « d’avril », « d’août ».
  */
 export function ofMonth(month: MonthKey, withYear = true): string {
   const label = monthLabel(month, withYear);
@@ -140,10 +140,10 @@ export function monthLabelShort(month: MonthKey): string {
   return `${MONTH_SHORT[m - 1]} ${String(year).slice(2)}`;
 }
 
-/** Numéro du jour à la française : « 1er », puis « 2 », « 3 »… */
+/** Numéro du jour à la française : « 1er », puis « 2 », « 3 »… */
 const jour = (day: number) => (day === 1 ? '1er' : String(day));
 
-/** « 5 nov. 2026 » ou « 5 novembre 2026 » (« 1er nov. 2026 » le premier du mois). */
+/** « 5 nov. 2026 » ou « 5 novembre 2026 » (« 1er nov. 2026 » le premier du mois). */
 export function formatDate(date: ISODate, long = false): string {
   const { year, month, day } = parseISO(date);
   if (long) return `${jour(day)} ${MONTH_NAMES[month - 1]} ${year}`;
@@ -152,7 +152,7 @@ export function formatDate(date: ISODate, long = false): string {
 
 const WEEKDAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 
-/** En-tête de journée d'un relevé : « Aujourd’hui », « Hier », sinon « Mercredi 11 novembre 2026 ». */
+/** En-tête de journée d'un relevé : « Aujourd’hui », « Hier », sinon « Mercredi 11 novembre 2026 ». */
 export function dayHeader(date: ISODate, today: ISODate): string {
   const n = dayDiff(date, today);
   if (n === 0) return 'Aujourd’hui';
@@ -162,7 +162,7 @@ export function dayHeader(date: ISODate, today: ISODate): string {
   return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${jour(day)} ${MONTH_NAMES[month - 1]} ${year}`;
 }
 
-/** Date relative pour les échéances proches : « Aujourd’hui », « Demain », « Dans 3 jours », sinon « Le 3 déc. 2026 ». */
+/** Date relative pour les échéances proches : « Aujourd’hui », « Demain », « Dans 3 jours », sinon « Le 3 déc. 2026 ». */
 export function relativeDay(date: ISODate, today: ISODate): string {
   const n = dayDiff(today, date);
   if (n === 0) return 'Aujourd’hui';

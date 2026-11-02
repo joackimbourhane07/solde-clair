@@ -51,7 +51,7 @@ describe('actions utiles du tableau de bord', () => {
   it('propose les actions par priorité : limite dépassée, épargne, sauvegarde', () => {
     const a = suggestedActions(fixture(), TODAY, fmt);
     expect(a.map((x) => x.id)).toEqual(['limite:c-alim:2026-11', 'epargne:2026-11', 'sauvegarde:2026-11']);
-    expect(a[0].title).toBe('Votre budget « Alimentation » est dépassé de 8,00 €.');
+    expect(a[0].title).toBe('Votre budget « Alimentation » est dépassé de 8,00 €.');
     expect(a[0].detail).toBe('Vous pouvez consulter les dépenses concernées ou ajuster cette limite pour le mois.');
     expect(a[1].title).toBe('Il vous manque 50,00 € pour respecter votre objectif d’épargne du mois.');
   });
@@ -74,10 +74,10 @@ describe('actions utiles du tableau de bord', () => {
     ];
     const a = suggestedActions(d, TODAY, fmt);
     const charge = a.find((x) => x.id.startsWith('charge:'));
-    expect(charge?.title).toBe('Prélèvement « Forfait » demain : 15,99 €.');
+    expect(charge?.title).toBe('Prélèvement « Forfait » demain : 15,99 €.');
     const inhab = a.find((x) => x.id.startsWith('inhabituelle:'));
     expect(inhab?.id).toBe('inhabituelle:x5');
-    expect(inhab?.title).toBe('Dépense inhabituelle : « Festival » de 90,00 €.');
+    expect(inhab?.title).toBe('Dépense inhabituelle : « Festival » de 90,00 €.');
   });
 
   it('message positif quand toutes les limites sont respectées', () => {

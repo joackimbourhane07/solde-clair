@@ -4,7 +4,7 @@ import { useApp } from '../state/AppState';
 import type { AccountId, Transaction } from '../types';
 import { accountBalance, ACCOUNT_LABELS, operationsAVenir, releve, totaux, usesCarteRestaurant, type FiltreCompte } from '../lib/accounts';
 import { earliestDate, signedAmount } from '../lib/budget';
-import { addMonths, dayHeader, firstDay, monthLabel, monthOf, ofMonth, relativeDay } from '../lib/dates';
+import { addDays, addMonths, dayHeader, firstDay, monthLabel, monthOf, ofMonth, relativeDay } from '../lib/dates';
 import { centsToInput, parseAmount, sum } from '../lib/money';
 import { newId } from '../lib/id';
 import { Button, CheckboxField, ConfirmDialog, EmptyState, IconButton, Modal, MoneyField, PageHeader, SignedAmount, TextField } from '../components/ui';
@@ -25,7 +25,7 @@ function details(t: Transaction, avecCompte: boolean): string {
   const morceaux = [t.type === 'epargne' ? 'Vers l’épargne' : t.type === 'ajustement' ? 'Correction du solde' : t.categoryName];
   if (t.paymentMethod) morceaux.push(t.paymentMethod);
   if (t.type === 'charge') morceaux.push('Prélèvement');
-  // Le compte n'est précisé que s'il n'est pas déjà évident (pas de « Carte restaurant – Carte restaurant »)
+  // Le compte n'est précisé que s'il n'est pas déjà évident (pas de « Carte restaurant – Carte restaurant »)
   const compte = ACCOUNT_LABELS[t.account];
   if (avecCompte && !morceaux.some((m) => m.toLocaleLowerCase('fr') === compte.toLocaleLowerCase('fr'))) morceaux.push(compte);
   return morceaux.join(' – ');
@@ -92,7 +92,7 @@ function AjusterSolde({ comptes, onClose }: { comptes: AccountId[]; onClose: () 
       <form onSubmit={valider} noValidate className="form">
         <p className="muted">
           Indiquez le solde affiché aujourd’hui par votre banque{comptes.length > 1 ? ' et par votre carte restaurant' : ''}. SoldeClair ajoute un
-          « ajustement du solde » pour combler l’écart (une dépense oubliée, l’argent déjà présent avant de commencer…).
+          « ajustement du solde » pour combler l’écart (une dépense oubliée, l’argent déjà présent avant de commencer…).
         </p>
         {comptes.map((c) => (
           <div key={c} className="ajuster-compte">
@@ -147,6 +147,8 @@ export function Compte() {
   const aVenir = useMemo(() => operationsAVenir(data, actif, today, 30), [data, actif, today]);
   const soldePrevu = solde + sum(aVenir.map(signedAmount));
   const aVenirTotaux = totaux(aVenir);
+  // Le nombre dans la bulle n'apparaît que pour les 7 prochains jours (et les charges en retard)
+  const bientot = aVenir.filter((t) => t.date <= addDays(today, 7)).length;
   const jours = useMemo(() => releve(data, actif, debut, today, today), [data, actif, debut, today]);
   const q = recherche.trim().toLocaleLowerCase('fr');
   const joursFiltres = q
@@ -192,9 +194,7 @@ export function Compte() {
         <p id="solde-titre" className="solde-libelle">
           {actif === 'tout' ? 'Solde total aujourd’hui' : `${ACCOUNT_LABELS[actif]} – solde aujourd’hui`}
         </p>
-        <p className="solde-montant">
-          <span className={`pastille-solde ${solde < 0 ? 'pastille-negative' : 'pastille-positive'}`}>{solde < 0 ? `− ${fmt(-solde)}` : fmt(solde)}</span>
-        </p>
+        <p className={`solde-montant ${solde < 0 ? 'montant-moins' : 'montant-plus'}`}>{solde < 0 ? `− ${fmt(-solde)}` : fmt(solde)}</p>
         {actif === 'tout' && avecCarte && (
           <dl className="solde-detail">
             <div>
@@ -207,8 +207,19 @@ export function Compte() {
             </div>
           </dl>
         )}
+        {(data.adjustments ?? []).length === 0 && (
+          <div className="solde-astuce">
+            <p>
+              SoldeClair part de 0 € et ajoute chaque revenu le jour où il est versé (voir « À venir »). Pour afficher l’argent déjà présent sur
+              votre compte{avecCarte ? ' et votre carte restaurant' : ''}, indiquez une fois le solde affiché par votre banque.
+            </p>
+            <Button variant="secondaire" className="btn-small" icon="edit" onClick={() => setAjuster(true)}>
+              Indiquer mon solde réel
+            </Button>
+          </div>
+        )}
         <p className="solde-prevu">
-          Après les opérations prévues dans les 30 prochains jours :{' '}
+          Après les opérations prévues dans les 30 prochains jours :{' '}
           <strong className={soldePrevu < 0 ? 'montant-moins' : 'montant-plus'}>{soldePrevu < 0 ? `− ${fmt(-soldePrevu)}` : fmt(soldePrevu)}</strong>
         </p>
       </section>
@@ -218,7 +229,7 @@ export function Compte() {
         {(
           [
             ['operations', 'Opérations', null],
-            ['a-venir', 'À venir', aVenir.length],
+            ['a-venir', 'À venir', bientot > 0 ? bientot : null],
           ] as [Vue, string, number | null][]
         ).map(([v, libelle, nombre]) => (
           <button
@@ -230,7 +241,7 @@ export function Compte() {
             aria-selected={vue === v}
             aria-controls="panneau-compte"
             tabIndex={vue === v ? 0 : -1}
-            aria-label={nombre === null ? libelle : `${libelle} (${nombre} opération${nombre > 1 ? 's' : ''})`}
+            aria-label={nombre === null ? libelle : `${libelle} (${nombre} opération${nombre > 1 ? 's' : ''} dans les 7 prochains jours)`}
             onClick={() => choisirVue(v)}
           >
             <span>{libelle}</span>
@@ -248,8 +259,8 @@ export function Compte() {
           <>
             <h2 className="sr-only">Opérations à venir</h2>
             <p className="a-venir-resume">
-              Dans les 30 prochains jours : <strong className="montant-plus">+ {fmt(aVenirTotaux.entrees)}</strong> qui entrent,{' '}
-              <strong className="montant-moins">− {fmt(aVenirTotaux.sorties)}</strong> qui sortent. Solde prévu :{' '}
+              Dans les 30 prochains jours : <strong className="montant-plus">+ {fmt(aVenirTotaux.entrees)}</strong> qui entrent,{' '}
+              <strong className="montant-moins">− {fmt(aVenirTotaux.sorties)}</strong> qui sortent. Solde prévu :{' '}
               <strong className={soldePrevu < 0 ? 'montant-moins' : 'montant-plus'}>{soldePrevu < 0 ? `− ${fmt(-soldePrevu)}` : fmt(soldePrevu)}</strong>.
             </p>
             {aVenir.length === 0 ? (
@@ -279,10 +290,10 @@ export function Compte() {
               <TextField label="Rechercher une opération" type="search" value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Libellé, catégorie…" />
               <p className="operations-totaux" aria-live="polite">
                 <span>
-                  Entrées : <strong className="montant-plus">+ {fmt(entrees)}</strong>
+                  Entrées : <strong className="montant-plus">+ {fmt(entrees)}</strong>
                 </span>
                 <span>
-                  Sorties : <strong className="montant-moins">− {fmt(sorties)}</strong>
+                  Sorties : <strong className="montant-moins">− {fmt(sorties)}</strong>
                 </span>
                 <span className="muted">depuis le 1er {monthLabel(monthOf(debut))}</span>
               </p>
@@ -298,7 +309,7 @@ export function Compte() {
                     <h3 className="releve-date">
                       <span>{dayHeader(j.date, today)}</span>
                       <span className="releve-solde">
-                        Solde : <strong className={j.solde < 0 ? 'montant-moins' : 'montant-plus'}>{j.solde < 0 ? `− ${fmt(-j.solde)}` : fmt(j.solde)}</strong>
+                        Solde : <strong className={j.solde < 0 ? 'montant-moins' : 'montant-plus'}>{j.solde < 0 ? `− ${fmt(-j.solde)}` : fmt(j.solde)}</strong>
                       </span>
                     </h3>
                     <ul className="operations">
