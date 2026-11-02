@@ -18,6 +18,39 @@ const TYPE_LABELS: Record<TransactionType, string> = {
   epargne: 'Épargne',
 };
 
+/** Libellés des puces de filtre (au pluriel). */
+const TYPE_PUCES: ['' | TransactionType, string][] = [
+  ['', 'Tous'],
+  ['revenu', 'Revenus'],
+  ['charge', 'Charges fixes'],
+  ['depense', 'Dépenses'],
+  ['epargne', 'Épargne'],
+];
+
+const PERIODE_PUCES: ['mois' | 'plage' | 'tout', string][] = [
+  ['mois', 'Un mois'],
+  ['plage', 'Entre deux dates'],
+  ['tout', 'Tout l’historique'],
+];
+
+/** Groupe de puces à choix unique : un geste au lieu d'ouvrir une liste. */
+function Puces<T extends string>({ label, options, value, onChange }: { label: string; options: [T, string][]; value: T; onChange: (v: T) => void }) {
+  return (
+    <div className="filtre-puces">
+      <p className="filtre-puces-titre" id={`puces-${label}`}>
+        {label}
+      </p>
+      <div className="chips" role="group" aria-labelledby={`puces-${label}`}>
+        {options.map(([v, l]) => (
+          <button key={v || 'tous'} type="button" className={`chip chip-petit ${value === v ? 'chip-on' : ''}`} aria-pressed={value === v} onClick={() => onChange(v)}>
+            {l}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Delta({ value, goodWhenUp }: { value: Cents; goodWhenUp: boolean }) {
   const { fmt } = useApp();
   if (value === 0) return <span className="delta">= stable</span>;
@@ -73,25 +106,6 @@ function Transactions() {
         <div className="filters">
           {/* La recherche d'abord : c'est l'action la plus courante, visible sans défiler sur mobile. */}
           <TextField label="Rechercher" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Libellé, catégorie, note…" />
-          <SelectField label="Période" value={mode} onChange={(e) => setMode(e.target.value as typeof mode)}>
-            <option value="mois">Un mois</option>
-            <option value="plage">Entre deux dates</option>
-            <option value="tout">Tout l’historique</option>
-          </SelectField>
-          {mode === 'plage' && (
-            <>
-              <TextField label="Du" type="date" value={from} onChange={(e) => setFrom(e.target.value)} error={rangeError} />
-              <TextField label="Au" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-            </>
-          )}
-          <SelectField label="Type" value={type} onChange={(e) => setType(e.target.value as typeof type)}>
-            <option value="">Tous les types</option>
-            {(Object.keys(TYPE_LABELS) as TransactionType[]).map((t) => (
-              <option key={t} value={t}>
-                {TYPE_LABELS[t]}
-              </option>
-            ))}
-          </SelectField>
           <SelectField label="Catégorie" value={category} onChange={(e) => setCategory(e.target.value)}>
             <option value="">Toutes les catégories</option>
             {(['income', 'fixed', 'variable'] as const).map((kind) => (
@@ -107,6 +121,17 @@ function Transactions() {
             ))}
           </SelectField>
         </div>
+        {/* Période et type en puces : un geste, le choix actif reste visible */}
+        <div className="filtres-puces">
+          <Puces label="Période" options={PERIODE_PUCES} value={mode} onChange={setMode} />
+          <Puces label="Type" options={TYPE_PUCES} value={type} onChange={setType} />
+        </div>
+        {mode === 'plage' && (
+          <div className="filters filters-dates">
+            <TextField label="Du" type="date" value={from} onChange={(e) => setFrom(e.target.value)} error={rangeError} />
+            <TextField label="Au" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+          </div>
+        )}
         {mode === 'mois' && <MonthSwitcher />}
         {filtresActifs > 0 && (
           <div className="filtres-actifs">

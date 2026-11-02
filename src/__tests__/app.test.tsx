@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen, within, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { AppProvider } from '../state/AppState';
@@ -27,7 +27,7 @@ const stored = (): AppData => JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'n
 
 describe('configuration initiale', () => {
   it('parcours complet jusqu’au tableau de bord', async () => {
-    const user = renderApp(emptyData());
+    const user = renderApp(emptyData(), '/bienvenue');
     expect(screen.getByRole('heading', { name: 'Bienvenue sur SoldeClair' })).toBeInTheDocument();
 
     // Prénom obligatoire
@@ -74,7 +74,7 @@ describe('configuration initiale', () => {
   });
 
   it('chargement d’un profil de démonstration', async () => {
-    const user = renderApp(emptyData());
+    const user = renderApp(emptyData(), '/bienvenue');
     await user.selectOptions(screen.getByLabelText('Profil de démonstration'), 'salarie');
     await user.click(screen.getByRole('button', { name: 'Charger la démonstration' }));
     expect(await screen.findByRole('heading', { name: 'Bonjour Camille (démo)' })).toBeInTheDocument();
@@ -89,7 +89,8 @@ describe('tableau de bord', () => {
     );
     const stat = screen.getByText('Solde disponible').parentElement!;
     expect(norm(stat.textContent)).toContain('821,51 €');
-    expect(screen.getByText(/Budget « Alimentation » dépassé/)).toBeInTheDocument();
+    // La limite dépassée devient une action dans « À faire »
+    expect(screen.getByText('Votre budget « Alimentation » est dépassé de 8,00 €.', { normalizer: norm })).toBeInTheDocument();
   });
 
   it('ajout rapide d’une dépense, totaux mis à jour et sauvegardés', async () => {
@@ -175,8 +176,8 @@ describe('améliorations de simplicité (recherche et audit)', () => {
     expect(norm(calcul.textContent)).toContain('+ Revenus du mois1 700,50 €');
     expect(norm(calcul.textContent)).toContain('= Solde disponible du mois821,51 €');
     expect(norm(screen.getByText(/Divisé par 19 jours restants/).textContent)).toContain('environ 43,23 € par jour');
-    // Panneau chiffré : valeur réelle du jour, unité séparée
-    expect(norm(document.querySelector('.hero-figure')?.textContent)).toBe('43,23 €');
+    // Une seule carte principale : la phrase, les repères et le calcul (plus de panneau qui répète les montants)
+    expect(document.querySelector('.hero-figure')).toBeNull();
     expect(screen.getByText(/46 % des revenus déjà dépensés/)).toBeInTheDocument();
   });
 
@@ -233,13 +234,59 @@ describe('améliorations de simplicité (recherche et audit)', () => {
   });
 
   it('configuration : lien direct vers le profil de démonstration', async () => {
-    const user = renderApp(emptyData());
+    const user = renderApp(emptyData(), '/bienvenue');
     await user.click(screen.getByRole('button', { name: 'Essayer avec un profil de démonstration' }));
     expect(document.activeElement).toHaveTextContent('Ou bien…');
   });
 
   it('nouveau profil : thème clair par défaut', () => {
     expect(emptyData().settings.theme).toBe('light');
+  });
+});
+
+describe('page d’accueil (présentation)', () => {
+  it('nouveau visiteur : la présentation d’abord, puis la configuration avec « Commencer »', async () => {
+    const user = renderApp(emptyData());
+    expect(await screen.findByRole('heading', { level: 1, name: 'Votre budget devient enfin clair.' })).toBeInTheDocument();
+    // Les grandes sections, dans l'ordre prévu
+    const titres = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+    expect(titres).toEqual([
+      'L’essentiel, sans complication.',
+      'Sachez ce qu’il vous reste, vraiment.',
+      'Anticipez ce qui arrive.',
+      'Avancez vers vos projets, pas à pas.',
+      'Avant d’acheter, simulez.',
+      'Adapté à votre situation.',
+      'Vos données restent sur votre appareil.',
+      'Commencer avec SoldeClair',
+    ]);
+    expect(screen.getByRole('contentinfo')).toBeInTheDocument();
+    await user.click(screen.getAllByRole('button', { name: 'Commencer' })[0]);
+    expect(await screen.findByRole('heading', { name: 'Bienvenue sur SoldeClair' })).toBeInTheDocument();
+  });
+
+  it('« Essayer avec un profil de démonstration » mène à la démonstration de la configuration', async () => {
+    const user = renderApp(emptyData());
+    await user.click(await screen.findByRole('button', { name: 'Essayer avec un profil de démonstration' }));
+    expect(await screen.findByRole('heading', { name: 'Ou bien…' })).toHaveFocus();
+    expect(screen.getByLabelText('Profil de démonstration')).toBeInTheDocument();
+  });
+
+  it('avec des données : le tableau de bord directement, et la présentation propose d’y retourner', async () => {
+    renderApp(fixture(), '/');
+    expect(screen.getByRole('heading', { name: 'Bonjour Test' })).toBeInTheDocument();
+    cleanup();
+    const user = renderApp(fixture(), '/presentation');
+    const boutons = await screen.findAllByRole('button', { name: 'Accéder à mon tableau de bord' });
+    expect(boutons).toHaveLength(2); // introduction et appel final
+    expect(screen.queryByRole('button', { name: 'Essayer avec un profil de démonstration' })).not.toBeInTheDocument();
+    await user.click(boutons[0]);
+    expect(await screen.findByRole('heading', { name: 'Bonjour Test' })).toBeInTheDocument();
+  });
+
+  it('l’application propose un lien vers la présentation', () => {
+    renderApp();
+    expect(screen.getByRole('link', { name: 'Voir la présentation de SoldeClair' })).toHaveAttribute('href', '/presentation');
   });
 });
 
@@ -259,12 +306,12 @@ describe('identité claire et améliorations v2', () => {
     expect(screen.queryByText(/filtre actif/)).not.toBeInTheDocument();
     await user.type(screen.getByLabelText('Rechercher'), 'introuvable');
     expect(screen.getByText('1 filtre actif')).toBeInTheDocument();
-    await user.selectOptions(screen.getByLabelText('Type'), 'depense');
+    await user.click(within(screen.getByRole('group', { name: 'Type' })).getByRole('button', { name: 'Dépenses' }));
     expect(screen.getByText('2 filtres actifs')).toBeInTheDocument();
     expect(screen.getByText('Aucun mouvement ne correspond à ces critères.')).toBeInTheDocument();
     await user.click(screen.getAllByRole('button', { name: 'Effacer les filtres' })[0]);
     expect(screen.getByLabelText('Rechercher')).toHaveValue('');
-    expect(screen.getByLabelText('Type')).toHaveValue('');
+    expect(within(screen.getByRole('group', { name: 'Type' })).getByRole('button', { name: 'Tous' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.queryByText(/filtres? actifs?/)).not.toBeInTheDocument();
     expect(screen.getByText('Concert')).toBeInTheDocument();
   });
@@ -321,23 +368,46 @@ describe('améliorations validées : ajout rapide, raccourcis, discrétion, simp
     expect(norm(screen.getByText('Solde disponible').parentElement!.textContent)).toContain('821,51 €');
   });
 
-  it('tableau de bord : quatre chiffres visibles, le reste dans « Détail du mois »', () => {
+  it('tableau de bord : ordre prévu, au plus quatre chiffres principaux, le reste dans « Détail du mois »', () => {
     renderApp();
-    const essentiels = document.querySelector('.stats-grid')!;
-    expect(Array.from(essentiels.querySelectorAll('.stat-label')).map((e) => e.textContent)).toEqual([
-      'Revenus',
-      'Total des dépenses',
-      'Solde disponible',
-      'Épargné ce mois',
-    ]);
+    // Carte principale, puis À venir, Ce mois-ci, Épargne, À faire, Estimation, ajout rapide
+    const titres = Array.from(document.querySelectorAll('.dashboard-grid .card-title')).map((e) => e.textContent);
+    expect(titres).toEqual(['À venir', 'Ce mois-ci', 'Épargne du mois', 'À faire', 'Estimation des 30 prochains jours', 'Ajouter une dépense']);
+    // Hors « Détail du mois », deux chiffres seulement en plus de la phrase principale
+    const horsDetail = Array.from(document.querySelectorAll('.stat-label')).filter((e) => !e.closest('.detail-mois'));
+    expect(horsDetail.map((e) => e.textContent)).toEqual(['Revenus', 'Total des dépenses']);
+    // Un seul graphique visible
+    expect(Array.from(document.querySelectorAll('.chart, .hbar-list, figure')).filter((e) => !e.closest('.detail-mois')).length).toBeLessThanOrEqual(1);
     const detail = screen.getByText('Détail du mois').closest('details')!;
     expect(detail).not.toHaveAttribute('open');
     expect(Array.from(detail.querySelectorAll('.stat-label')).map((e) => e.textContent)).toEqual([
       'Charges fixes',
       'Dépenses variables',
+      'Solde disponible',
+      'Épargné ce mois',
       'Reste à vivre par jour',
       'Prévision fin de mois',
     ]);
+  });
+
+  it('tableau de bord : « Ignorer » masque une action et le choix est enregistré', async () => {
+    const user = renderApp();
+    const carte = screen.getByRole('heading', { name: 'À faire' }).closest('section, .card')!;
+    expect(within(carte as HTMLElement).getAllByRole('listitem')).toHaveLength(3);
+    await user.click(screen.getByRole('button', { name: /^Ignorer : Faites une sauvegarde/ }));
+    expect(screen.queryByText('Faites une sauvegarde de vos données.')).not.toBeInTheDocument();
+    await waitFor(() => expect(stored().settings.dismissedActions).toEqual(['sauvegarde:2026-11']));
+  });
+
+  it('tableau de bord : estimation à 7, 15 et 30 jours, signalée comme estimation', () => {
+    renderApp();
+    const carte = screen.getByRole('heading', { name: 'Estimation des 30 prochains jours' }).closest('.card')! as HTMLElement;
+    expect(within(carte).getByText('Estimation')).toBeInTheDocument();
+    expect(Array.from(carte.querySelectorAll('.prevision-points dt')).map((e) => e.textContent)).toEqual(['Dans 7 jours', 'Dans 15 jours', 'Dans 30 jours']);
+    expect(norm(carte.querySelector('.prevision-points')!.textContent)).toContain('768,69 €');
+    expect(norm(carte.querySelector('.prevision-phrase')!.textContent)).toBe(
+      'Si tout se passe comme prévu, il vous resterait environ 1 426 € dans 30 jours.',
+    );
   });
 
   it('budgets : les catégories sans limite sont regroupées en une liste compacte', async () => {
@@ -446,7 +516,8 @@ describe('paramètres et données', () => {
     await user.type(within(second).getByLabelText('Confirmation'), 'effacer');
     expect(confirmBtn).toBeEnabled();
     await user.click(confirmBtn);
-    expect(await screen.findByRole('heading', { name: 'Bienvenue sur SoldeClair' })).toBeInTheDocument();
+    // Après l'effacement : retour à la présentation, comme un nouveau visiteur
+    expect(await screen.findByRole('heading', { level: 1, name: 'Votre budget devient enfin clair.' })).toBeInTheDocument();
     await waitFor(() => expect(localStorage.getItem(STORAGE_KEY)).toBeNull());
   });
 
@@ -473,10 +544,26 @@ describe('historique et bilan', () => {
   it('filtre par type et recherche', async () => {
     const user = renderApp(fixture(), '/historique');
     expect(screen.getByText('9 transaction(s)')).toBeInTheDocument();
-    await user.selectOptions(screen.getByLabelText('Type'), 'depense');
+    await user.click(within(screen.getByRole('group', { name: 'Type' })).getByRole('button', { name: 'Dépenses' }));
     expect(screen.getByText('3 transaction(s)')).toBeInTheDocument();
+    // Période en puces : tout l'historique en un geste
+    await user.click(within(screen.getByRole('group', { name: 'Période' })).getByRole('button', { name: 'Tout l’historique' }));
+    expect(screen.getByText('4 transaction(s)')).toBeInTheDocument();
+    await user.click(within(screen.getByRole('group', { name: 'Période' })).getByRole('button', { name: 'Un mois' }));
     await user.type(screen.getByLabelText('Rechercher'), 'concert');
     expect(screen.getByText('1 transaction(s)')).toBeInTheDocument();
+  });
+
+  it('budgets : l’essentiel en une phrase, et une piste quand la limite est dépassée', async () => {
+    const user = renderApp(fixture(), '/budgets');
+    const alim = screen.getByRole('heading', { name: 'Alimentation' }).closest('.card')! as HTMLElement;
+    expect(norm(alim.querySelector('.budget-phrase')!.textContent)).toBe('58,00 € dépensés sur 50,00 € · dépassement de 8,00 €');
+    expect(within(alim).getByText(/Vous pouvez consulter les dépenses concernées ou ajuster cette limite pour le mois/)).toBeInTheDocument();
+    const loisirs = screen.getByRole('heading', { name: 'Loisirs' }).closest('.card')! as HTMLElement;
+    expect(norm(loisirs.querySelector('.budget-phrase')!.textContent)).toBe('60,00 € dépensés sur 80,00 € (75 %) · il reste 20,00 €');
+    // « Voir les dépenses » ouvre la liste filtrée sur la catégorie
+    await user.click(within(alim).getByRole('link', { name: 'Voir les dépenses' }));
+    expect(screen.getByLabelText('Catégorie')).toHaveValue('c-alim');
   });
 
   it('affiche le bilan avec la comparaison au mois précédent', async () => {

@@ -1,4 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import { categoryBudgets, type CategoryBudgetLine } from '../lib/budget';
 import { monthLabel } from '../lib/dates';
@@ -106,6 +107,20 @@ export function Budgets() {
               </div>
               {l.budget !== null && (
                 <>
+                  {/* L'essentiel en une phrase : dépensé, limite, reste (comme une enveloppe) */}
+                  <p className="budget-phrase">
+                    {(l.remaining ?? 0) < 0 ? (
+                      <>
+                        <strong>{fmt(l.spent)}</strong> dépensés sur {fmt(l.budget)} · dépassement de{' '}
+                        <strong className="texte-negatif">{fmt(-(l.remaining ?? 0))}</strong>
+                      </>
+                    ) : (
+                      <>
+                        <strong>{fmt(l.spent)}</strong> dépensés sur {fmt(l.budget)} ({l.pct}
+                        {'\u00a0'}%) · il reste <strong>{fmt(l.remaining ?? 0)}</strong>
+                      </>
+                    )}
+                  </p>
                   <ProgressBar
                     value={l.spent}
                     max={l.budget}
@@ -113,24 +128,15 @@ export function Budgets() {
                     label={`Budget ${l.category.name}`}
                     valueText={`${l.pct}\u00a0% utilisé, ${fmt(l.spent)} sur ${fmt(l.budget)}`}
                   />
-                  <dl className="budget-figures">
-                    <div>
-                      <dt>Prévu</dt>
-                      <dd>{fmt(l.budget)}</dd>
-                    </div>
-                    <div>
-                      <dt>Dépensé</dt>
-                      <dd>{fmt(l.spent)}</dd>
-                    </div>
-                    <div>
-                      <dt>{(l.remaining ?? 0) < 0 ? 'Dépassement' : 'Restant'}</dt>
-                      <dd className={(l.remaining ?? 0) < 0 ? 'texte-negatif' : ''}>{fmt(Math.abs(l.remaining ?? 0))}</dd>
-                    </div>
-                    <div>
-                      <dt>Utilisé</dt>
-                      <dd>{l.pct}{'\u00a0'}%</dd>
-                    </div>
-                  </dl>
+                  {l.level === 'depasse' && (
+                    <p className="budget-conseil">
+                      Votre budget {l.category.name.toLocaleLowerCase('fr')} est dépassé. Vous pouvez consulter les dépenses concernées ou ajuster cette
+                      limite pour le mois.{' '}
+                      <Link to={`/depenses?categorie=${l.category.id}`} className="link">
+                        Voir les dépenses
+                      </Link>
+                    </p>
+                  )}
                 </>
               )}
             </Card>

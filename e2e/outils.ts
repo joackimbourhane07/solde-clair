@@ -30,7 +30,7 @@ export async function preparer(page: Page): Promise<string[]> {
 }
 
 export async function chargerDemo(page: Page, profil: 'etudiant' | 'alternant' | 'salarie' = 'salarie') {
-  await page.goto('./');
+  await page.goto('./#/bienvenue');
   await page.getByLabel('Profil de démonstration').selectOption(profil);
   await page.getByRole('button', { name: 'Charger la démonstration' }).click();
   await expect(page.getByRole('heading', { name: /^Bonjour / })).toBeVisible();
@@ -43,7 +43,8 @@ export async function aller(page: Page, route: string) {
 
 export async function stat(page: Page, libelle: string) {
   const carte = page.locator('.stat').filter({ has: page.locator('.stat-label', { hasText: new RegExp(`^${libelle}$`) }) });
-  return norm(await carte.locator('.stat-value').innerText());
+  // textContent : le chiffre peut se trouver dans « Détail du mois », replié par défaut
+  return norm(await carte.locator('.stat-value').textContent());
 }
 
 /** Débordements horizontaux et textes sortant de l'écran. */

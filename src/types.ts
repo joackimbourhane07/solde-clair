@@ -112,6 +112,8 @@ export interface Settings {
   hideAmounts?: boolean;
   /** Version de l'apparence (2 = thème clair par défaut). */
   appearanceVersion?: number;
+  /** Actions suggérées que la personne a choisi d'ignorer (tableau de bord). */
+  dismissedActions?: string[];
 }
 
 export interface AppData {

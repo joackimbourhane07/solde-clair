@@ -1,4 +1,5 @@
-import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { HashRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Toasts } from './components/ui';
 import { useApp } from './state/AppState';
@@ -13,22 +14,46 @@ import { Simulator } from './pages/Simulator';
 import { History } from './pages/History';
 import { SettingsPage } from './pages/Settings';
 
+// Page de présentation : chargée séparément, les personnes qui ont déjà des données ne la téléchargent pas.
+const Accueil = lazy(() => import('./pages/Accueil'));
+
+function PagePresentation() {
+  return (
+    <Suspense fallback={<div className="chargement" role="status" aria-label="Chargement de la présentation" />}>
+      <Accueil />
+    </Suspense>
+  );
+}
+
+function AppLayout() {
+  return (
+    <Layout>
+      <Outlet />
+    </Layout>
+  );
+}
+
 export function AppRoutes() {
   const { data } = useApp();
   if (!data.profile) {
+    // Nouveau visiteur : la présentation d'abord, la configuration ensuite.
     return (
       <>
         <Routes>
+          <Route path="/" element={<PagePresentation />} />
+          <Route path="/presentation" element={<PagePresentation />} />
           <Route path="/bienvenue" element={<Onboarding />} />
-          <Route path="*" element={<Navigate to="/bienvenue" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Toasts />
       </>
     );
   }
+  // Données présentes : le tableau de bord directement ; la présentation reste accessible.
   return (
-    <Layout>
-      <Routes>
+    <Routes>
+      <Route path="/presentation" element={<PagePresentation />} />
+      <Route element={<AppLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/revenus" element={<Incomes />} />
         <Route path="/depenses" element={<Expenses />} />
@@ -39,8 +64,8 @@ export function AppRoutes() {
         <Route path="/historique" element={<History />} />
         <Route path="/parametres" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Layout>
+      </Route>
+    </Routes>
   );
 }
 

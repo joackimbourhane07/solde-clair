@@ -49,6 +49,8 @@
   --surface: var(--dp-color-fond);
   --surface-2: var(--dp-color-fond-2);
   --surface-hover: var(--dp-color-fond-survol);
+  --card: var(--dp-color-fond-2); /* panneaux : gris très clair, sans bordure */
+  --track: var(--dp-color-bordure); /* pistes des barres, visibles sur blanc et sur gris */
   --text: var(--dp-color-texte);
   --text-2: #3f3e3a;
   --muted: #6b6a66; /* 5,1:1 sur blanc (au lieu de 4,48:1 pour #787774) */
@@ -86,7 +88,7 @@
   /* Graphiques : bleu pour la série principale, vert pour la seconde */
   --serie-1: var(--dp-color-bleu);
   --serie-2: var(--dp-color-vert);
-  --chart-grid: var(--dp-color-fond-survol);
+  --chart-grid: #e3e3e0;
   --chart-axis: #d3d3d0;
 
   --radius: var(--dp-radius-panel);
@@ -108,6 +110,8 @@
     --surface: #202020;
     --surface-2: #2a2a2a;
     --surface-hover: #313131;
+    --card: #202020;
+    --track: #333333;
     --text: #e6e6e4;
     --text-2: #cfcfcb;
     --muted: #a5a4a0;
@@ -153,6 +157,8 @@
   --surface: #202020;
   --surface-2: #2a2a2a;
   --surface-hover: #313131;
+  --card: #202020;
+  --track: #333333;
   --text: #e6e6e4;
   --text-2: #cfcfcb;
   --muted: #a5a4a0;
@@ -594,8 +600,8 @@ strong {
 /* ------------------------------ Cartes ------------------------------ */
 
 .card {
-  background: var(--surface);
-  border: var(--dp-border-hairline) solid var(--border);
+  background: var(--card);
+  border: 0;
   border-radius: var(--radius);
   padding: 18px;
   box-shadow: var(--shadow);
@@ -702,8 +708,7 @@ strong {
   flex-direction: column;
   gap: 14px;
   padding: 22px;
-  background: var(--surface);
-  border: var(--dp-border-hairline) solid var(--border);
+  background: var(--card);
   border-radius: var(--dp-radius-panel);
 }
 
@@ -865,10 +870,8 @@ strong {
   display: grid;
   gap: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  /* Grille réglée : chaque cellule trace son filet droit et inférieur ;
-     le cadre masque ceux du bord. Une case vide reste de la couleur du panneau. */
-  background: var(--surface);
-  border: var(--dp-border-hairline) solid var(--border);
+  /* Tuiles grises séparées par un filet blanc (fond de page) ; pas de cadre. */
+  background: var(--card);
   border-radius: var(--dp-radius-panel);
   overflow: hidden;
 }
@@ -891,12 +894,12 @@ strong {
 }
 
 .stat {
-  background: var(--surface);
+  background: var(--card);
   padding: 16px 18px;
   min-width: 0;
   box-shadow:
-    var(--dp-border-hairline) 0 0 var(--border),
-    0 var(--dp-border-hairline) 0 var(--border);
+    2px 0 0 var(--bg),
+    0 2px 0 var(--bg);
 }
 
 .stat-label {
@@ -1148,7 +1151,7 @@ strong {
 }
 
 .input:disabled {
-  background: var(--surface-2);
+  background: var(--surface-hover);
   color: var(--muted);
 }
 
@@ -1672,8 +1675,7 @@ ol.rank-list li > span {
   position: relative;
   height: 12px;
   border-radius: var(--dp-radius-control);
-  background: var(--surface-2);
-  border: var(--dp-border-hairline) solid var(--border);
+  background: var(--track);
   overflow: hidden;
 }
 
@@ -1710,7 +1712,7 @@ ol.rank-list li > span {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: var(--surface);
+  background: var(--bg);
   opacity: 0.9;
 }
 
@@ -1725,7 +1727,7 @@ ol.rank-list li > span {
 }
 
 .badge-sans {
-  background: var(--surface-2);
+  background: var(--surface-hover);
   color: var(--muted);
 }
 
@@ -1908,7 +1910,7 @@ ol.rank-list li > span {
   align-items: center;
   flex-wrap: wrap;
   gap: 4px;
-  background: var(--surface-2);
+  background: var(--surface-hover);
   border-radius: var(--dp-radius-control);
   padding: 4px;
   align-self: flex-start;
@@ -1926,7 +1928,7 @@ ol.rank-list li > span {
   display: flex;
   gap: 4px;
   padding: 4px;
-  background: var(--surface-2);
+  background: var(--surface-hover);
   border-radius: var(--dp-radius-control);
   overflow-x: auto;
   margin-bottom: 4px;
@@ -2184,7 +2186,7 @@ ol.rank-list li > span {
 }
 
 .chart .hover-band {
-  fill: var(--surface-2);
+  fill: var(--surface-hover);
 }
 
 .chart .bar.serie-1 {
@@ -2210,7 +2212,7 @@ ol.rank-list li > span {
 
 .chart .dot {
   fill: var(--serie-1);
-  stroke: var(--surface);
+  stroke: var(--card);
   stroke-width: 2;
 }
 
@@ -2268,7 +2270,7 @@ ol.rank-list li > span {
 .hbar-track {
   height: 10px;
   border-radius: 999px;
-  background: var(--surface-2);
+  background: var(--track);
 }
 
 .hbar-fill {
@@ -2489,7 +2491,7 @@ ol.rank-list li > span {
   gap: 10px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   padding: 12px;
-  background: var(--surface-2);
+  background: var(--bg);
   border-radius: var(--dp-radius-panel);
   align-items: end;
 }
@@ -2845,5 +2847,212 @@ ol.rank-list li > span {
   font-size: var(--dp-typography-supporting);
   line-height: var(--dp-typography-reading-leading);
   margin-bottom: 4px;
+}
+
+/* Logo cliquable (retour à la présentation) */
+.logo-lien {
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+.chargement {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* ------------------- Tableau de bord : nouvel ordre (v2) ------------------- */
+
+/* Carte principale : la phrase du mois, les repères et le calcul, dans un seul panneau */
+.hero.carte-principale {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  padding: clamp(20px, 4vw, 32px);
+  background: var(--card);
+  border-radius: 16px;
+}
+
+.carte-principale .hero-text {
+  max-width: 30ch;
+}
+
+.carte-principale .progress {
+  max-width: 560px;
+}
+
+/* Tuiles blanches à l'intérieur d'un panneau gris */
+.card .stats-grid {
+  background: var(--bg);
+}
+
+.card .stat {
+  background: var(--bg);
+  box-shadow:
+    2px 0 0 var(--card),
+    0 2px 0 var(--card);
+}
+
+.stats-duo {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 8px;
+}
+
+@media (min-width: 820px) {
+  .stats-duo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* À faire : 3 actions au maximum, chacune dans une tuile blanche */
+.actions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.action-titre {
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.action-detail {
+  color: var(--muted);
+  font-size: var(--dp-typography-supporting);
+  line-height: 1.5;
+}
+
+.action-boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.tag-priorite-1 {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.tag-priorite-2 {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.tag-priorite-3 {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+.actions-plus {
+  margin-top: 10px;
+  font-size: var(--dp-typography-supporting);
+}
+
+/* Estimation 7 / 15 / 30 jours */
+.prevision-phrase {
+  font-weight: 500;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.prevision-points {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  margin: 0 0 12px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.prevision-points div {
+  background: var(--bg);
+  padding: 12px;
+  min-width: 0;
+}
+
+.prevision-points dt {
+  font-size: var(--dp-typography-metadata);
+  color: var(--muted);
+}
+
+.prevision-points dd {
+  margin: 4px 0 0;
+  font-weight: 600;
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+
+.prevision-points .negatif dd {
+  color: var(--danger);
+}
+
+.prevision-card .disclosure {
+  margin-bottom: 12px;
+}
+
+/* Ajout rapide : sur ordinateur seulement (sur mobile, le bouton « + » central) */
+@media (max-width: 959px) {
+  .dashboard-grid .quick-add {
+    display: none;
+  }
+}
+
+.detail-mois .card {
+  margin-top: 16px;
+}
+
+/* Budgets : l'essentiel en une phrase */
+.budget-phrase {
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.budget-phrase strong {
+  font-weight: 600;
+}
+
+.budget-conseil {
+  margin-top: 10px;
+  color: var(--text-2);
+  font-size: var(--dp-typography-supporting);
+  line-height: 1.55;
+}
+
+/* Historique : filtres en puces */
+.filtres-puces {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.filtre-puces-titre {
+  font-weight: 500;
+  font-size: var(--dp-typography-supporting);
+  margin-bottom: 6px;
+}
+
+.filters-dates {
+  margin-top: 0;
+}
+
+@media (min-width: 640px) {
+  .filters-dates {
+    grid-template-columns: repeat(2, minmax(0, 220px));
+  }
 }
 

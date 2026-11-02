@@ -15,6 +15,15 @@ for (const format of FORMATS) {
       await page.setViewportSize(format.viewport);
       await page.emulateMedia({ colorScheme: theme });
       const erreurs = await preparer(page);
+      // Présentation (nouveau visiteur)
+      await page.goto('./');
+      await expect(page.getByRole('heading', { level: 1, name: 'Votre budget devient enfin clair.' })).toBeVisible();
+      if (theme === 'dark') await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
+      expect(await problemesDeMiseEnPage(page), 'Mise en page de la présentation').toEqual([]);
+      if (format.axe) {
+        const res = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+        expect(res.violations.map((v) => `${v.id} : ${v.help}`), 'Accessibilité de la présentation').toEqual([]);
+      }
       await chargerDemo(page);
       // Le thème clair est imposé par défaut : on choisit explicitement le thème testé.
       await aller(page, 'parametres');
@@ -34,13 +43,17 @@ for (const format of FORMATS) {
   }
 }
 
-test('petit écran : onglets sans mot coupé, bilan et formulaire rapide lisibles', async ({ page }) => {
+test('petit écran : onglets sans mot coupé, bilan lisible, ajout au pouce', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await preparer(page);
   await chargerDemo(page);
-  // Formulaire rapide : un champ par ligne pour que la date reste entière
-  const colonnes = await page.locator('.form-quick .form-row').evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length);
-  expect(colonnes).toBe(1);
+  // Ajout d'une dépense : bouton « + » dans la barre du bas (le formulaire du tableau de bord est réservé à l'ordinateur)
+  await expect(page.getByRole('form', { name: 'Ajout rapide d’une dépense' })).toBeHidden();
+  const plus = page.locator('.bottom-nav').getByRole('button', { name: 'Ajouter une dépense' });
+  await expect(plus).toBeVisible();
+  const cible = await plus.boundingBox();
+  expect(cible!.y + cible!.height).toBeGreaterThan(640 - 120); // à portée du pouce, en bas de l'écran
+  expect(cible!.width).toBeGreaterThanOrEqual(44);
   // Onglets des catégories : chaque mot tient sur une ligne
   await aller(page, 'parametres');
   const coupes = await page.locator('.tab').evaluateAll((tabs) =>
@@ -63,7 +76,7 @@ test('petit écran : onglets sans mot coupé, bilan et formulaire rapide lisible
 test('configuration sur mobile : chaque montant du récapitulatif tient sur une ligne', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await preparer(page);
-  await page.goto('./');
+  await page.goto('./#/bienvenue');
   await page.getByLabel('Prénom ou pseudonyme').fill('Test');
   await page.getByRole('button', { name: /Continuer/ }).click();
   await page.getByLabel('Montant mensuel').nth(0).fill('1 250,00');
