@@ -1,0 +1,454 @@
+import { describe, expect, it } from 'vitest';
+import { render, screen, within, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
+import { AppProvider } from '../state/AppState';
+import { AppRoutes } from '../App';
+import type { AppData } from '../types';
+import { STORAGE_KEY, emptyData, exportJSON, parseBackup } from '../lib/storage';
+import { fixture, TODAY } from '../test/fixtures';
+
+const norm = (s: string | null | undefined) => (s ?? '').replace(/[  ]/g, ' ');
+
+function renderApp(data: AppData = fixture(), path = '/') {
+  const user = userEvent.setup();
+  render(
+    <AppProvider initialData={data} today={TODAY}>
+      <MemoryRouter initialEntries={[path]}>
+        <AppRoutes />
+      </MemoryRouter>
+    </AppProvider>,
+  );
+  return user;
+}
+
+const stored = (): AppData => JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
+
+describe('configuration initiale', () => {
+  it('parcours complet jusqu’au tableau de bord', async () => {
+    const user = renderApp(emptyData());
+    expect(screen.getByRole('heading', { name: 'Bienvenue sur SoldeClair' })).toBeInTheDocument();
+
+    // Prénom obligatoire
+    await user.click(screen.getByRole('button', { name: /Continuer/ }));
+    expect(screen.getByText('Indiquez un prénom ou un pseudonyme.')).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('Prénom ou pseudonyme'), 'Sam');
+    await user.click(screen.getByLabelText('Alternant·e'));
+    await user.click(screen.getByRole('button', { name: /Continuer/ }));
+
+    // Revenus
+    expect(screen.getByRole('heading', { name: 'Vos revenus mensuels' })).toBeInTheDocument();
+    await user.type(screen.getAllByLabelText('Montant mensuel')[0], '1200');
+    await user.click(screen.getByRole('button', { name: /Continuer/ }));
+
+    // Charges fixes : montant invalide refusé
+    const amounts = screen.getAllByLabelText('Montant mensuel');
+    await user.type(amounts[0], 'abc');
+    await user.click(screen.getByRole('button', { name: /Continuer/ }));
+    expect(screen.getByText(/Montant non reconnu/)).toBeInTheDocument();
+    await user.clear(amounts[0]);
+    await user.type(amounts[0], '450');
+    await user.click(screen.getByRole('button', { name: /Continuer/ }));
+
+    // Dépenses et épargne
+    await user.type(screen.getByLabelText('Estimation de vos dépenses variables par mois'), '300');
+    await user.type(screen.getByLabelText('Objectif d’épargne mensuel'), '100');
+    await user.click(screen.getByRole('button', { name: /Continuer/ }));
+
+    // Catégories proposées pour un alternant
+    expect(screen.getByText('Carburant')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Continuer/ }));
+
+    // Récapitulatif : 1200 − 450 − 300 − 100 = 350
+    expect(norm(screen.getByText('Marge estimée').nextSibling?.textContent)).toBe('350,00 €');
+    await user.click(screen.getByRole('button', { name: /Commencer/ }));
+
+    expect(await screen.findByRole('heading', { name: 'Bonjour Sam' })).toBeInTheDocument();
+    // 1200 − 450 = 750 € disponibles sur 19 jours → 39 € par jour
+    expect(norm(screen.getByText(/Il vous reste/).textContent)).toBe(
+      'Il vous reste 750 € pour terminer le mois, soit environ 39 € par jour.',
+    );
+    await waitFor(() => expect(stored()?.profile?.name).toBe('Sam'));
+  });
+
+  it('chargement d’un profil de démonstration', async () => {
+    const user = renderApp(emptyData());
+    await user.selectOptions(screen.getByLabelText('Profil de démonstration'), 'salarie');
+    await user.click(screen.getByRole('button', { name: 'Charger la démonstration' }));
+    expect(await screen.findByRole('heading', { name: 'Bonjour Camille (démo)' })).toBeInTheDocument();
+  });
+});
+
+describe('tableau de bord', () => {
+  it('affiche le reste à vivre et les chiffres clés', () => {
+    renderApp();
+    expect(norm(screen.getByText(/Il vous reste/).textContent)).toBe(
+      'Il vous reste 821 € pour terminer le mois, soit environ 43 € par jour.',
+    );
+    const stat = screen.getByText('Solde disponible').parentElement!;
+    expect(norm(stat.textContent)).toContain('821,51 €');
+    expect(screen.getByText(/Budget « Alimentation » dépassé/)).toBeInTheDocument();
+  });
+
+  it('ajout rapide d’une dépense, totaux mis à jour et sauvegardés', async () => {
+    const user = renderApp();
+    const form = screen.getByRole('form', { name: 'Ajout rapide d’une dépense' });
+    await user.type(within(form).getByLabelText('Montant'), '21,51');
+    await user.selectOptions(within(form).getByLabelText('Catégorie'), 'Santé');
+    await user.type(within(form).getByLabelText(/Description/), 'Pharmacie');
+    await user.click(within(form).getByRole('button', { name: 'Ajouter la dépense' }));
+
+    expect(await screen.findByText('Dépense de 21,51 € ajoutée.', { normalizer: norm })).toBeInTheDocument();
+    expect(norm(screen.getByText('Solde disponible').parentElement!.textContent)).toContain('800,00 €');
+    expect(norm(screen.getByText(/Il vous reste/).textContent)).toContain('environ 42 € par jour');
+    await waitFor(() => expect(stored().expenses.some((e) => e.description === 'Pharmacie' && e.amount === 2151)).toBe(true));
+  });
+
+  it('refuse un montant invalide avec un message compréhensible', async () => {
+    const user = renderApp();
+    const form = screen.getByRole('form', { name: 'Ajout rapide d’une dépense' });
+    await user.click(within(form).getByRole('button', { name: 'Ajouter la dépense' }));
+    expect(within(form).getByText('Indiquez un montant, par exemple 12,50.')).toBeInTheDocument();
+    await user.type(within(form).getByLabelText('Montant'), '0');
+    await user.click(within(form).getByRole('button', { name: 'Ajouter la dépense' }));
+    expect(within(form).getByText('Le montant doit être supérieur à 0.')).toBeInTheDocument();
+    expect(within(form).getByLabelText('Montant')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('navigation entre les mois', async () => {
+    const user = renderApp();
+    expect(screen.getByText('Novembre 2026')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Mois précédent' }));
+    expect(screen.getByText('Octobre 2026')).toBeInTheDocument();
+    expect(norm(screen.getByText(/Mois terminé :/).textContent)).toContain('1 034,01 €');
+    await user.click(screen.getByRole('button', { name: 'Mois en cours' }));
+    expect(screen.getByText('Novembre 2026')).toBeInTheDocument();
+  });
+});
+
+describe('textes et accessibilité (corrections du test navigateur)', () => {
+  it('titres avec élision : « Échéances d’octobre 2026 »', async () => {
+    const user = renderApp(fixture(), '/charges');
+    await user.click(screen.getByRole('button', { name: 'Mois précédent' }));
+    expect(screen.getByRole('heading', { name: 'Échéances d’octobre 2026' })).toBeInTheDocument();
+    expect(screen.getByText('Charges d’octobre 2026')).toBeInTheDocument();
+    expect(screen.queryByText(/de octobre/)).not.toBeInTheDocument();
+  });
+
+  it('au chargement, le focus n’est pas déplacé (lien « Aller au contenu » atteignable en premier)', async () => {
+    const user = renderApp();
+    expect(document.activeElement).not.toHaveAttribute('id', 'contenu');
+    await user.tab();
+    expect(document.activeElement).toHaveTextContent('Aller au contenu');
+    // Après un changement de page, le focus va sur le contenu principal.
+    await user.click(screen.getAllByRole('link', { name: /Dépenses/ })[0]);
+    expect(document.activeElement).toHaveAttribute('id', 'contenu');
+  });
+
+  it('paramètres : les catégories sont une vraie liste dans le panneau d’onglet', () => {
+    renderApp(fixture(), '/parametres');
+    const panel = screen.getByRole('tabpanel', { name: 'Dépenses variables' });
+    const list = within(panel).getByRole('list');
+    expect(within(list).getAllByRole('listitem')).toHaveLength(3);
+  });
+
+  it('bilan : tableau défilable accessible au clavier, évolution aussi lisible sur mobile', async () => {
+    const user = renderApp(fixture(), '/historique?vue=bilan');
+    const region = screen.getByRole('region', { name: /Bilan de novembre 2026 comparé d’octobre 2026/ });
+    expect(region).toHaveAttribute('tabindex', '0');
+    const row = screen.getByRole('row', { name: /Dépenses variables/ });
+    expect(row.querySelector('.delta-mobile')).toHaveTextContent('en hausse de 18,00');
+    expect(row.querySelector('.col-evolution')).toHaveTextContent('en hausse de 18,00');
+    const chart = screen.getByText('Revenus et dépenses sur 6 mois').closest('figure')!;
+    await user.click(within(chart as HTMLElement).getByRole('button', { name: 'Voir le tableau' }));
+    expect(screen.getByRole('region', { name: /Revenus et dépenses sur 6 mois \(tableau\)/ })).toHaveAttribute('tabindex', '0');
+  });
+});
+
+describe('améliorations de simplicité (recherche et audit)', () => {
+  it('tableau de bord : « Comment est-ce calculé ? » détaille le calcul avec les vrais chiffres', async () => {
+    const user = renderApp();
+    await user.click(screen.getByText('Comment est-ce calculé ?'));
+    const calcul = screen.getByText('= Solde disponible du mois').closest('dl')!;
+    expect(norm(calcul.textContent)).toContain('+ Revenus du mois1 700,50 €');
+    expect(norm(calcul.textContent)).toContain('= Solde disponible du mois821,51 €');
+    expect(norm(screen.getByText(/Divisé par 19 jours restants/).textContent)).toContain('environ 43,23 € par jour');
+    // Panneau chiffré : valeur réelle du jour, unité séparée
+    expect(norm(document.querySelector('.hero-figure')?.textContent)).toBe('43,23 €');
+    expect(screen.getByText(/46 % des revenus déjà dépensés/)).toBeInTheDocument();
+  });
+
+  it('paramètres : la sauvegarde est en tête et affiche la date de la dernière sauvegarde', async () => {
+    const user = renderApp(fixture(), '/parametres');
+    const titres = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+    expect(titres.indexOf('Sauvegarder mes données')).toBeLessThan(titres.indexOf('Mon profil'));
+    expect(screen.getByText('aucune pour l’instant')).toBeInTheDocument();
+    expect(screen.getByText(/Pensez à télécharger une sauvegarde complète/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Sauvegarde complète (JSON)' }));
+    expect(screen.getByText('le 12 nov. 2026')).toBeInTheDocument();
+    expect(screen.queryByText(/Pensez à télécharger une sauvegarde complète/)).not.toBeInTheDocument();
+    await waitFor(() => expect(stored().settings.lastBackup).toBe(TODAY));
+  });
+
+  it('la sauvegarde JSON contient sa propre date : la restauration retrouve l’état exact', () => {
+    const d = { ...fixture(), settings: { theme: 'dark' as const, lastBackup: TODAY } };
+    const r = parseBackup(exportJSON(d, TODAY));
+    expect(r.ok && r.data).toEqual(d);
+  });
+
+  it('historique : la recherche est le premier filtre', () => {
+    renderApp(fixture(), '/historique');
+    const champs = Array.from(document.querySelectorAll('.filters label')).map((l) => l.textContent);
+    expect(champs[0]).toBe('Rechercher');
+  });
+
+  it('revenu : libellés explicites et conséquence du choix expliquée', async () => {
+    const user = renderApp(fixture(), '/revenus');
+    await user.click(screen.getByRole('button', { name: 'Ajouter un revenu' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Il sera compté automatiquement chaque mois (ou selon la fréquence choisie).')).toBeInTheDocument();
+    await user.click(within(dialog).getByLabelText(/Exceptionnel \(prime, vente…\)/));
+    expect(within(dialog).getByText('Il ne sera compté qu’une seule fois, à la date indiquée.')).toBeInTheDocument();
+  });
+
+  it('état vide avec bouton d’action (dépenses)', async () => {
+    const d = fixture();
+    d.expenses = [];
+    const user = renderApp(d, '/depenses');
+    await user.click(screen.getByRole('button', { name: 'Ajouter ma première dépense' }));
+    expect(screen.getByRole('dialog', { name: 'Nouvelle dépense' })).toBeInTheDocument();
+  });
+
+  it('une seule notification visible à la fois', async () => {
+    const user = renderApp();
+    const form = screen.getByRole('form', { name: 'Ajout rapide d’une dépense' });
+    for (const v of ['1', '2', '3']) {
+      await user.type(within(form).getByLabelText('Montant'), v);
+      await user.click(within(form).getByRole('button', { name: 'Ajouter la dépense' }));
+    }
+    expect(document.querySelectorAll('.toast')).toHaveLength(1);
+    expect(norm(document.querySelector('.toast')?.textContent)).toContain('3,00 €');
+  });
+
+  it('configuration : lien direct vers le profil de démonstration', async () => {
+    const user = renderApp(emptyData());
+    await user.click(screen.getByRole('button', { name: 'Essayer avec un profil de démonstration' }));
+    expect(document.activeElement).toHaveTextContent('Ou bien…');
+  });
+
+  it('nouveau profil : thème sombre « Financial » par défaut', () => {
+    expect(emptyData().settings.theme).toBe('dark');
+  });
+});
+
+describe('améliorations validées : ajout rapide, raccourcis, discrétion, simplicité', () => {
+  it('bouton « + » : ajoute une dépense depuis n’importe quelle page', async () => {
+    const user = renderApp(fixture(), '/budgets');
+    const boutons = screen.getAllByRole('button', { name: 'Ajouter une dépense' });
+    // barre latérale (ordinateur) et bouton central (mobile)
+    expect(boutons.length).toBe(2);
+    await user.click(boutons[1]);
+    const dialog = screen.getByRole('dialog', { name: 'Nouvelle dépense' });
+    await user.type(within(dialog).getByLabelText('Montant'), '6,50');
+    await user.click(within(dialog).getByRole('button', { name: 'Ajouter la dépense' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => expect(stored().expenses.some((e) => e.amount === 650 && e.date === TODAY)).toBe(true));
+    // On reste sur la page en cours
+    expect(screen.getByRole('heading', { name: 'Budgets par catégorie' })).toBeInTheDocument();
+  });
+
+  it('catégories fréquentes : la plus utilisée est présélectionnée, un clic change la catégorie', async () => {
+    const user = renderApp();
+    const form = screen.getByRole('form', { name: 'Ajout rapide d’une dépense' });
+    const groupe = within(form).getByRole('group', { name: 'Catégories fréquentes' });
+    const puces = within(groupe).getAllByRole('button');
+    expect(puces.map((b) => b.textContent)).toEqual(['Alimentation', 'Loisirs', 'Santé']);
+    expect(puces[0]).toHaveAttribute('aria-pressed', 'true');
+    await user.click(puces[1]);
+    expect(within(form).getByLabelText('Catégorie')).toHaveValue('c-loisirs');
+    expect(puces[1]).toHaveAttribute('aria-pressed', 'true');
+    await user.type(within(form).getByLabelText('Montant'), '12');
+    await user.click(within(form).getByRole('button', { name: 'Ajouter la dépense' }));
+    await waitFor(() => expect(stored().expenses.some((e) => e.amount === 1200 && e.categoryId === 'c-loisirs')).toBe(true));
+  });
+
+  it('masquer les montants : tous les montants sont remplacés, la préférence est conservée', async () => {
+    const user = renderApp();
+    const [bouton] = screen.getAllByRole('button', { name: 'Masquer les montants' });
+    await user.click(bouton);
+    expect(norm(screen.getByText(/Il vous reste/).textContent)).toBe('Il vous reste ••• € pour terminer le mois, soit environ ••• € par jour.');
+    expect(norm(screen.getByText('Solde disponible').parentElement!.textContent)).toContain('••• €');
+    expect(document.body.textContent).not.toMatch(/821,51/);
+    expect(screen.getAllByRole('button', { name: 'Afficher les montants' })[0]).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => expect(stored().settings.hideAmounts).toBe(true));
+    await user.click(screen.getAllByRole('button', { name: 'Afficher les montants' })[0]);
+    expect(norm(screen.getByText('Solde disponible').parentElement!.textContent)).toContain('821,51 €');
+  });
+
+  it('tableau de bord : quatre chiffres visibles, le reste dans « Détail du mois »', () => {
+    renderApp();
+    const essentiels = document.querySelector('.stats-grid')!;
+    expect(Array.from(essentiels.querySelectorAll('.stat-label')).map((e) => e.textContent)).toEqual([
+      'Revenus',
+      'Total des dépenses',
+      'Solde disponible',
+      'Épargné ce mois',
+    ]);
+    const detail = screen.getByText('Détail du mois').closest('details')!;
+    expect(detail).not.toHaveAttribute('open');
+    expect(Array.from(detail.querySelectorAll('.stat-label')).map((e) => e.textContent)).toEqual([
+      'Charges fixes',
+      'Dépenses variables',
+      'Reste à vivre par jour',
+      'Prévision fin de mois',
+    ]);
+  });
+
+  it('budgets : les catégories sans limite sont regroupées en une liste compacte', async () => {
+    const user = renderApp(fixture(), '/budgets');
+    const liste = screen.getByRole('heading', { name: 'Catégories sans limite (1)' }).closest('section')!;
+    expect(within(liste).getByText('Santé')).toBeInTheDocument();
+    expect(document.querySelectorAll('.budget-card')).toHaveLength(2); // Alimentation et Loisirs
+    await user.click(within(liste).getByRole('button', { name: 'Fixer une limite pour Santé' }));
+    const dialog = screen.getByRole('dialog');
+    await user.type(within(dialog).getByLabelText('Limite mensuelle'), '30');
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer' }));
+    expect(document.querySelectorAll('.budget-card')).toHaveLength(3);
+    expect(screen.queryByRole('heading', { name: /Catégories sans limite/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('modification et suppression', () => {
+  it('modifie puis supprime une dépense avec confirmation', async () => {
+    const user = renderApp(fixture(), '/depenses');
+    await user.click(screen.getByRole('button', { name: /Modifier la dépense Courses du 2 nov. 2026/ }));
+    const dialog = screen.getByRole('dialog', { name: 'Modifier la dépense' });
+    const amount = within(dialog).getByLabelText('Montant');
+    expect(amount).toHaveValue('45,30');
+    await user.clear(amount);
+    await user.type(amount, '50');
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer les modifications' }));
+    await waitFor(() => expect(stored().expenses.find((e) => e.id === 'e1')?.amount).toBe(5000));
+
+    await user.click(screen.getByRole('button', { name: /Supprimer la dépense Courses du 2 nov. 2026/ }));
+    const confirm = screen.getByRole('alertdialog', { name: 'Supprimer cette dépense ?' });
+    // Annuler ne supprime rien
+    await user.click(within(confirm).getByRole('button', { name: 'Annuler' }));
+    expect(stored().expenses.find((e) => e.id === 'e1')).toBeDefined();
+    await user.click(screen.getByRole('button', { name: /Supprimer la dépense Courses du 2 nov. 2026/ }));
+    await user.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Supprimer' }));
+    await waitFor(() => expect(stored().expenses.find((e) => e.id === 'e1')).toBeUndefined());
+  });
+
+  it('ajoute un revenu exceptionnel', async () => {
+    const user = renderApp(fixture(), '/revenus');
+    await user.click(screen.getByRole('button', { name: 'Ajouter un revenu' }));
+    const dialog = screen.getByRole('dialog', { name: 'Nouveau revenu' });
+    await user.type(within(dialog).getByLabelText('Nom'), 'Prime');
+    await user.type(within(dialog).getByLabelText('Montant'), '150');
+    await user.click(within(dialog).getByLabelText(/Exceptionnel/));
+    await user.click(within(dialog).getByRole('button', { name: 'Ajouter le revenu' }));
+    await waitFor(() => expect(stored().incomes.find((i) => i.name === 'Prime')).toMatchObject({ amount: 15000, recurring: false, date: TODAY }));
+    expect(norm(screen.getByText('Revenus de novembre 2026').parentElement!.textContent)).toContain('1 850,50 €');
+  });
+
+  it('marque une charge fixe comme payée', async () => {
+    const user = renderApp(fixture(), '/charges');
+    await user.click(screen.getByRole('button', { name: /Forfait : à venir/ }));
+    await waitFor(() => expect(stored().fixedCharges.find((c) => c.id === 'f-tel')?.status['2026-11-20']).toBe('paye'));
+    expect(screen.getByRole('button', { name: /Forfait : payé/ })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('modifie la limite d’une catégorie', async () => {
+    const user = renderApp(fixture(), '/budgets');
+    await user.click(screen.getByRole('button', { name: 'Modifier la limite de Alimentation' }));
+    const dialog = screen.getByRole('dialog');
+    const field = within(dialog).getByLabelText('Limite mensuelle');
+    await user.clear(field);
+    await user.type(field, '100');
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer' }));
+    await waitFor(() => expect(stored().categories.find((c) => c.id === 'c-alim')?.budget).toBe(10000));
+    expect(screen.getByRole('progressbar', { name: 'Budget Alimentation' })).toHaveAttribute('aria-valuenow', '58');
+  });
+});
+
+describe('simulateur', () => {
+  it('donne une appréciation et le nouveau reste à vivre', async () => {
+    const user = renderApp(fixture(), '/simulateur');
+    await user.type(screen.getByLabelText('Montant de l’achat'), '900');
+    expect(screen.getByText('Achat susceptible de déséquilibrer le budget')).toBeInTheDocument();
+    await user.clear(screen.getByLabelText('Montant de l’achat'));
+    await user.type(screen.getByLabelText('Montant de l’achat'), '100');
+    expect(screen.getByText('Situation confortable')).toBeInTheDocument();
+    expect(norm(screen.getByText('Solde restant après l’achat').parentElement!.textContent)).toContain('721,51 €');
+    expect(screen.getByText(/pas un conseil financier/)).toBeInTheDocument();
+  });
+});
+
+describe('paramètres et données', () => {
+  it('import JSON : fichier invalide refusé, fichier valide accepté', async () => {
+    const user = renderApp(fixture(), '/parametres');
+    const input = screen.getByLabelText('Choisir un fichier JSON');
+    await user.upload(input, new File(['nimporte quoi'], 'x.json', { type: 'application/json' }));
+    expect(await screen.findByText(/Import impossible/)).toBeInTheDocument();
+
+    const other = fixture();
+    other.profile!.name = 'Importé';
+    await user.upload(input, new File([exportJSON(other, TODAY)], 'sauvegarde.json', { type: 'application/json' }));
+    const confirm = await screen.findByRole('alertdialog', { name: 'Remplacer les données actuelles ?' });
+    await user.click(within(confirm).getByRole('button', { name: 'Importer et remplacer' }));
+    expect(await screen.findByRole('heading', { name: 'Bonjour Importé' })).toBeInTheDocument();
+  });
+
+  it('effacement total avec double confirmation', async () => {
+    const user = renderApp(fixture(), '/parametres');
+    await user.click(screen.getByRole('button', { name: 'Effacer toutes mes données' }));
+    await user.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Continuer' }));
+    const second = screen.getByRole('alertdialog', { name: 'Dernière confirmation' });
+    const confirmBtn = within(second).getByRole('button', { name: 'Tout effacer définitivement' });
+    expect(confirmBtn).toBeDisabled();
+    await user.type(within(second).getByLabelText('Confirmation'), 'effacer');
+    expect(confirmBtn).toBeEnabled();
+    await user.click(confirmBtn);
+    expect(await screen.findByRole('heading', { name: 'Bienvenue sur SoldeClair' })).toBeInTheDocument();
+    await waitFor(() => expect(localStorage.getItem(STORAGE_KEY)).toBeNull());
+  });
+
+  it('renomme une catégorie', async () => {
+    const user = renderApp(fixture(), '/parametres');
+    await user.click(screen.getByRole('button', { name: 'Renommer Loisirs' }));
+    const field = within(screen.getByRole('dialog')).getByLabelText('Nom de la catégorie');
+    await user.clear(field);
+    await user.type(field, 'Sorties');
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Enregistrer' }));
+    await waitFor(() => expect(stored().categories.find((c) => c.id === 'c-loisirs')?.name).toBe('Sorties'));
+  });
+
+  it('change le thème', async () => {
+    const user = renderApp(fixture(), '/parametres');
+    await user.click(screen.getByLabelText('Mode sombre'));
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+    await user.click(screen.getByLabelText('Comme mon appareil'));
+    expect(document.documentElement).not.toHaveAttribute('data-theme');
+  });
+});
+
+describe('historique et bilan', () => {
+  it('filtre par type et recherche', async () => {
+    const user = renderApp(fixture(), '/historique');
+    expect(screen.getByText('9 transaction(s)')).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText('Type'), 'depense');
+    expect(screen.getByText('3 transaction(s)')).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Rechercher'), 'concert');
+    expect(screen.getByText('1 transaction(s)')).toBeInTheDocument();
+  });
+
+  it('affiche le bilan avec la comparaison au mois précédent', async () => {
+    const user = renderApp(fixture(), '/historique');
+    await user.click(screen.getByRole('tab', { name: 'Bilan mensuel' }));
+    const row = screen.getByRole('row', { name: /Dépenses variables/ });
+    expect(norm(row.textContent)).toContain('118,00 €');
+    expect(norm(row.textContent)).toContain('en hausse de 18,00 €');
+  });
+});
