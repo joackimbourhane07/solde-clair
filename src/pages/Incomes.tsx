@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useApp } from '../state/AppState';
 import type { Income } from '../types';
 import { carryOverInto, categoryName, monthTransactions } from '../lib/budget';
+import { usesCarteRestaurant } from '../lib/accounts';
 import { defaultDateFor, firstDay, formatDate, monthLabel, monthOf, ofMonth } from '../lib/dates';
 import { sum } from '../lib/money';
 import { FREQUENCY_LABELS } from '../lib/recurrence';
@@ -29,6 +30,9 @@ export function Incomes() {
     if (inc.recurring) return { texte: `À partir de ${monthLabel(monthOf(inc.date))}`, mois: monthOf(inc.date) };
     return { texte: `Compté en ${monthLabel(monthOf(inc.date))}`, mois: monthOf(inc.date) };
   };
+  // Carte restaurant : total de toutes les sources, puis détail compte bancaire / carte restaurant
+  const avecCarte = usesCarteRestaurant(data);
+  const surCarte = sum(occurrences.filter((t) => t.account === 'carte-restaurant').map((t) => t.amount));
   const recurringTotal = sum(occurrences.filter((t) => data.incomes.find((i) => i.id === t.sourceId)?.recurring).map((t) => t.amount));
 
   return (
@@ -44,9 +48,18 @@ export function Incomes() {
       />
       <MonthSwitcher />
       <div className="stats-grid stats-compact">
-        <Stat label={`Revenus ${ofMonth(month)}`} value={fmt(total)} />
-        <Stat label="Dont revenus récurrents" value={fmt(recurringTotal)} />
-        <Stat label="Dont revenus exceptionnels" value={fmt(total - recurringTotal)} />
+        <Stat label={`Revenus ${ofMonth(month)}`} value={fmt(total)} detail={avecCarte ? 'Toutes les sources' : undefined} />
+        {avecCarte ? (
+          <>
+            <Stat label="Sur le compte bancaire" value={fmt(total - surCarte)} />
+            <Stat label="Sur la carte restaurant" value={fmt(surCarte)} />
+          </>
+        ) : (
+          <>
+            <Stat label="Dont revenus récurrents" value={fmt(recurringTotal)} />
+            <Stat label="Dont revenus exceptionnels" value={fmt(total - recurringTotal)} />
+          </>
+        )}
       </div>
       {report !== 0 && (
         <Notice>
@@ -88,15 +101,16 @@ export function Incomes() {
                         {inc.recurring ? FREQUENCY_LABELS[inc.frequency ?? 'mensuel'] : 'Exceptionnel'}
                       </span>
                       {hors && <span className="tag tag-autre-mois">{hors.texte}</span>}
+                      {avecCarte && (occ[0]?.account ?? (inc.account || null)) === 'carte-restaurant' && <span className="tag tag-carte">Carte restaurant</span>}
                     </p>
                     <p className="item-meta">
-                      {categoryName(data, inc.categoryId)} ·{' '}
+                      {categoryName(data, inc.categoryId)} –{' '}
                       {inc.recurring
                         ? occ.length > 0
                           ? `Versé le ${occ.map((o) => formatDate(o.date)).join(', ')}`
                           : `Depuis le ${formatDate(inc.date)}`
                         : `Le ${formatDate(inc.date)}`}
-                      {inc.endDate && ` · jusqu’au ${formatDate(inc.endDate)}`}
+                      {inc.endDate && ` – jusqu’au ${formatDate(inc.endDate)}`}
                     </p>
                     {inc.note && <p className="item-note">{inc.note}</p>}
                     {hors && hors.mois !== month && (

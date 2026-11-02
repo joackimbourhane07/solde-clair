@@ -79,7 +79,7 @@ export function Expenses() {
           <>
             {(category || query) && (
               <p className="muted" aria-live="polite">
-                {filtered.length} dépense(s) · {fmt(filteredTotal)}
+                {filtered.length} dépense(s) pour {fmt(filteredTotal)}
               </p>
             )}
             <ul className="item-list">
@@ -88,8 +88,8 @@ export function Expenses() {
                   <div className="item-main">
                     <p className="item-title">{e.description || categoryName(data, e.categoryId)}</p>
                     <p className="item-meta">
-                      {formatDate(e.date)} · {categoryName(data, e.categoryId)}
-                      {e.paymentMethod && ` · ${e.paymentMethod}`}
+                      {formatDate(e.date)} – {categoryName(data, e.categoryId)}
+                      {e.paymentMethod && ` – ${e.paymentMethod}`}
                     </p>
                   </div>
                   <span className="montant">{fmt(e.amount)}</span>

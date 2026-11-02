@@ -15,7 +15,7 @@ import type {
 import { presetCategories } from './categories';
 import { addMonths, addMonthsToDate, daysInMonth, monthOf, toISO, parseMonth } from './dates';
 import { splitByWeights } from './money';
-import { APPEARANCE_VERSION } from './storage';
+import { APPEARANCE_VERSION, PRESETS_VERSION } from './storage';
 
 /**
  * Profils de démonstration ENTIÈREMENT FICTIFS (aucune donnée réelle).
@@ -344,7 +344,8 @@ export function buildDemoData(profile: DemoProfile, today: ISODate): AppData {
       variableEstimate: spec.variableEstimate,
       createdAt: dateIn(startMonth, 1),
     },
-    settings: { theme: 'light', appearanceVersion: APPEARANCE_VERSION },
+    settings: { theme: 'light', appearanceVersion: APPEARANCE_VERSION, presetsVersion: PRESETS_VERSION },
+    adjustments: [],
     categories,
     incomes,
     fixedCharges,

@@ -87,12 +87,12 @@ describe('export CSV', () => {
 
   it('BOM UTF-8, en-tête et séparateur point-virgule', () => {
     expect(csv.startsWith('﻿')).toBe(true);
-    expect(lines[0]).toBe('Date;Type;Libellé;Catégorie;Montant;Statut;Moyen de paiement;Note');
+    expect(lines[0]).toBe('Date;Type;Libellé;Catégorie;Montant;Statut;Moyen de paiement;Compte;Note');
   });
 
   it('montants signés avec virgule décimale', () => {
-    expect(lines).toContain('2026-11-10;Revenu;Vente vélo;Autre revenu;200,50;;;');
-    expect(lines).toContain('2026-11-02;Dépense variable;Courses;Alimentation;-45,30;;Carte bancaire;');
+    expect(lines).toContain('2026-11-10;Revenu;Vente vélo;Autre revenu;200,50;;;Compte bancaire;');
+    expect(lines).toContain('2026-11-02;Dépense variable;Courses;Alimentation;-45,30;;Carte bancaire;Compte bancaire;');
     expect(lines.some((l) => l.startsWith('2026-11-20;Charge fixe;Forfait;Téléphone;-15,99;À venir'))).toBe(true);
   });
 

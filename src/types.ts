@@ -23,6 +23,9 @@ export type ThemeChoice = 'system' | 'light' | 'dark';
 
 export type ChargeStatus = 'paye' | 'a_venir';
 
+/** Comptes suivis : le compte bancaire et la carte restaurant (titres-restaurant). */
+export type AccountId = 'compte' | 'carte-restaurant';
+
 export interface Profile {
   name: string;
   type: ProfileType;
@@ -53,6 +56,17 @@ export interface Income {
   frequency: Frequency | null;
   /** Dernière date incluse pour un revenu récurrent (facultatif). */
   endDate: ISODate | null;
+  note: string;
+  /** Compte crédité ; absent = déduit de la catégorie ou du nom (« Carte restaurant » → carte restaurant). */
+  account?: AccountId;
+}
+
+/** Ajustement du solde réel d'un compte (montant signé), pour coller au solde de la banque. */
+export interface BalanceAdjustment {
+  id: string;
+  account: AccountId;
+  date: ISODate;
+  amount: Cents;
   note: string;
 }
 
@@ -112,6 +126,8 @@ export interface Settings {
   hideAmounts?: boolean;
   /** Version de l'apparence (2 = thème clair par défaut). */
   appearanceVersion?: number;
+  /** Version des catégories proposées (3 = « Carte restaurant » ajoutée aux revenus). */
+  presetsVersion?: number;
   /** Actions suggérées que la personne a choisi d'ignorer (tableau de bord). */
   dismissedActions?: string[];
   /** Reporter le reste d'un mois sur le suivant (cumul). Actif si absent. */
@@ -128,9 +144,11 @@ export interface AppData {
   expenses: Expense[];
   goals: SavingsGoal[];
   savings: SavingsDeposit[];
+  /** Ajustements de solde (onglet Compte). */
+  adjustments: BalanceAdjustment[];
 }
 
-export type TransactionType = 'revenu' | 'charge' | 'depense' | 'epargne';
+export type TransactionType = 'revenu' | 'charge' | 'depense' | 'epargne' | 'ajustement';
 
 /** Vue unifiée d'un mouvement (utilisée par l'historique, les exports et les calculs). */
 export interface Transaction {
@@ -141,8 +159,11 @@ export interface Transaction {
   label: string;
   categoryId: string | null;
   categoryName: string;
+  /** Montant positif ; pour un ajustement, montant signé (voir signedAmount). */
   amount: Cents;
   note: string;
   paymentMethod: string;
   status?: ChargeStatus;
+  /** Compte concerné (compte bancaire ou carte restaurant). */
+  account: AccountId;
 }

@@ -50,11 +50,12 @@ Permettre à chacun de :
 | --- | --- |
 | **Page d’accueil (présentation)** | Premier écran d’un nouveau visiteur : grand titre « Votre budget devient enfin clair. », boutons « Commencer » et « Découvrir SoldeClair », illustrations originales, sections sur le reste à vivre, les charges à venir, l’épargne, le simulateur, les profils et la confidentialité, appel à l’action et pied de page. Vraies captures de SoldeClair (profil de démonstration, données fictives) dans des cadres d’ordinateur et de téléphone. Si des profils existent déjà sur l’appareil : « Continuer avec … », « Créer un nouveau profil » et les autres profils. Chargée séparément (≈ 10 Ko de code + 220 Ko d’images WebP chargées au fil du défilement) ; accessible à tout moment en cliquant sur le logo. |
 | **Configuration initiale** | Parcours en 6 étapes : prénom ou pseudonyme, situation (étudiant, alternant, salarié, indépendant, autre), devise (euro par défaut), revenu principal et revenus complémentaires, charges fixes, estimation des dépenses variables, objectif d’épargne mensuel, objectif à long terme, choix des catégories proposées selon le profil. Possibilité de charger une démonstration ou d’importer une sauvegarde. |
-| **Tableau de bord** | Dans l’ordre : **carte principale** (« Il vous reste X € pour terminer le mois, soit environ Y € par jour », jours restants, part des revenus dépensée, détail du calcul), **À venir** (« Dans les 7 prochains jours : … », charges et revenus attendus avec des dates relatives), **Ce mois-ci** (revenus, dépenses, dernières opérations), **Épargne du mois**, **À faire** (3 petites actions au maximum : limite dépassée, rythme trop rapide, prélèvement de demain, dépense inhabituelle, versement d’épargne, sauvegarde ; chacune peut être ignorée), **Estimation des 30 prochains jours** (disponible estimé à 7, 15 et 30 jours, point le plus bas, événements pris en compte), ajout rapide (sur ordinateur), **un seul graphique** ; le reste dans « Détail du mois ». Navigation de mois en mois. |
-| **Revenus** | Ajout, modification, suppression. Nom, montant, date, catégorie, récurrent ou exceptionnel, fréquence, date de fin facultative, note. |
-| **Dépenses** | Ajout, modification, suppression, recherche et filtre par catégorie. Montant, catégorie, date, description et moyen de paiement facultatifs. |
+| **Tableau de bord** | Dans l’ordre : **carte principale** (« Il vous reste X € pour terminer le mois, soit environ Y € par jour », jours restants, part des revenus dépensée, détail du calcul), **À venir** (« Dans les 7 prochains jours : … », charges et revenus attendus avec des dates relatives), **Ce mois-ci** (revenus, dépenses, dernières opérations), **Épargne du mois** (montant et **pourcentage de l’objectif atteint**, même au-delà de 100 %, puis les objectifs en cours avec leur pourcentage), **À faire** (3 petites actions au maximum : limite dépassée, rythme trop rapide, prélèvement de demain, dépense inhabituelle, versement d’épargne, sauvegarde ; chacune peut être ignorée), **Estimation des 30 prochains jours** (disponible estimé à 7, 15 et 30 jours, point le plus bas, événements pris en compte), ajout rapide (sur ordinateur), **un seul graphique** ; le reste dans « Détail du mois ». Navigation de mois en mois. |
+| **Mon compte** | Vue façon application bancaire : **solde du jour** (total, puis compte bancaire et carte restaurant séparément si elle est utilisée), solde estimé après les opérations des 30 prochains jours, **À venir** (prélèvements et revenus attendus, charges pas encore payées), puis **toutes les opérations jour par jour** (« Aujourd’hui », « Hier », « Mercredi 4 novembre 2026 ») avec ce qui est entré, ce qui est sorti et le **solde en fin de journée**. Recherche, total des entrées et des sorties, mois précédents à la demande. Bouton **« Ajuster le solde »** : on indique le solde réel affiché par la banque (ou la carte restaurant, découvert possible) et SoldeClair ajoute un « ajustement du solde » daté du jour pour combler l’écart ; un ajustement se supprime d’un geste. |
+| **Revenus** | Ajout, modification, suppression. Nom, montant, date, catégorie, récurrent ou exceptionnel, fréquence, date de fin facultative, note. **Carte restaurant** : catégorie proposée à tous les profils ; un revenu de cette catégorie est « versé sur » la carte restaurant (modifiable). Le total du mois compte **toutes les sources**, puis le détail **sur le compte bancaire** et **sur la carte restaurant**. |
+| **Dépenses** | Ajout, modification, suppression, recherche et filtre par catégorie. Montant, catégorie, date, description et moyen de paiement facultatifs (carte bancaire, **carte restaurant**, espèces, virement…). Une dépense payée par carte restaurant est retirée du solde de la carte, pas du compte bancaire. |
 | **Charges fixes** | Ajout, modification, suppression. Nom, montant, date de prélèvement, catégorie, fréquence (hebdomadaire à annuelle), statut **payé / à venir** modifiable pour chaque échéance, note. |
-| **Budgets par catégorie** | Limite mensuelle par catégorie résumée en une phrase (« 45,40 € dépensés sur 60,00 € (76 %) · il reste 14,60 € ») avec une barre de progression et des repères à 75 % et 90 %. Alertes à **75 %**, **90 %** et en cas de **dépassement**, signalées par un texte et une icône (pas seulement par la couleur) ; en cas de dépassement, lien direct vers les dépenses de la catégorie. Les catégories **sans limite** sont regroupées dans une liste courte, avec un bouton « Fixer une limite ». |
+| **Budgets par catégorie** | Limite mensuelle par catégorie résumée en une phrase (« 45,40 € dépensés sur 60,00 € (76 %), il reste 14,60 € ») avec une barre de progression et des repères à 75 % et 90 %. Alertes à **75 %**, **90 %** et en cas de **dépassement**, signalées par un texte et une icône (pas seulement par la couleur) ; en cas de dépassement, lien direct vers les dépenses de la catégorie. Les catégories **sans limite** sont regroupées dans une liste courte, avec un bouton « Fixer une limite ». |
 | **Objectifs d’épargne** | Plusieurs objectifs : nom, description, montant cible, montant déjà disponible, date souhaitée, priorité, contribution mensuelle. Calcul automatique du restant, des mois restants, du montant mensuel nécessaire, du pourcentage et de la date d’atteinte estimée. Enregistrement des versements. Progression résumée en une phrase (« Vous avez atteint 43 % de votre objectif ») avec la prochaine petite étape. |
 | **Simulateur d’achat** | Solde après achat, nouveau reste à vivre quotidien, impact sur l’épargne du mois, impact sur chaque objectif, dépassement éventuel d’une catégorie, et appréciation : *situation confortable*, *achat possible avec prudence* ou *achat susceptible de déséquilibrer le budget* (indication budgétaire, pas un conseil financier). |
 | **Historique et bilan** | Historique complet avec recherche, **puces** pour la période et le type, liste pour la catégorie, filtres actifs visibles et effaçables en un geste, bilan mensuel (revenus, charges, dépenses, épargne, solde final, catégories les plus coûteuses, budgets dépassés), comparaison avec le mois précédent, export CSV. |
@@ -153,13 +154,15 @@ Vérification des types TypeScript :
 npm run typecheck
 ```
 
-**149 tests** couvrent notamment :
+**223 tests** couvrent notamment :
 
 - la saisie et l’arrondi des montants (virgule, espaces, deux décimales, 0,1 + 0,2) ;
 - les dates (années bissextiles, fins de mois, passage d’année, jours restants) ;
 - les échéances récurrentes (hebdomadaires à annuelles, date de fin, jour 31) ;
 - le **total des revenus**, le **total des charges fixes**, le **total des dépenses variables** ;
 - le **solde disponible** et le **reste à vivre quotidien** (y compris négatif, dernier jour du mois) ;
+- l’**onglet Compte** : soldes du compte bancaire et de la carte restaurant, relevé jour par jour (solde de fin de journée), charges « à venir » non débitées, opérations des 30 prochains jours, **ajustement du solde** (découvert compris) ;
+- la **carte restaurant** : reconnaissance du nom, revenus « versés sur » la carte, paiement par carte restaurant, cumul de toutes les sources et détail par compte, ajout automatique de la catégorie aux profils existants ;
 - les **changements de mois** (mois passé, en cours, futur) et la comparaison avec le mois précédent ;
 - les **limites par catégorie** (seuils exacts 75 %, 90 %, 100 %) et les alertes ;
 - les **objectifs d’épargne** (mois restants, effort mensuel, date estimée, objectif atteint, date dépassée) ;
@@ -204,7 +207,7 @@ solde-clair/
 ├── .github/workflows/         Publication automatique sur GitHub Pages
 ├── e2e/                       Tests dans un vrai navigateur (Playwright)
 ├── docs/                      Recherche, audit, références et plan (avec captures)
-├── public/favicon.svg         Icône
+├── public/                   Icônes (SVG, PNG 32 px, icône Apple 180 px)
 └── src/
     ├── main.tsx               Démarrage de l’application
     ├── App.tsx                Pages et navigation
@@ -214,6 +217,7 @@ solde-clair/
     │   ├── dates.ts           Manipulation des dates et des mois
     │   ├── recurrence.ts      Échéances des revenus et charges récurrents
     │   ├── budget.ts          Totaux, solde, reste à vivre, budgets, alertes, bilan
+    │   ├── accounts.ts        Soldes des comptes, relevé jour par jour, opérations à venir
     │   ├── goals.ts           Objectifs d’épargne
     │   ├── simulator.ts       Simulateur d’achat
     │   ├── forecast.ts        Estimation du disponible à 7, 15 et 30 jours
@@ -282,13 +286,17 @@ Tous les calculs se font en centimes entiers ; la conversion en euros n’a lieu
 | Dépenses variables | Dépenses datées du mois. |
 | Montant épargné | Versements d’épargne datés du mois. |
 | **Report des mois précédents** | Cumul des soldes de tous les mois précédents (depuis la première saisie, 10 ans au plus) : un reste s’ajoute, un dépassement se retranche. Actif par défaut, désactivable dans les paramètres. |
-| **Solde disponible** | Report + revenus − charges fixes − dépenses variables − épargne versée. |
+| **Solde disponible** | Report + ajustements du solde + revenus − charges fixes − dépenses variables − épargne versée. |
+| **Solde d’un compte (onglet Compte)** | Tous les mouvements passés depuis la première saisie : revenus reçus, dépenses, charges prélevées, versements d’épargne et ajustements. Une charge marquée « à venir » n’est pas encore débitée. Compte bancaire et carte restaurant sont calculés séparément ; le solde total est leur somme. |
+| **Carte restaurant** | Reconnue par son nom (« carte restaurant », « titres-restaurant », « ticket resto », Swile, Edenred, Pluxee, Up Déjeuner, Bimpli…). Revenus de cette catégorie → carte restaurant, sauf choix contraire ; dépenses payées « Carte restaurant » → carte restaurant ; tout le reste → compte bancaire. Les soldes séparés ne s’affichent que si la carte sert vraiment (revenu, paiement ou ajustement). |
+| **Ajustement du solde** | Solde réel indiqué − solde calculé, daté du jour, sur le compte choisi. |
+| **Épargne du mois (%)** | Montant épargné ÷ objectif mensuel, arrondi à l’unité (peut dépasser 100 %). |
 | Jours restants | Jours jusqu’à la fin du mois, **aujourd’hui inclus** (0 pour un mois passé). |
 | **Reste à vivre quotidien** | Solde disponible ÷ jours restants, arrondi au centime **inférieur** (jamais surestimé). Dans la phrase d’accueil, le reste est arrondi à l’euro inférieur et un dépassement à l’euro supérieur. |
 | Budget consommé | (Charges fixes + dépenses variables) ÷ revenus. |
 | Prévision de fin de mois | Revenus − charges − épargne − dépenses variables projetées : au rythme actuel à partir du 7ᵉ jour, sinon d’après les limites prévues (ou l’estimation du profil). |
 | Statut d’une charge | « Payé » si sa date est passée, « À venir » sinon ; modifiable à la main pour chaque échéance. |
-| Alerte de catégorie | ≥ 75 % : attention · ≥ 90 % : alerte · > 100 % : dépassement. |
+| Alerte de catégorie | ≥ 75 % : attention ; ≥ 90 % : alerte ; > 100 % : dépassement. |
 | Objectif : mois restants | Mois calendaires jusqu’à la date souhaitée (au moins 1 si la date est dans le mois en cours). |
 | Objectif : effort mensuel | Montant restant ÷ mois restants, arrondi au centime supérieur. |
 | Objectif : date estimée | Aujourd’hui + ⌈restant ÷ contribution mensuelle⌉ mois. |
@@ -302,7 +310,8 @@ Tous les calculs se font en centimes entiers ; la conversion en euros n’a lieu
 - Le `localStorage` est limité à quelques mégaoctets (largement suffisant pour plusieurs années de saisies manuelles).
 - Supprimer un revenu ou une charge récurrente le retire aussi des mois passés : pour l’arrêter seulement à partir d’une date, il faut renseigner une **date de fin**.
 - Les dépenses récurrentes variables (ex. : courses hebdomadaires automatiques) ne sont pas gérées ; seules les charges fixes et revenus peuvent être récurrents.
-- Pas de gestion de plusieurs comptes bancaires, de plusieurs devises simultanées ni de dépenses partagées.
+- Deux comptes seulement (compte bancaire et carte restaurant) : pas de livret séparé, de plusieurs devises simultanées ni de dépenses partagées.
+- **Pas de connexion à la banque ni à Apple Pay**, volontairement : cela demanderait un prestataire agréé (DSP2), un serveur et l’envoi des données hors de l’appareil. Le bouton « Ajuster le solde » permet de recaler le solde à la main en quelques secondes.
 - Les limites budgétaires concernent les dépenses variables (pas les charges fixes).
 - Pas d’import de relevés bancaires (CSV de banque) — volontairement, pour cette première version.
 - L’application n’est pas encore installable hors ligne (PWA).
@@ -317,7 +326,7 @@ Tous les calculs se font en centimes entiers ; la conversion en euros n’a lieu
 6. **Dépenses récurrentes variables** et modèles de dépenses fréquentes (saisie en un geste).
 7. **Budgets reportables** (le reste d’une catégorie s’ajoute au mois suivant) et limites sur les charges fixes.
 8. **Rappels** avant les prélèvements importants et en cas de dépassement.
-9. **Comptes multiples** (courant, livret…) et transferts entre comptes.
+9. **Autres comptes** (livret, deuxième compte courant…) et transferts entre comptes, en plus du compte bancaire et de la carte restaurant.
 10. **Bilan annuel** et graphiques sur 12 mois, export PDF du bilan.
 11. **Tests navigateur dans l’intégration continue** : la publication lance déjà la vérification des types et `npm test` ; on pourrait y ajouter `npm run test:e2e`.
 12. **Traductions** (anglais, espagnol…) et adaptation des catégories par pays.

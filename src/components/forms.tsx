@@ -1,9 +1,10 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import type { CategoryKind, Expense, FixedCharge, Frequency, Income, ISODate, Priority, SavingsDeposit, SavingsGoal } from '../types';
+import type { AccountId, CategoryKind, Expense, FixedCharge, Frequency, Income, ISODate, Priority, SavingsDeposit, SavingsGoal } from '../types';
 import { useApp } from '../state/AppState';
 import { centsToInput, parseAmount } from '../lib/money';
 import { isValidISODate, monthLabel, monthOf } from '../lib/dates';
-import { frequentCategories } from '../lib/budget';
+import { frequentCategories, isCarteRestaurant } from '../lib/budget';
+import { usesCarteRestaurant } from '../lib/accounts';
 import { newId } from '../lib/id';
 import { FREQUENCY_LABELS } from '../lib/recurrence';
 import { makeCategory, PAYMENT_METHODS } from '../lib/categories';
@@ -269,10 +270,15 @@ export function IncomeForm({
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const { dispatch } = useApp();
+  const { data, dispatch } = useApp();
   const confirmer = useConfirmation();
   const choix = useChoixCategorie('income', initial?.categoryId);
   const [name, setName] = useState(initial?.name ?? '');
+  // Compte crédité : choisi par la personne, sinon déduit de la catégorie ou du nom (« Carte restaurant »).
+  const [compteChoisi, setCompteChoisi] = useState<AccountId | null>(initial?.account ?? null);
+  const nomCategorie = choix.categoryId === '__nouvelle__' ? choix.nouvelle : (data.categories.find((c) => c.id === choix.categoryId)?.name ?? '');
+  const compte: AccountId = compteChoisi ?? (isCarteRestaurant(nomCategorie) || isCarteRestaurant(name) ? 'carte-restaurant' : 'compte');
+  const proposerCompte = usesCarteRestaurant(data) || compte === 'carte-restaurant';
   const [amount, setAmount] = useState(centsToInput(initial?.amount));
   const [date, setDate] = useState(initial?.date ?? defaultDate);
   const [recurring, setRecurring] = useState(initial?.recurring ?? true);
@@ -306,6 +312,7 @@ export function IncomeForm({
         frequency: recurring ? frequency : null,
         endDate: recurring && endDate ? endDate : null,
         note: note.trim(),
+        account: compte,
       },
     });
     confirmer(initial ? 'Revenu modifié et enregistré.' : 'Revenu enregistré.', date, recurring);
@@ -326,6 +333,21 @@ export function IncomeForm({
           error={errors.date}
         />
       </div>
+      {proposerCompte && (
+        <fieldset className="fieldset">
+          <legend>Versé sur</legend>
+          <div className="radio-row">
+            <label className="radio">
+              <input type="radio" name="compte" checked={compte === 'compte'} onChange={() => setCompteChoisi('compte')} /> Compte bancaire
+            </label>
+            <label className="radio">
+              <input type="radio" name="compte" checked={compte === 'carte-restaurant'} onChange={() => setCompteChoisi('carte-restaurant')} /> Carte
+              restaurant
+            </label>
+          </div>
+          <p className="field-hint">La carte restaurant a son propre solde dans l’onglet « Compte » ; le total de vos revenus les compte tous.</p>
+        </fieldset>
+      )}
       <fieldset className="fieldset">
         <legend>Ce revenu revient-il régulièrement ?</legend>
         <div className="radio-row">

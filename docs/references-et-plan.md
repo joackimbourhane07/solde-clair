@@ -2,7 +2,7 @@
 
 Ce document prépare la deuxième version de SoldeClair. Il présente l'analyse du site actuel, ce qui a été retenu de 20 références, les changements appliqués tout de suite (faible risque) et ceux qui attendent votre accord.
 
-Légende : **[V]** constaté dans le navigateur · **[R]** idée tirée des recherches · **[H]** hypothèse à vérifier avec de vrais utilisateurs.
+Légende : **[V]** constaté dans le navigateur, **[R]** idée tirée des recherches, **[H]** hypothèse à vérifier avec de vrais utilisateurs.
 
 ## 0. Limites (à lire en premier)
 
@@ -68,7 +68,7 @@ Version analysée : celle en ligne (commit `1594e9d`), démo « Camille, salari�
 
 ## 3. Recommandations
 
-Colonnes : référence · problème résolu · solution · page · priorité (1 = haute) · difficulté · risque de régression · test prévu.
+Colonnes : référence, problème résolu, solution, page, priorité (1 = haute), difficulté, risque de régression, test prévu.
 
 ### 3a. Appliquées dans cette version (faible risque)
 
@@ -79,7 +79,7 @@ Colonnes : référence · problème résolu · solution · page · priorité (1 
 | A3 | Stripe, Linear | P3 | Une seule police (IBM Plex Sans) avec chiffres tabulaires ; étiquettes en minuscules | Toutes | 1 | Faible | Faible (largeurs) | Débordements à 320 px |
 | A4 | Notion, Linear | Décor | Coins légèrement arrondis, bordures fines, presque aucune ombre, cadre décoratif de l'accueil supprimé | Toutes | 2 | Faible | Faible | Captures |
 | A5 | — | Ancien défaut sombre | Les personnes qui avaient le thème sombre **par défaut** passent au clair (une seule fois) ; un choix fait ensuite est respecté | Paramètres | 1 | Faible | Faible | Test de la migration |
-| A6 | Stripe | P10 | « 2 filtres actifs · Effacer les filtres » dans l'historique | Historique | 2 | Faible | Faible | Test d'interface |
+| A6 | Stripe | P10 | « 2 filtres actifs, Effacer les filtres » dans l'historique | Historique | 2 | Faible | Faible | Test d'interface |
 | A7 | Google Agenda | P5 (en partie) | Résumé « Dans les 7 prochains jours : 3 charges prévues pour un total de 145 € » et dates relatives (aujourd'hui, demain, dans 3 jours) | Tableau de bord | 2 | Faible | Faible | Test unitaire + interface |
 | A8 | Duolingo, Headspace | Motivation | Objectifs : « Vous avez atteint 66 % de votre objectif. » et « Prochaine étape : mettre 100 € de côté ce mois-ci. » | Objectifs | 2 | Faible | Faible | Test d'interface |
 | A9 | — | P7 | Date et durée sur deux lignes dans les objectifs | Objectifs | 1 | Faible | Nul | Captures 320 / 390 px |
@@ -95,7 +95,7 @@ Colonnes : référence · problème résolu · solution · page · priorité (1 
 | B1 | Notion | P12 | **Page d'accueil originale** (section 7) | Accueil | 1 | Moyenne | Faible | Toutes tailles, axe, performances |
 | B2 | Apple Wallet, Plausible, PocketGuard | P4, P5, P6 | **Nouvel ordre du tableau de bord** (section 6) : carte principale, à venir, mois, épargne, actions, un graphique | Tableau de bord | 1 | Moyenne | Moyen (habitudes) | Parcours e2e, captures |
 | B3 | Stripe | P10 | Filtres de l'historique en **puces** (Type, Catégorie, Période) au lieu de 4 listes | Historique | 2 | Moyenne | Moyen | Tests filtres |
-| B4 | Goodbudget | P11 | Carte de budget en une phrase : « 45 € dépensés sur 60 € · il reste 15 € » + barre | Budgets | 2 | Faible | Faible | Tests budgets |
+| B4 | Goodbudget | P11 | Carte de budget en une phrase : « 45 € dépensés sur 60 €, il reste 15 € » + barre | Budgets | 2 | Faible | Faible | Tests budgets |
 | B5 | Todoist | Alertes dispersées | Carte « À faire » : 3 actions maximum (ajuster une limite, sauvegarder, compléter une charge), avec « Ignorer » | Tableau de bord | 3 | Moyenne | Moyen | Tests unitaires |
 | B6 | Fintur, Linxo | Anticipation | Estimation du solde à 7, 15 et 30 jours d'après les revenus et charges récurrents, marquée « estimation » | Tableau de bord | 3 | Moyenne | Moyen (calcul) | Tests de calcul |
 | B7 | YNAB | Planification | Répartition **facultative** du revenu par catégorie, avec « reste à répartir » | Budgets | 3 | Élevée | Moyen | Tests de calcul |
@@ -110,7 +110,7 @@ Colonnes : référence · problème résolu · solution · page · priorité (1 
 | B1 Page d'accueil | Validée | 12 sections dans l'ordre demandé, illustrations SVG originales, « Commencer » → configuration, « Accéder à mon tableau de bord » si des données existent, chargée séparément (≈ 9 Ko compressés) |
 | B2 Nouvel ordre du tableau de bord | Validée | Carte principale unique, À venir, Ce mois-ci, Épargne du mois, À faire, Estimation, un seul graphique ; « Détail du mois » pour le reste ; page mobile 20 % plus courte |
 | B3 Filtres en puces | Validée | Période et type en puces, catégorie en liste, filtres actifs effaçables |
-| B4 Budget en une phrase | Validée | « 45,40 € dépensés sur 60,00 € (76 %) · il reste 14,60 € » ; dépassement : piste + lien vers les dépenses filtrées |
+| B4 Budget en une phrase | Validée | « 45,40 € dépensés sur 60,00 € (76 %), il reste 14,60 € » ; dépassement : piste + lien vers les dépenses filtrées |
 | B5 À faire | Validée | 3 actions au maximum, priorité écrite en mots, « Ignorer » mémorisé (et inclus dans la sauvegarde) |
 | B6 Estimation 7 / 15 / 30 jours | Validée | Marquée « Estimation », point le plus bas signalé, événements listés, lien vers le simulateur |
 | Panneaux | Votre choix | Gris très clair, sans bordure (les champs de saisie gardent un trait fin) |
@@ -149,7 +149,7 @@ Note : la consigne générale proposait « bleu nuit + orange » ; votre choix e
 2. **Ajouter une dépense au pouce** : bouton « + » au centre de la barre du bas → montant (clavier numérique) → catégorie fréquente → « Ajouter » : **3 gestes**.
 3. **Vérifier ce qui arrive** : carte « À venir » juste sous la carte principale.
 4. **Comprendre** : « Comment est-ce calculé ? » et « Détail du mois » s'ouvrent sur place, sans changer de page.
-5. Barre du bas inchangée : Accueil · Dépenses · **+** · Budgets · Plus.
+5. Barre du bas inchangée : Accueil, Dépenses, **+**, Budgets, Plus.
 
 ## 6. Tableau de bord (B2, validé et appliqué)
 
@@ -173,15 +173,15 @@ Le formulaire d'ajout rapide resterait sur ordinateur et serait remplacé par le
 | 1 | Barre de navigation | Logo SoldeClair à gauche ; au centre « Fonctionnalités », « Pour qui ? », « Confidentialité » (défilement doux vers la section) ; à droite bouton bleu « Commencer » (ou « Mon tableau de bord » si des données existent). Sur mobile : logo + bouton seulement |
 | 2 | Introduction | Titre « Votre budget devient enfin clair. » ; sous-titre proposé ; boutons « Commencer » et « Découvrir SoldeClair » (fait défiler vers la section 4). Si des données existent : « Accéder à mon tableau de bord » |
 | 3 | Illustration principale | Illustration originale (voir plus bas) |
-| 4 | Avantages | 3 cartes : « Ce qu'il vous reste, en un coup d'œil » · « Sans banque, sans compte » · « Pensé pour débuter » |
+| 4 | Avantages | 3 cartes : « Ce qu'il vous reste, en un coup d'œil », « Sans banque, sans compte », « Pensé pour débuter » |
 | 5 | Reste à vivre | Texte + maquette réelle de la carte principale (chiffres fictifs) |
 | 6 | Dépenses et charges à venir | Maquette de la liste « À venir » + ajout en 3 gestes |
 | 7 | Objectifs d'épargne | Maquette d'un objectif avec barre de progression |
 | 8 | Simulateur d'achat | Maquette « Puis-je acheter ce vélo à 180 € ? » → appréciation |
-| 9 | Profils | 3 cartes : étudiant·e, alternant·e, salarié·e (+ « indépendant·e ou autre situation »), avec un exemple de catégories proposées |
+| 9 | Profils | 3 cartes : étudiant(e), alternant(e), salarié(e) (+ « indépendant(e) ou autre situation »), avec un exemple de catégories proposées |
 | 10 | Confidentialité | « Vos données restent sur votre appareil » : pas de compte, pas de banque, pas de publicité, sauvegarde en un clic |
 | 11 | Appel à l'action | Grand bandeau « Commencer avec SoldeClair » + « Essayer avec un profil de démonstration » |
-| 12 | Pied de page | Logo + phrase, colonnes Application / Découvrir / Confidentialité / Projet, mention « Version de test · données stockées dans votre navigateur » |
+| 12 | Pied de page | Logo + phrase, colonnes Application / Découvrir / Confidentialité / Projet, mention « Version de test, données stockées dans votre navigateur » |
 
 Alternance : texte à gauche / visuel à droite, puis l'inverse ; sur mobile, tout s'empile (texte puis visuel), titres réduits (≈ 36 px au lieu de 64 px), boutons pleine largeur.
 
@@ -194,7 +194,7 @@ Dessinées spécialement en SVG (vecteurs légers), style à plat avec un trait 
 3. **À venir** : une frise de trois jours avec des étiquettes (loyer, téléphone, abonnement).
 4. **Épargne** : un bocal qui se remplit, avec un repère 60 %.
 5. **Simulateur** : une balance avec un sac d'achats d'un côté et des pièces de l'autre.
-6. **Profils** : trois objets symboliques : sac à dos et livre (étudiant·e), casque de chantier et carnet (alternant·e), sacoche et badge (salarié·e).
+6. **Profils** : trois objets symboliques : sac à dos et livre (étudiant(e)), casque de chantier et carnet (alternant(e)), sacoche et badge (salarié(e)).
 7. **Confidentialité** : un téléphone avec un cadenas, des données qui restent « à l'intérieur ».
 
 ### Composants existants réutilisés
@@ -233,7 +233,7 @@ Dessinées spécialement en SVG (vecteurs légers), style à plat avec un trait 
 
 ### Captures avant / après
 
-[Configuration (ordinateur)](captures/v2/configuration-ordinateur.jpg) · [Tableau de bord (ordinateur)](captures/v2/tableau-de-bord-ordinateur.jpg) · [Tableau de bord (mobile)](captures/v2/tableau-de-bord-mobile.jpg) · [Tableau de bord, mode sombre (mobile)](captures/v2/tableau-de-bord-mobile-sombre.jpg) · [Historique](captures/v2/historique-mobile.jpg) · [Budgets](captures/v2/budgets-mobile.jpg) · [Objectifs](captures/v2/objectifs-mobile.jpg) · [Présentation (ordinateur)](captures/v2/presentation-ordinateur.jpg) · [Présentation (mobile, clair et sombre)](captures/v2/presentation-mobile-clair-sombre.jpg)
+[Configuration (ordinateur)](captures/v2/configuration-ordinateur.jpg), [Tableau de bord (ordinateur)](captures/v2/tableau-de-bord-ordinateur.jpg), [Tableau de bord (mobile)](captures/v2/tableau-de-bord-mobile.jpg), [Tableau de bord, mode sombre (mobile)](captures/v2/tableau-de-bord-mobile-sombre.jpg), [Historique](captures/v2/historique-mobile.jpg), [Budgets](captures/v2/budgets-mobile.jpg), [Objectifs](captures/v2/objectifs-mobile.jpg), [Présentation (ordinateur)](captures/v2/presentation-ordinateur.jpg), [Présentation (mobile, clair et sombre)](captures/v2/presentation-mobile-clair-sombre.jpg)
 
 ### Fichiers modifiés
 
@@ -255,25 +255,38 @@ Dessinées spécialement en SVG (vecteurs légers), style à plat avec un trait 
 | Le logo doit mener à la page d'accueil, avec « continuer avec mon profil » ou « créer un nouveau profil » | Logo → page d'accueil ; **plusieurs profils** sur l'appareil (« Continuer avec … », « Créer un nouveau profil », autres profils) ; « Revenir à mes profils » pendant la configuration |
 | Plus d'images sur la page d'accueil | Vraies captures de SoldeClair (données fictives) dans des cadres d'ordinateur et de téléphone, objets dessinés autour, illustration dans l'appel final |
 
-## 11. Sources consultées
+## 11. Retours de la propriétaire (3ᵉ série) et corrections
 
-- Notion : [teardown de la page d'accueil (uirip)](https://uirip.pages.dev/blog/teardowns/notion) · [analyse du design marketing](https://webtrends.pages.dev/posts/notion-marketing-design-analysis) · [étude de design (Blake Crosley)](https://blakecrosley.com/blog/design-study-notion) · [divulgation progressive (LogRocket)](https://blog.logrocket.com/ux-design/progressive-disclosure-ux-types-use-cases)
-- Stripe : [composant de paiements](https://docs.stripe.com/connect/supported-embedded-components/payments) · [tableau des comptes et statuts](https://docs.stripe.com/connect/dashboard/viewing-all-accounts)
-- Linear : [Behind the latest design refresh](https://linear.app/blog/behind-the-latest-design-refresh) · [How we redesigned the Linear UI](https://linear.app/blog/how-we-redesigned-the-linear-ui)
-- Airbnb : [Wired, refonte de l'application (fiches à une question)](https://wirednews.pages.dev/2016/04/airbnbs-new-app-overhauls-user-experience) · [Leanplum, onboarding](https://www.leanplum.com/?p=6413)
-- Headspace : [étude UX (uxdesign.cc)](https://uxdesign.cc/getting-a-little-headspace-a-ux-case-study-ec7a82aa7780) · [critique de design (Pratt)](https://ixd.prattsi.org/2026/02/design-critique-headspace)
-- Apple Santé : [guide MacRumors](https://macrumors.com/guide/health) · [MacStories](https://www.macstories.net/?p=60534)
+| Retour | Correction |
+|---|---|
+| Relier la banque ou Apple Pay au site | **Non retenu.** En France, lire un compte demande un agrégateur agréé par l'ACPR (DSP2 : Powens, Bridge, Tink…), un serveur et l'envoi des données hors de l'appareil, souvent payant. L'API d'Apple (FinanceKit) est réservée aux applications iPhone natives et à Apple Card, Apple Cash et Apple Savings (États-Unis). Ce serait contraire aux règles du projet (pas de banque, pas de serveur, rien ne quitte l'appareil). À la place : bouton **« Ajuster le solde »** (solde réel en quelques secondes). Import de relevés : pas pour l'instant (choix de la propriétaire). |
+| Le symbole « · » ne plaît pas | Remplacé partout par un tiret « – », une virgule ou des parenthèses ; « Étudiant·e » devient « Étudiant(e) » |
+| Voir des pourcentages (« objectif atteint à … % ») | Épargne du mois : pourcentage de l'objectif mensuel, même au-delà de 100 % (« Objectif du mois atteint à 333 %. Bravo ! ») ; objectifs en cours avec leur pourcentage et une barre |
+| Ajouter la carte restaurant comme source de revenus et moyen de paiement | Catégorie « Carte restaurant » ajoutée automatiquement (une seule fois) à tous les profils ; revenu « versé sur » la carte ; moyen de paiement « Carte restaurant » ; revenus : cumul de toutes les sources, puis détail compte bancaire / carte restaurant |
+| Un onglet « Compte » façon application bancaire | Onglet **Mon compte** (dans la barre du bas sur mobile, à la place de Dépenses qui passe dans « Plus ») : solde du jour, soldes séparés, solde estimé à 30 jours, à venir, opérations jour par jour avec le solde de fin de journée (comme les relevés des applications bancaires), recherche, mois précédents, ajustement du solde |
+| Icône de l'onglet restée orange | L'icône était déjà bleue : le navigateur gardait l'ancienne en mémoire. Nouveau nom de fichier (`icone-soldeclair.svg`) et versions PNG (32 px et Apple 180 px) pour forcer la mise à jour |
+
+Sources de cette série : [Journal du Net, agréments DSP2 des fintech](https://www.journaldunet.com/fintech/1486993-dsp2-que-font-les-fintech-de-leurs-agrements/), [Hayot Expertise, open banking et DSP2 en 2026](https://hayot-expertise.fr/blog/connecter-banque-logiciel-comptable-open-banking), [La finance pour tous, DSP2](https://www.lafinancepourtous.com/decryptages/finance-perso/banque-et-credit/directives-europeennes-sur-les-services-de-paiement/deuxieme-directive-europeenne-sur-les-services-de-paiement-dsp2/), [TechCrunch, FinanceKit](https://techcrunch.com/2024/03/06/apple-releases-a-new-api-to-fetch-transactions-from-apple-card-and-apple-cash/amp), [PYMNTS, FinanceKit](https://www.pymnts.com/apple/2024/apples-new-api-offers-users-peek-at-balances/).
+
+## 12. Sources consultées
+
+- Notion : [teardown de la page d'accueil (uirip)](https://uirip.pages.dev/blog/teardowns/notion), [analyse du design marketing](https://webtrends.pages.dev/posts/notion-marketing-design-analysis), [étude de design (Blake Crosley)](https://blakecrosley.com/blog/design-study-notion), [divulgation progressive (LogRocket)](https://blog.logrocket.com/ux-design/progressive-disclosure-ux-types-use-cases)
+- Stripe : [composant de paiements](https://docs.stripe.com/connect/supported-embedded-components/payments), [tableau des comptes et statuts](https://docs.stripe.com/connect/dashboard/viewing-all-accounts)
+- Linear : [Behind the latest design refresh](https://linear.app/blog/behind-the-latest-design-refresh), [How we redesigned the Linear UI](https://linear.app/blog/how-we-redesigned-the-linear-ui)
+- Airbnb : [Wired, refonte de l'application (fiches à une question)](https://wirednews.pages.dev/2016/04/airbnbs-new-app-overhauls-user-experience), [Leanplum, onboarding](https://www.leanplum.com/?p=6413)
+- Headspace : [étude UX (uxdesign.cc)](https://uxdesign.cc/getting-a-little-headspace-a-ux-case-study-ec7a82aa7780), [critique de design (Pratt)](https://ixd.prattsi.org/2026/02/design-critique-headspace)
+- Apple Santé : [guide MacRumors](https://macrumors.com/guide/health), [MacStories](https://www.macstories.net/?p=60534)
 - Google Agenda : [vues du calendrier](https://cedarville.teamdynamix.com/TDClient/2045/Portal/KB/Article/52846/Google-Calendar-View-Calendars)
-- Todoist : [Planifier sa journée avec Aujourd'hui](https://www.todoist.com/help/todoist/get-started/plan-your-day-with-the-today-view-UVUXaiSs) · [ordre de tri](https://todoist.com/help/articles/360006365600)
-- Duolingo : [UX et ludification (UX Planet)](https://uxplanet.org/ux-and-gamification-in-duolingo-40d55ee09359) · [design pédagogique (Learnnovators)](https://learnnovators.com/blog/duolingo-gets-both-gamification-and-learning-design-right)
-- Revolut : [aide « solde flouté »](https://help.revolut.com/en-AU/help/profile-and-plan/security-and-personal-data/why-is-my-balance-blurry) · [nouvelles fonctions de sécurité](https://www.revolut.com/blog/post/new-revolut-security-features/)
+- Todoist : [Planifier sa journée avec Aujourd'hui](https://www.todoist.com/help/todoist/get-started/plan-your-day-with-the-today-view-UVUXaiSs), [ordre de tri](https://todoist.com/help/articles/360006365600)
+- Duolingo : [UX et ludification (UX Planet)](https://uxplanet.org/ux-and-gamification-in-duolingo-40d55ee09359), [design pédagogique (Learnnovators)](https://learnnovators.com/blog/duolingo-gets-both-gamification-and-learning-design-right)
+- Revolut : [aide « solde flouté »](https://help.revolut.com/en-AU/help/profile-and-plan/security-and-personal-data/why-is-my-balance-blurry), [nouvelles fonctions de sécurité](https://www.revolut.com/blog/post/new-revolut-security-features/)
 - Apple Wallet : [critique de design (Pratt)](https://ixd.prattsi.org/2026/09/design-critique-apple-wallet-ios/)
-- Plausible : [présentation du tableau de bord](https://docs.plausible.io/guided-tour) · [simple web analytics](https://Plausible.io/simple-web-analytics)
-- PocketGuard : [Leftover / In My Pocket](https://pocketguard.com/leftover/) · [guide du débutant](https://pocketguard.com/blog/the-newbies-guide-to-pocketguard/)
-- Pilote Budget : [Les clés de la banque](https://www.lesclesdelabanque.com/particulier/pilotebudget-application-budget/) · [La Fabrique du Net](https://www.lafabriquedunet.fr/logiciel/pilote-budget)
+- Plausible : [présentation du tableau de bord](https://docs.plausible.io/guided-tour), [simple web analytics](https://Plausible.io/simple-web-analytics)
+- PocketGuard : [Leftover / In My Pocket](https://pocketguard.com/leftover/), [guide du débutant](https://pocketguard.com/blog/the-newbies-guide-to-pocketguard/)
+- Pilote Budget : [Les clés de la banque](https://www.lesclesdelabanque.com/particulier/pilotebudget-application-budget/), [La Fabrique du Net](https://www.lafabriquedunet.fr/logiciel/pilote-budget)
 - YNAB : [Assigning your money](https://support.ynab.com/en_us/assigning-your-money-a-guide-SypgkrNJi)
 - Goodbudget : [Combien reste-t-il dans mon enveloppe ?](https://goodbudget.com/help/budgeting-with-goodbudget/how-much-left-in-envelope/)
-- Linxo : [prévisionnel (MoneyVox)](https://www.moneyvox.fr/placement/actualites/53837/fintech-linxo-veut-simplifier-la-gestion-des-comptes-bancaires) · Fintur : [fiche App Store](https://apps.apple.com/app/id6796725254)
-- Mobbin : [analyse de 1 460 parcours d'accueil](https://daniliants-com.pages.dev/insights/i-studied-1460-onboarding-flows-heres-what-i-found/) · confirmations : [Uxcel](https://app.uxcel.com/courses/mobile-design/mobile-settings-745/use-confirmations-for-important-or-destructive-actions-5959)
-- Tendances visuelles : [galerie Kombai](https://kombai.com/gallery/app-pages/dashboards-ios-20/) · [projet personnel de budget](https://divyaweb.pages.dev/budget.html)
+- Linxo : [prévisionnel (MoneyVox)](https://www.moneyvox.fr/placement/actualites/53837/fintech-linxo-veut-simplifier-la-gestion-des-comptes-bancaires), Fintur : [fiche App Store](https://apps.apple.com/app/id6796725254)
+- Mobbin : [analyse de 1 460 parcours d'accueil](https://daniliants-com.pages.dev/insights/i-studied-1460-onboarding-flows-heres-what-i-found/), confirmations : [Uxcel](https://app.uxcel.com/courses/mobile-design/mobile-settings-745/use-confirmations-for-important-or-destructive-actions-5959)
+- Tendances visuelles : [galerie Kombai](https://kombai.com/gallery/app-pages/dashboards-ios-20/), [projet personnel de budget](https://divyaweb.pages.dev/budget.html)
 - Accessibilité : [Nouveautés de WCAG 2.2 (W3C)](https://w3.org/WAI/standards-guidelines/wcag/new-in-22/)

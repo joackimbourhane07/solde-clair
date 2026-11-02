@@ -62,7 +62,7 @@ export function FixedCharges() {
                       {o.label} <span className="tag">{FREQUENCY_LABELS[charge.frequency]}</span>
                     </p>
                     <p className="item-meta">
-                      {o.categoryName} · prélèvement le {formatDate(o.date)}
+                      {o.categoryName} – prélèvement le {formatDate(o.date)}
                     </p>
                     {charge.note && <p className="item-note">{charge.note}</p>}
                   </div>
@@ -106,7 +106,7 @@ export function FixedCharges() {
                   </p>
                   <p className="item-meta">
                     Première échéance le {formatDate(c.date)}
-                    {c.endDate && ` · jusqu’au ${formatDate(c.endDate)}`}
+                    {c.endDate && ` – jusqu’au ${formatDate(c.endDate)}`}
                   </p>
                 </div>
                 <span className="montant">{fmt(c.amount)}</span>

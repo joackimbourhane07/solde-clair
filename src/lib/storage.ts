@@ -1,5 +1,7 @@
 import type {
+  AccountId,
   AppData,
+  BalanceAdjustment,
   Category,
   Expense,
   FixedCharge,
@@ -10,7 +12,7 @@ import type {
   SavingsDeposit,
   SavingsGoal,
 } from '../types';
-import { earliestDate, transactionsInRange } from './budget';
+import { earliestDate, signedAmount, transactionsInRange } from './budget';
 import { isValidISODate, lastDay, monthOf } from './dates';
 import { centsToInput } from './money';
 
@@ -27,18 +29,22 @@ export const STORAGE_KEY = 'soldeclair:donnees:v1';
  */
 export const APPEARANCE_VERSION = 2;
 
+/** Version des catégories proposées : 3 = « Carte restaurant » parmi les revenus. */
+export const PRESETS_VERSION = 3;
+
 export function emptyData(): AppData {
   return {
     version: 1,
     profile: null,
     // Thème clair par défaut (sombre et automatique restent disponibles).
-    settings: { theme: 'light', appearanceVersion: APPEARANCE_VERSION },
+    settings: { theme: 'light', appearanceVersion: APPEARANCE_VERSION, presetsVersion: PRESETS_VERSION },
     categories: [],
     incomes: [],
     fixedCharges: [],
     expenses: [],
     goals: [],
     savings: [],
+    adjustments: [],
   };
 }
 
@@ -142,6 +148,7 @@ export type ValidationResult = { ok: true; data: AppData } | { ok: false; error:
 const FREQUENCIES: Frequency[] = ['hebdomadaire', 'mensuel', 'trimestriel', 'semestriel', 'annuel'];
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isStr = (v: unknown): v is string => typeof v === 'string';
+const COMPTES: AccountId[] = ['compte', 'carte-restaurant'];
 const isAmount = (v: unknown): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0;
 const isOptDate = (v: unknown) => v === null || v === undefined || isValidISODate(v);
 const str = (v: unknown) => (isStr(v) ? v.slice(0, 500) : '');
@@ -216,6 +223,7 @@ export function validateData(input: unknown): ValidationResult {
         frequency: recurring ? (FREQUENCIES.includes(r.frequency as Frequency) ? (r.frequency as Frequency) : 'mensuel') : null,
         endDate: (r.endDate as ISODate | null | undefined) ?? null,
         note: str(r.note),
+        ...(COMPTES.includes(r.account as AccountId) ? { account: r.account as AccountId } : {}),
       };
     });
 
@@ -280,6 +288,20 @@ export function validateData(input: unknown): ValidationResult {
       };
     });
 
+    // Ajustements de solde (absents des sauvegardes plus anciennes) : montant signé, borné.
+    const adjustments: BalanceAdjustment[] = (Array.isArray(root.adjustments) ? root.adjustments : []).map((r, i) => {
+      if (
+        !isObj(r) ||
+        typeof r.amount !== 'number' ||
+        !Number.isSafeInteger(r.amount) ||
+        Math.abs(r.amount) > 100_000_000_00 ||
+        !isValidISODate(r.date) ||
+        !COMPTES.includes(r.account as AccountId)
+      )
+        fail(`Ajustement de solde n° ${i + 1} invalide.`);
+      return { id: checkId(r.id, 'Ajustement', i), account: r.account as AccountId, date: r.date, amount: r.amount, note: str(r.note) };
+    });
+
     return {
       ok: true,
       data: {
@@ -291,6 +313,7 @@ export function validateData(input: unknown): ValidationResult {
           ...(isValidISODate(settingsIn.lastBackup) ? { lastBackup: settingsIn.lastBackup } : {}),
           ...(typeof settingsIn.hideAmounts === 'boolean' ? { hideAmounts: settingsIn.hideAmounts } : {}),
           ...(typeof settingsIn.carryOver === 'boolean' ? { carryOver: settingsIn.carryOver } : {}),
+          ...(Number.isInteger(settingsIn.presetsVersion) ? { presetsVersion: settingsIn.presetsVersion as number } : {}),
           ...(Array.isArray(settingsIn.dismissedActions)
             ? { dismissedActions: settingsIn.dismissedActions.filter((x): x is string => typeof x === 'string' && x.length <= 120).slice(-50) }
             : {}),
@@ -301,6 +324,7 @@ export function validateData(input: unknown): ValidationResult {
         expenses,
         goals,
         savings,
+        adjustments,
       },
     };
   } catch (e) {
@@ -328,7 +352,7 @@ export function exportJSON(data: AppData, today: ISODate): string {
   return JSON.stringify({ application: 'SoldeClair', exporteLe: today, donnees: data }, null, 2);
 }
 
-const TYPE_LABELS = { revenu: 'Revenu', charge: 'Charge fixe', depense: 'Dépense variable', epargne: 'Épargne' } as const;
+const TYPE_LABELS = { revenu: 'Revenu', charge: 'Charge fixe', depense: 'Dépense variable', epargne: 'Épargne', ajustement: 'Ajustement du solde' } as const;
 
 function csvCell(value: string): string {
   // Neutralise les formules (protection contre l'injection dans les tableurs),
@@ -347,9 +371,9 @@ export function exportCSV(data: AppData, today: ISODate): string {
   const from = earliestDate(data, today);
   const to = lastDay(monthOf(today));
   const rows = transactionsInRange(data, from, to, today);
-  const header = ['Date', 'Type', 'Libellé', 'Catégorie', 'Montant', 'Statut', 'Moyen de paiement', 'Note'];
+  const header = ['Date', 'Type', 'Libellé', 'Catégorie', 'Montant', 'Statut', 'Moyen de paiement', 'Compte', 'Note'];
   const lines = rows.map((t) => {
-    const signed = t.type === 'revenu' ? t.amount : -t.amount;
+    const signed = signedAmount(t);
     return [
       t.date,
       TYPE_LABELS[t.type],
@@ -358,6 +382,7 @@ export function exportCSV(data: AppData, today: ISODate): string {
       centsToInput(signed),
       t.status === 'paye' ? 'Payé' : t.status === 'a_venir' ? 'À venir' : '',
       t.paymentMethod,
+      t.account === 'carte-restaurant' ? 'Carte restaurant' : 'Compte bancaire',
       t.note,
     ]
       .map(csvCell)

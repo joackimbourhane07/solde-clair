@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
 import type {
   AppData,
+  BalanceAdjustment,
   Category,
   ChargeStatus,
   Expense,
@@ -13,7 +14,8 @@ import type {
   SavingsGoal,
   ThemeChoice,
 } from '../types';
-import { clearData, emptyData, listProfiles, loadData, loadIndex, saveData, saveIndex, type ProfilResume } from '../lib/storage';
+import { clearData, emptyData, listProfiles, loadData, loadIndex, PRESETS_VERSION, saveData, saveIndex, type ProfilResume } from '../lib/storage';
+import { isCarteRestaurant } from '../lib/budget';
 import { newId } from '../lib/id';
 import { monthOf, todayISO } from '../lib/dates';
 import { formatMoney, formatMoneyShort } from '../lib/money';
@@ -30,6 +32,7 @@ type Collections = {
   goals: SavingsGoal;
   savings: SavingsDeposit;
   categories: Category;
+  adjustments: BalanceAdjustment;
 };
 type CollectionName = keyof Collections;
 
@@ -42,6 +45,7 @@ export type Action =
   | { type: 'setHideAmounts'; hide: boolean }
   | { type: 'dismissAction'; id: string }
   | { type: 'setCarryOver'; value: boolean }
+  | { type: 'mettreAJourCategories' }
   | { [K in CollectionName]: { type: 'upsert'; collection: K; item: Collections[K] } }[CollectionName]
   | { type: 'remove'; collection: Exclude<CollectionName, 'categories' | 'goals'>; id: string }
   | { type: 'removeGoal'; id: string }
@@ -68,6 +72,15 @@ export function reducer(state: AppData, action: Action): AppData {
       return { ...state, settings: { ...state.settings, lastBackup: action.date } };
     case 'setHideAmounts':
       return { ...state, settings: { ...state.settings, hideAmounts: action.hide } };
+    case 'mettreAJourCategories': {
+      // Une seule fois par profil : ajoute « Carte restaurant » aux catégories de revenus si elle manque.
+      const manque = !state.categories.some((c) => c.kind === 'income' && isCarteRestaurant(c.name));
+      return {
+        ...state,
+        categories: manque ? [...state.categories, makeCategory('Carte restaurant', 'income')] : state.categories,
+        settings: { ...state.settings, presetsVersion: PRESETS_VERSION },
+      };
+    }
     case 'setCarryOver':
       return { ...state, settings: { ...state.settings, carryOver: action.value } };
     case 'dismissAction': {
@@ -220,7 +233,7 @@ export function AppProvider({
     const index = loadIndex();
     const isEmpty =
       !data.profile &&
-      [data.categories, data.incomes, data.fixedCharges, data.expenses, data.goals, data.savings].every((l) => l.length === 0);
+      [data.categories, data.incomes, data.fixedCharges, data.expenses, data.goals, data.savings, data.adjustments ?? []].every((l) => l.length === 0);
     if (isEmpty) {
       clearData(profilActif); // après « Tout effacer », rien ne reste dans le navigateur pour ce profil
       saveIndex({ actif: profilActif, ids: index.ids.filter((id) => id !== profilActif) });
@@ -270,6 +283,11 @@ export function AppProvider({
     setMonth(monthOf(today));
     setProfils(listProfiles());
   }, [data.settings.theme, today, garderProfilOuvert]);
+
+  // Profils créés avant l'ajout de « Carte restaurant » : mise à jour unique des catégories.
+  useEffect(() => {
+    if (data.profile && (data.settings.presetsVersion ?? 0) < PRESETS_VERSION) dispatch({ type: 'mettreAJourCategories' });
+  }, [data.profile, data.settings.presetsVersion]);
 
   // Thème clair / sombre.
   useEffect(() => {

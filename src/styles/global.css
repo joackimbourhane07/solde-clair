@@ -3012,6 +3012,29 @@ ol.rank-list li > span {
   color: var(--danger);
 }
 
+/* Carte étroite (téléphone, colonne du tableau de bord) : une ligne par échéance, le montant ne se coupe plus */
+.prevision-card {
+  container-type: inline-size;
+}
+
+@container (max-width: 499px) {
+  .prevision-points {
+    grid-template-columns: 1fr;
+  }
+
+  .prevision-points div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .prevision-points dd {
+    margin: 0;
+    white-space: nowrap;
+  }
+}
+
 .prevision-card .disclosure {
   margin-bottom: 12px;
 }
@@ -3107,5 +3130,247 @@ ol.rank-list li > span {
   min-height: 28px;
   font-size: var(--dp-typography-supporting);
   margin-top: 2px;
+}
+
+/* Carte restaurant */
+.tag-carte {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+/* ------------------------- Onglet « Mon compte » ------------------------- */
+
+.solde-compte {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: clamp(20px, 4vw, 28px);
+  border-radius: 16px;
+  background: var(--card);
+}
+
+.solde-libelle {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.solde-montant {
+  font-size: clamp(2rem, 1.5rem + 2vw, 2.8rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.solde-montant.negatif {
+  color: var(--danger);
+}
+
+.solde-detail {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+  margin: 4px 0 0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.solde-detail div {
+  background: var(--bg);
+  padding: 10px 12px;
+  min-width: 0;
+}
+
+.solde-detail dt {
+  font-size: var(--dp-typography-metadata);
+  color: var(--muted);
+}
+
+.solde-detail dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+}
+
+.solde-prevu {
+  color: var(--text-2);
+  font-size: var(--dp-typography-supporting);
+}
+
+.operations {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.operation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: var(--dp-border-hairline) solid var(--border);
+  min-width: 0;
+}
+
+.operation:last-child {
+  border-bottom: 0;
+}
+
+.operation-icone {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--text-2);
+}
+
+.operation-icone.type-depense,
+.operation-icone.type-ajustement {
+  background: var(--surface-hover);
+}
+
+.operation-icone.type-revenu {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.operation-icone.type-epargne {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+.operation-icone.type-charge {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.operation-texte {
+  flex: 1;
+  min-width: 0;
+}
+
+.operation-libelle {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.operation-detail {
+  font-size: var(--dp-typography-metadata);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.operation .montant {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.operation.a-venir .operation-libelle {
+  font-style: italic;
+}
+
+.operations-outils {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.operations-totaux {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  font-size: var(--dp-typography-supporting);
+}
+
+.releve {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.releve-jour {
+  border-radius: 12px;
+  background: var(--bg);
+  padding: 4px 14px;
+}
+
+.releve-date {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 10px 0 6px;
+  border-bottom: var(--dp-border-hairline) solid var(--border);
+  font-size: var(--dp-typography-supporting);
+  font-weight: 600;
+}
+
+.releve-solde {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.releve-solde strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.releve-plus {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.ajuster-compte {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.petit-texte {
+  font-size: var(--dp-typography-supporting);
+  margin-top: 8px;
+}
+
+/* Épargne du mois : pourcentage bien visible + objectifs en cours */
+.epargne-ligne {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.epargne-pct {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--primary-text);
+  white-space: nowrap;
+}
+
+.objectifs-mini {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  border-top: var(--dp-border-hairline) solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.objectifs-mini .petit-texte {
+  margin-top: 4px;
+}
+
+.objectif-nom {
+  font-weight: 500;
+  overflow-wrap: anywhere;
 }
 

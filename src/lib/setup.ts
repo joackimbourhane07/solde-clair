@@ -3,7 +3,7 @@ import { makeCategory, PROFILE_PRESETS } from './categories';
 import { daysInMonth, monthOf } from './dates';
 import { newId } from './id';
 import { splitByWeights } from './money';
-import { APPEARANCE_VERSION } from './storage';
+import { APPEARANCE_VERSION, PRESETS_VERSION } from './storage';
 
 export interface SetupLine {
   name: string;
@@ -120,7 +120,8 @@ export function buildInitialData(input: SetupInput, today: ISODate): AppData {
       variableEstimate: input.variableEstimate,
       createdAt: today,
     },
-    settings: { theme: input.theme, appearanceVersion: APPEARANCE_VERSION },
+    settings: { theme: input.theme, appearanceVersion: APPEARANCE_VERSION, presetsVersion: PRESETS_VERSION },
+    adjustments: [],
     categories,
     incomes,
     fixedCharges,

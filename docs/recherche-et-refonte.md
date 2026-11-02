@@ -2,7 +2,7 @@
 
 Rapport du 2 novembre 2026, branche `claude/sweet-noether-l08fhm` (pull request #1).
 
-Légende utilisée partout : **[V]** problème vérifié dans le navigateur · **[R]** amélioration inspirée des recherches · **[H]** hypothèse à valider avec de vrais utilisateurs.
+Légende utilisée partout : **[V]** problème vérifié dans le navigateur, **[R]** amélioration inspirée des recherches, **[H]** hypothèse à valider avec de vrais utilisateurs.
 
 ## Limites de la recherche (à lire en premier)
 
@@ -143,7 +143,7 @@ Les 20 parcours réussissent avant et après les modifications, sans erreur dans
 - Thème sombre par défaut ; mode clair conservé, avec des couleurs ajustées pour le contraste ; mode automatique conservé.
 - Mouvement réduit respecté (aucune transition).
 
-Captures : [tableau de bord, ordinateur](captures/tableau-de-bord-ordinateur.jpg) · [tableau de bord, mobile](captures/tableau-de-bord-mobile.jpg) · [historique, mobile](captures/historique-mobile.jpg) · [paramètres, mobile](captures/parametres-mobile.jpg) · [graphique vide](captures/graphique-epargne-vide.jpg)
+Captures : [tableau de bord, ordinateur](captures/tableau-de-bord-ordinateur.jpg), [tableau de bord, mobile](captures/tableau-de-bord-mobile.jpg), [historique, mobile](captures/historique-mobile.jpg), [paramètres, mobile](captures/parametres-mobile.jpg), [graphique vide](captures/graphique-epargne-vide.jpg)
 
 ## 6. Améliorations soumises à votre accord
 

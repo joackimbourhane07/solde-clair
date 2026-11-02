@@ -111,13 +111,13 @@ export function Budgets() {
                   <p className="budget-phrase">
                     {(l.remaining ?? 0) < 0 ? (
                       <>
-                        <strong>{fmt(l.spent)}</strong> dépensés sur {fmt(l.budget)} · dépassement de{' '}
+                        <strong>{fmt(l.spent)}</strong> dépensés sur {fmt(l.budget)}, dépassement de{' '}
                         <strong className="texte-negatif">{fmt(-(l.remaining ?? 0))}</strong>
                       </>
                     ) : (
                       <>
                         <strong>{fmt(l.spent)}</strong> dépensés sur {fmt(l.budget)} ({l.pct}
-                        {'\u00a0'}%) · il reste <strong>{fmt(l.remaining ?? 0)}</strong>
+                        {'\u00a0'}%), il reste <strong>{fmt(l.remaining ?? 0)}</strong>
                       </>
                     )}
                   </p>
