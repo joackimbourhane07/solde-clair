@@ -16,11 +16,16 @@ for (const format of FORMATS) {
       await page.emulateMedia({ colorScheme: theme });
       const erreurs = await preparer(page);
       await chargerDemo(page);
+      // Le thème clair est imposé par défaut : on choisit explicitement le thème testé.
+      await aller(page, 'parametres');
+      await page.getByLabel(theme === 'light' ? 'Mode clair' : 'Mode sombre').check();
+      const fond = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+      expect(fond).toBe(theme === 'light' ? 'rgb(255, 255, 255)' : 'rgb(25, 25, 25)');
       for (const [route, nom] of PAGES) {
         await aller(page, route);
         expect(await problemesDeMiseEnPage(page), `Mise en page de « ${nom} »`).toEqual([]);
         if (format.axe) {
-          const res = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+          const res = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
           expect(res.violations.map((v) => `${v.id} : ${v.help}`), `Accessibilité de « ${nom} »`).toEqual([]);
         }
       }
@@ -119,29 +124,29 @@ test('clavier : lien d’évitement en premier, contour de focus visible, fenêt
   await expect(page.locator(':focus')).toHaveText('Ajouter une dépense');
 });
 
-test('thèmes : sombre par défaut, automatique, clair', async ({ page }) => {
-  await page.emulateMedia({ colorScheme: 'light' });
+test('thèmes : clair par défaut, automatique, sombre', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark' });
   await preparer(page);
   await chargerDemo(page);
   const fond = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  const SOMBRE = 'rgb(7, 9, 14)';
-  const CLAIR = 'rgb(243, 244, 247)';
-  // Identité « Financial » : sombre par défaut, même si l'appareil est en clair
-  expect(await fond()).toBe(SOMBRE);
+  const SOMBRE = 'rgb(25, 25, 25)';
+  const CLAIR = 'rgb(255, 255, 255)';
+  // Fond blanc par défaut, même si l'appareil est en mode sombre
+  expect(await fond()).toBe(CLAIR);
   await aller(page, 'parametres');
   await page.getByLabel('Comme mon appareil').check();
-  expect(await fond()).toBe(CLAIR);
-  await page.emulateMedia({ colorScheme: 'dark' });
   expect(await fond()).toBe(SOMBRE);
-  await page.getByLabel('Mode clair').check();
-  expect(await fond()).toBe(CLAIR);
-  await page.reload();
+  await page.emulateMedia({ colorScheme: 'light' });
   expect(await fond()).toBe(CLAIR);
   await page.getByLabel('Mode sombre').check();
   expect(await fond()).toBe(SOMBRE);
+  await page.reload();
+  expect(await fond()).toBe(SOMBRE);
+  await page.getByLabel('Mode clair').check();
+  expect(await fond()).toBe(CLAIR);
 });
 
-test('polices IBM Plex chargées localement, aucune requête externe', async ({ page }) => {
+test('police IBM Plex Sans chargée localement, chiffres alignés, aucune requête externe', async ({ page }) => {
   const externes: string[] = [];
   page.on('request', (r) => {
     if (!r.url().startsWith('http://localhost:4173')) externes.push(r.url());
@@ -149,12 +154,13 @@ test('polices IBM Plex chargées localement, aucune requête externe', async ({ 
   await preparer(page);
   await chargerDemo(page);
   await page.evaluate(() => document.fonts.ready);
-  const polices = await page.evaluate(() => [
-    document.fonts.check('500 16px "Financial Plex Sans"'),
-    document.fonts.check('500 16px "Financial Plex Mono"'),
-  ]);
-  expect(polices).toEqual([true, true]);
-  expect(await page.locator('.stat-value').first().evaluate((el) => getComputedStyle(el).fontFamily)).toContain('Financial Plex Mono');
+  expect(await page.evaluate(() => document.fonts.check('500 16px "SoldeClair Plex Sans"'))).toBe(true);
+  const style = await page.locator('.stat-value').first().evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return { police: cs.fontFamily, chiffres: cs.fontVariantNumeric };
+  });
+  expect(style.police).toContain('SoldeClair Plex Sans');
+  expect(style.chiffres).toContain('tabular-nums');
   expect(externes).toEqual([]);
 });
 

@@ -1,26 +1,35 @@
 /* ==========================================================================
-   SoldeClair — styles globaux, identité visuelle « Financial »
-   Fond bleu nuit presque noir, actions orange chaud, montants importants or pâle,
-   panneaux opaques séparés par des filets fins. Mobile d'abord.
-   Thème sombre par défaut ; variante claire cohérente (mêmes rôles de couleur).
+   SoldeClair — styles globaux, identité claire
+   Fond blanc, texte presque noir, un seul accent bleu, vert pour les bonnes
+   nouvelles, orange pour l'attention, rouge pour les dépassements.
+   Mobile d'abord. Thème clair par défaut ; mode sombre graphite cohérent.
+   Les teintes « texte » sont assombries pour atteindre le contraste WCAG AA.
    ========================================================================== */
 
 @import './fonts.css';
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* --- Jetons de référence « Financial » (valeurs imposées) --- */
-  --dp-color-ground: #07090e;
-  --dp-color-ground-tint: #101522;
-  --dp-color-panel: #10141c;
-  --dp-color-accent: #ff951f;
-  --dp-color-value: #edcd8c;
-  --dp-color-ink: #f4f5f7;
-  --dp-color-ink-muted: #c9ced8;
-  --dp-color-line: #303139;
-  --dp-typography-body-face: 'Financial Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
-  --dp-typography-data-face: 'Financial Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  /* --- Palette de référence (choisie par la propriétaire du projet) --- */
+  --dp-color-fond: #ffffff;
+  --dp-color-fond-2: #f7f7f5;
+  --dp-color-fond-survol: #efefed;
+  --dp-color-texte: #191919;
+  --dp-color-texte-2: #787774; /* trop clair pour du petit texte : remplacé par --muted */
+  --dp-color-discret: #9b9a97; /* icônes et séparateurs uniquement */
+  --dp-color-bordure: #e9e9e7;
+  --dp-color-bleu: #2383e2;
+  --dp-color-bleu-clair: #e7f3f8;
+  --dp-color-vert: #0f7b6c;
+  --dp-color-vert-clair: #ddedea;
+  --dp-color-orange: #d9730d;
+  --dp-color-orange-clair: #faebdd;
+  --dp-color-rouge: #e03e3e;
+  --dp-color-rouge-clair: #fbe4e4;
+
+  /* --- Typographie, espacements, formes --- */
+  --dp-typography-body-face: 'SoldeClair Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
   --dp-typography-body: 16px;
   --dp-typography-supporting: 14px;
   --dp-typography-metadata: 13px;
@@ -28,139 +37,157 @@
   --dp-typography-reading-leading: 1.65;
   --dp-spacing-cluster-gap: 24px;
   --dp-spacing-compact-gap: 12px;
-  --dp-radius-panel: 5px;
-  --dp-radius-editorial: 4px;
-  --dp-radius-control: 40px;
+  --dp-radius-panel: 12px; /* cartes */
+  --dp-radius-control: 8px; /* boutons, champs, puces */
   --dp-border-hairline: 1px;
-  --dp-motion-interaction: 160ms;
+  --dp-motion-interaction: 150ms;
   --dp-motion-easing: ease;
 
-  /* --- Jetons dérivés (compléments nécessaires à l'interface) --- */
-  --dp-color-panel-raised: #171c27; /* survol, pistes, champs */
-  --dp-color-field-line: #686d7a; /* bordure des champs : contraste ≥ 3:1 */
-  --dp-color-ink-subtle: #9ea5b2; /* métadonnées (7:1 sur panneau) */
-  --dp-color-accent-strong: #ffab52; /* survol du bouton principal */
-  --dp-color-accent-text: #ff951f; /* accent utilisé comme texte */
-  --dp-color-accent-soft: #2a1c0e; /* fond opaque d'un élément sélectionné */
-  --dp-color-on-accent: #07090e;
+  /* --- Rôles utilisés par les composants --- */
+  --bg: var(--dp-color-fond);
+  --bg-tint: var(--dp-color-fond-2);
+  --surface: var(--dp-color-fond);
+  --surface-2: var(--dp-color-fond-2);
+  --surface-hover: var(--dp-color-fond-survol);
+  --text: var(--dp-color-texte);
+  --text-2: #3f3e3a;
+  --muted: #6b6a66; /* 5,1:1 sur blanc (au lieu de 4,48:1 pour #787774) */
+  --border: var(--dp-color-bordure);
+  --border-strong: #8c8b87; /* bordure des champs : 3,4:1, visible */
+  --primary: #1f6fbf; /* boutons : texte blanc à 5,1:1 */
+  --primary-text: #1f6fbf; /* liens : 5,1:1 */
+  --primary-hover: #195c9f;
+  --primary-ink: #ffffff;
+  --primary-soft: var(--dp-color-bleu-clair);
+  --fill-doux: var(--dp-color-bleu-clair); /* boutons secondaires, choix non sélectionnés : sans bordure */
+  --fill-doux-survol: #d6eaf5;
+  --fill-doux-texte: #1a62a8; /* 5,5:1 sur bleu clair */
+  --brand: var(--dp-color-bleu); /* logo, barres, illustrations, focus */
+  --value: var(--dp-color-texte); /* montants importants : noir, bien lisibles */
+  --value-accent: #1f6fbf; /* montants mis en valeur dans les phrases */
+  --focus: var(--dp-color-bleu);
+  --logo-bg: var(--dp-color-bleu);
+  --logo-ink: #ffffff;
 
-  /* --- Rôles utilisés par les composants (reliés aux jetons ci-dessus) --- */
-  --bg: var(--dp-color-ground);
-  --bg-tint: var(--dp-color-ground-tint);
-  --surface: var(--dp-color-panel);
-  --surface-2: var(--dp-color-panel-raised);
-  --text: var(--dp-color-ink);
-  --text-2: var(--dp-color-ink-muted);
-  --muted: var(--dp-color-ink-subtle);
-  --border: var(--dp-color-line);
-  --border-strong: var(--dp-color-field-line);
-  --primary: var(--dp-color-accent);
-  --primary-text: var(--dp-color-accent-text);
-  --primary-hover: var(--dp-color-accent-strong);
-  --primary-ink: var(--dp-color-on-accent);
-  --primary-soft: var(--dp-color-accent-soft);
-  --value: var(--dp-color-value);
-  --focus: var(--dp-color-accent);
-  --logo-ink: var(--dp-color-on-accent);
-  --glow: rgba(255, 149, 31, 0.14); /* lumière chaude, réservée au cadre principal */
+  --ok: #0b6e61; /* 5,1:1 sur fond vert clair */
+  --ok-bg: var(--dp-color-vert-clair);
+  --ok-bar: var(--dp-color-vert);
+  --info: #1f6fbf;
+  --info-bg: var(--dp-color-bleu-clair);
+  --warn: #93520c; /* 5,2:1 sur fond orange clair */
+  --warn-bg: var(--dp-color-orange-clair);
+  --warn-bar: var(--dp-color-orange);
+  --danger: #c22f2f; /* 4,6:1 sur fond rouge clair */
+  --danger-bg: var(--dp-color-rouge-clair);
+  --danger-bar: var(--dp-color-rouge);
+  --danger-fill: #c22f2f;
+  --on-danger: #ffffff;
 
-  --ok: #5fd39b;
-  --ok-bg: #11261c;
-  --info: #93b7ff;
-  --info-bg: #131c30;
-  --warn: #f4bd4f;
-  --warn-bg: #2a2213;
-  --warn-bar: #e6a23c;
-  --danger: #ff8a80;
-  --danger-bg: #2c1618;
-  --danger-bar: #e5605a;
-  --danger-fill: #e5605a;
-  --on-danger: #07090e;
-
-  /* Graphiques : or pour la série principale, bleu acier pour la seconde */
-  --serie-1: var(--dp-color-value);
-  --serie-2: #7f9cc7;
-  --chart-grid: #1d212b;
-  --chart-axis: #3a3d48;
+  /* Graphiques : bleu pour la série principale, vert pour la seconde */
+  --serie-1: var(--dp-color-bleu);
+  --serie-2: var(--dp-color-vert);
+  --chart-grid: var(--dp-color-fond-survol);
+  --chart-axis: #d3d3d0;
 
   --radius: var(--dp-radius-panel);
-  --radius-sm: var(--dp-radius-panel);
-  --radius-field: 8px;
+  --radius-sm: var(--dp-radius-control);
+  --radius-field: var(--dp-radius-control);
   --shadow: none;
+  --shadow-fenetre: 0 12px 40px rgba(25, 25, 25, 0.16);
   --font: var(--dp-typography-body-face);
-  --font-data: var(--dp-typography-data-face);
+  --font-data: var(--dp-typography-body-face);
   --transition: var(--dp-motion-interaction) var(--dp-motion-easing);
 }
 
-/* Variante claire : mêmes rôles, valeurs ajustées pour le contraste sur fond clair. */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) {
-    color-scheme: light;
-    --dp-color-ground: #f3f4f7;
-    --dp-color-ground-tint: #e8ecf3;
-    --dp-color-panel: #ffffff;
-    --dp-color-value: #7a5710;
-    --dp-color-ink: #0e121a;
-    --dp-color-ink-muted: #3b4250;
-    --dp-color-line: #d5d9e1;
-    --dp-color-panel-raised: #eef0f4;
-    --dp-color-field-line: #8c93a1;
-    --dp-color-ink-subtle: #5a6170;
-    --dp-color-accent-strong: #ffa640;
-    --dp-color-accent-text: #a54c00;
-    --dp-color-accent-soft: #fff1e0;
-    --glow: rgba(255, 149, 31, 0.16);
-    --ok: #16733e;
-    --ok-bg: #e7f5ec;
-    --info: #1f5fa8;
-    --info-bg: #e8f0fb;
-    --warn: #8a5300;
-    --warn-bg: #fff4dc;
-    --warn-bar: #d99000;
-    --danger: #b42318;
-    --danger-bg: #fdebe9;
-    --danger-bar: #d03b3b;
-    --danger-fill: #b42318;
-    --on-danger: #ffffff;
-    --serie-1: #b7892b;
-    --serie-2: #4f6d99;
-    --chart-grid: #e4e7ed;
-    --chart-axis: #c3c8d2;
+/* Mode sombre (option) : graphite neutre, mêmes rôles de couleur. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #191919;
+    --bg-tint: #202020;
+    --surface: #202020;
+    --surface-2: #2a2a2a;
+    --surface-hover: #313131;
+    --text: #e6e6e4;
+    --text-2: #cfcfcb;
+    --muted: #a5a4a0;
+    --border: #2f2f2f;
+    --border-strong: #7a7974;
+    --primary: #1f6fbf;
+    --primary-text: #5aa5ec;
+    --primary-hover: #2a7fd4;
+    --primary-ink: #ffffff;
+    --primary-soft: #1b2a38;
+    --fill-doux: #1b2a38;
+    --fill-doux-survol: #223447;
+    --fill-doux-texte: #8ec0f0;
+    --brand: #5aa5ec;
+    --value: #f2f2f0;
+    --value-accent: #5aa5ec;
+    --focus: #5aa5ec;
+    --ok: #4db6a2;
+    --ok-bg: #16302b;
+    --ok-bar: #3aa391;
+    --info: #7fb7ee;
+    --info-bg: #1b2a38;
+    --warn: #f0a04b;
+    --warn-bg: #3a2a18;
+    --warn-bar: #d9730d;
+    --danger: #f27e7e;
+    --danger-bg: #3b1f1f;
+    --danger-bar: #e03e3e;
+    --danger-fill: #f27e7e;
+    --on-danger: #191919;
+    --serie-1: #5aa5ec;
+    --serie-2: #4db6a2;
+    --chart-grid: #2a2a2a;
+    --chart-axis: #4a4a48;
+    --shadow-fenetre: 0 12px 40px rgba(0, 0, 0, 0.5);
   }
 }
 
-:root[data-theme='light'] {
-  color-scheme: light;
-  --dp-color-ground: #f3f4f7;
-  --dp-color-ground-tint: #e8ecf3;
-  --dp-color-panel: #ffffff;
-  --dp-color-value: #7a5710;
-  --dp-color-ink: #0e121a;
-  --dp-color-ink-muted: #3b4250;
-  --dp-color-line: #d5d9e1;
-  --dp-color-panel-raised: #eef0f4;
-  --dp-color-field-line: #8c93a1;
-  --dp-color-ink-subtle: #5a6170;
-  --dp-color-accent-strong: #ffa640;
-  --dp-color-accent-text: #a54c00;
-  --dp-color-accent-soft: #fff1e0;
-  --glow: rgba(255, 149, 31, 0.16);
-  --ok: #16733e;
-  --ok-bg: #e7f5ec;
-  --info: #1f5fa8;
-  --info-bg: #e8f0fb;
-  --warn: #8a5300;
-  --warn-bg: #fff4dc;
-  --warn-bar: #d99000;
-  --danger: #b42318;
-  --danger-bg: #fdebe9;
-  --danger-bar: #d03b3b;
-  --danger-fill: #b42318;
-  --on-danger: #ffffff;
-  --serie-1: #b7892b;
-  --serie-2: #4f6d99;
-  --chart-grid: #e4e7ed;
-  --chart-axis: #c3c8d2;
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #191919;
+  --bg-tint: #202020;
+  --surface: #202020;
+  --surface-2: #2a2a2a;
+  --surface-hover: #313131;
+  --text: #e6e6e4;
+  --text-2: #cfcfcb;
+  --muted: #a5a4a0;
+  --border: #2f2f2f;
+  --border-strong: #7a7974;
+  --primary: #1f6fbf;
+  --primary-text: #5aa5ec;
+  --primary-hover: #2a7fd4;
+  --primary-ink: #ffffff;
+  --primary-soft: #1b2a38;
+  --fill-doux: #1b2a38;
+  --fill-doux-survol: #223447;
+  --fill-doux-texte: #8ec0f0;
+  --brand: #5aa5ec;
+  --value: #f2f2f0;
+  --value-accent: #5aa5ec;
+  --focus: #5aa5ec;
+  --ok: #4db6a2;
+  --ok-bg: #16302b;
+  --ok-bar: #3aa391;
+  --info: #7fb7ee;
+  --info-bg: #1b2a38;
+  --warn: #f0a04b;
+  --warn-bg: #3a2a18;
+  --warn-bar: #d9730d;
+  --danger: #f27e7e;
+  --danger-bg: #3b1f1f;
+  --danger-bar: #e03e3e;
+  --danger-fill: #f27e7e;
+  --on-danger: #191919;
+  --serie-1: #5aa5ec;
+  --serie-2: #4db6a2;
+  --chart-grid: #2a2a2a;
+  --chart-axis: #4a4a48;
+  --shadow-fenetre: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
 /* ------------------------------ Base -------------------------------- */
@@ -177,14 +204,14 @@ html {
 
 body {
   margin: 0;
-  /* Fond presque noir avec un léger décalage bleu nuit en haut de page. */
-  background: linear-gradient(180deg, var(--bg-tint) 0, var(--bg) 420px) no-repeat, var(--bg);
-  background-color: var(--bg);
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font);
   font-size: var(--dp-typography-body);
   line-height: var(--dp-typography-body-leading);
   -webkit-font-smoothing: antialiased;
+  /* Chiffres de même largeur : les montants s'alignent en colonne */
+  font-variant-numeric: tabular-nums;
 }
 
 body.modal-ouverte {
@@ -195,7 +222,7 @@ h1,
 h2,
 h3 {
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.015em;
   line-height: 1.2;
   text-wrap: balance;
@@ -245,14 +272,14 @@ strong {
   color: var(--danger);
 }
 
-/* Chiffres : police à chasse fixe, chiffres tabulaires */
+/* Chiffres : chiffres tabulaires */
 .donnee {
   font-family: var(--font-data);
   font-variant-numeric: tabular-nums;
 }
 
 .valeur {
-  color: var(--value);
+  color: var(--value-accent);
   font-weight: inherit;
 }
 
@@ -313,7 +340,7 @@ strong {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: var(--primary);
+  color: var(--logo-bg);
   font-weight: 600;
   font-size: 1.1rem;
 }
@@ -439,14 +466,13 @@ strong {
 }
 
 .nav-link:hover {
-  background: var(--surface-2);
+  background: var(--surface-hover);
   color: var(--text);
 }
 
 .nav-link.active {
   background: var(--primary-soft);
   color: var(--primary-text);
-  box-shadow: inset 0 0 0 var(--dp-border-hairline) color-mix(in srgb, var(--primary) 45%, transparent);
 }
 
 @media (min-width: 960px) {
@@ -463,7 +489,7 @@ strong {
     top: 0;
     height: 100vh;
     padding: 24px 16px;
-    background: var(--surface);
+    background: var(--bg-tint);
     border-right: var(--dp-border-hairline) solid var(--border);
     overflow-y: auto;
   }
@@ -535,14 +561,11 @@ strong {
   gap: 10px;
 }
 
-/* Métadonnées : police à chasse fixe, petites capitales espacées */
+/* Métadonnées : petit texte gris */
 .eyebrow {
-  font-family: var(--font-data);
   color: var(--muted);
-  font-size: var(--dp-typography-metadata);
+  font-size: var(--dp-typography-supporting);
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   margin-bottom: 6px;
 }
 
@@ -668,29 +691,9 @@ strong {
 
 .hero-frame {
   position: relative;
-  padding: 14px 14px 0 0;
   min-width: 0;
 }
 
-/* Contours fins décalés : effet de profondeur statique, sans masquer le contenu */
-.hero-frame::before,
-.hero-frame::after {
-  content: '';
-  position: absolute;
-  border: var(--dp-border-hairline) solid var(--border);
-  border-radius: var(--dp-radius-panel);
-  pointer-events: none;
-}
-
-.hero-frame::before {
-  inset: 0 0 14px 14px;
-  opacity: 0.55;
-}
-
-.hero-frame::after {
-  inset: 7px 7px 7px 7px;
-  opacity: 0.85;
-}
 
 .hero-panel {
   position: relative;
@@ -702,23 +705,18 @@ strong {
   background: var(--surface);
   border: var(--dp-border-hairline) solid var(--border);
   border-radius: var(--dp-radius-panel);
-  /* Lumière chaude discrète, réservée à ce panneau principal */
-  box-shadow: 0 28px 70px -30px var(--glow);
 }
 
 .hero-panel-label {
-  font-family: var(--font-data);
-  font-size: var(--dp-typography-metadata);
+  font-size: var(--dp-typography-supporting);
+  font-weight: 500;
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
 
 .hero-figure {
-  font-family: var(--font-data);
   font-variant-numeric: tabular-nums;
   font-size: clamp(2.2rem, 1.7rem + 2vw, 3.25rem);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1;
   color: var(--value);
@@ -769,7 +767,7 @@ strong {
 }
 
 .hero .progress-fill {
-  background: var(--value);
+  background: var(--brand);
 }
 
 .hero-negatif .hero-panel {
@@ -781,18 +779,6 @@ strong {
 }
 
 @media (max-width: 520px) {
-  .hero-frame {
-    padding: 8px 8px 0 0;
-  }
-
-  .hero-frame::before {
-    inset: 0 0 8px 8px;
-  }
-
-  .hero-frame::after {
-    display: none;
-  }
-
   .hero-panel {
     padding: 18px;
   }
@@ -887,6 +873,13 @@ strong {
   overflow: hidden;
 }
 
+/* Nombre impair de chiffres sur deux colonnes : le dernier prend toute la largeur (pas de case vide). */
+@media (max-width: 819px) {
+  .stats-grid > .stat:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (min-width: 820px) {
   .stats-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -913,9 +906,8 @@ strong {
 }
 
 .stat-value {
-  font-family: var(--font-data);
   font-size: 1.3rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   color: var(--value);
@@ -987,14 +979,12 @@ strong {
 }
 
 .btn-secondaire {
-  background: transparent;
-  color: var(--text);
-  border-color: var(--border-strong);
+  background: var(--fill-doux);
+  color: var(--fill-doux-texte);
 }
 
 .btn-secondaire:hover:not(:disabled) {
-  background: var(--surface-2);
-  border-color: var(--text-2);
+  background: var(--fill-doux-survol);
 }
 
 .btn-discret {
@@ -1228,30 +1218,76 @@ textarea.input {
 .radio {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-height: 44px;
   padding: 8px 16px;
-  border: var(--dp-border-hairline) solid var(--border-strong);
   border-radius: var(--dp-radius-control);
+  background: var(--fill-doux);
+  color: var(--fill-doux-texte);
+  font-weight: 500;
   cursor: pointer;
-  transition: border-color var(--transition), background-color var(--transition);
+  transition: background-color var(--transition), color var(--transition);
 }
 
 .radio:hover {
-  border-color: var(--text-2);
+  background: var(--fill-doux-survol);
 }
 
-.radio input,
 .field-check input {
   width: 20px;
   height: 20px;
   accent-color: var(--primary);
 }
 
-.radio:has(input:checked) {
-  border-color: var(--primary);
-  background: var(--primary-soft);
-  font-weight: 500;
+/* Choix sélectionné : bleu plein, texte blanc (comme le bouton principal) */
+.radio:has(input:checked),
+.radio:has(input:checked):hover {
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
+/* Rond de sélection dessiné avec la couleur du texte : le point plein indique le choix (pas seulement la couleur) */
+.radio input,
+.choice input {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  display: grid;
+  place-content: center;
+  cursor: pointer;
+}
+
+.radio input::before,
+.choice input::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: scale(0);
+  transition: transform var(--transition);
+}
+
+.radio input:checked::before,
+.choice input:checked::before {
+  transform: scale(1);
+}
+
+.radio:has(input:focus-visible),
+.choice:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.radio input:focus-visible,
+.choice input:focus-visible {
+  outline: none;
 }
 
 .field-check {
@@ -1297,24 +1333,24 @@ textarea.input {
   min-height: 40px;
   padding: 6px 14px;
   border-radius: var(--dp-radius-control);
-  border: var(--dp-border-hairline) solid var(--border-strong);
-  background: transparent;
-  color: var(--text-2);
-  transition: border-color var(--transition), background-color var(--transition), color var(--transition);
+  border: 0;
+  background: var(--fill-doux);
+  color: var(--fill-doux-texte);
+  transition: background-color var(--transition), color var(--transition);
   font: inherit;
   font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
 }
 
 .chip:hover {
-  border-color: var(--text-2);
+  background: var(--fill-doux-survol);
 }
 
-.chip-on {
-  border-color: var(--primary);
-  background: var(--primary-soft);
-  color: var(--primary-text);
-  font-weight: 500;
+.chip-on,
+.chip-on:hover {
+  background: var(--primary);
+  color: var(--primary-ink);
 }
 
 .chip:focus-within {
@@ -1467,9 +1503,8 @@ ol.rank-list li > span {
   font-size: 0.75rem;
   font-weight: 500;
   padding: 1px 9px;
-  border-radius: var(--dp-radius-control);
-  border: var(--dp-border-hairline) solid var(--border);
-  background: var(--surface-2);
+  border-radius: 6px;
+  background: var(--surface-hover);
   color: var(--text-2);
   vertical-align: middle;
   white-space: nowrap;
@@ -1502,14 +1537,13 @@ ol.rank-list li > span {
 }
 
 .status-toggle {
-  border: var(--dp-border-hairline) solid var(--border-strong);
-  background: transparent;
+  border: 0;
+  background: var(--surface-hover);
 }
 
 .status-paye {
   background: var(--ok-bg);
   color: var(--ok);
-  border-color: var(--ok);
 }
 
 .status-avenir {
@@ -1543,8 +1577,8 @@ ol.rank-list li > span {
   align-items: flex-start;
   padding: 12px 14px;
   border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  border-left-width: 4px;
+  /* Encadré rempli, sans bordure : la couleur de fond et l'icône portent le sens */
+  border: 0;
 }
 
 .notice svg {
@@ -1554,7 +1588,6 @@ ol.rank-list li > span {
 
 .notice-info {
   background: var(--info-bg);
-  border-color: var(--info);
 }
 
 .notice-info svg {
@@ -1563,7 +1596,6 @@ ol.rank-list li > span {
 
 .notice-succes {
   background: var(--ok-bg);
-  border-color: var(--ok);
 }
 
 .notice-succes svg {
@@ -1572,7 +1604,6 @@ ol.rank-list li > span {
 
 .notice-attention {
   background: var(--warn-bg);
-  border-color: var(--warn-bar);
 }
 
 .notice-attention svg {
@@ -1581,7 +1612,6 @@ ol.rank-list li > span {
 
 .notice-danger {
   background: var(--danger-bg);
-  border-color: var(--danger);
 }
 
 .notice-danger svg {
@@ -1619,9 +1649,8 @@ ol.rank-list li > span {
   border-radius: var(--dp-radius-panel);
   background: var(--surface-2);
   color: var(--text);
-  border: var(--dp-border-hairline) solid var(--border-strong);
-  border-left: 3px solid var(--ok);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  border: 0;
+  box-shadow: var(--shadow-fenetre);
   font-weight: 500;
 }
 
@@ -1635,11 +1664,6 @@ ol.rank-list li > span {
 
 .toast-erreur {
   background: var(--danger-bg);
-  border-left-color: var(--danger);
-}
-
-.toast-info {
-  border-left-color: var(--info);
 }
 
 /* ------------------------- Progression / budgets -------------------- */
@@ -1678,7 +1702,7 @@ ol.rank-list li > span {
 }
 
 .progress-objectif .progress-fill {
-  background: var(--value);
+  background: var(--brand);
 }
 
 .progress-mark {
@@ -1805,9 +1829,22 @@ ol.rank-list li > span {
 }
 
 .goal-amounts strong {
-  font-family: var(--font-data);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--value);
+}
+
+/* Progression : une phrase courte et encourageante */
+.goal-step {
+  color: var(--text-2);
+  font-size: var(--dp-typography-supporting);
+  line-height: var(--dp-typography-reading-leading);
+}
+
+.goal-sub {
+  display: block;
+  font-size: var(--dp-typography-metadata);
+  font-weight: 400;
+  color: var(--muted);
 }
 
 /* ----------------------------- Simulateur --------------------------- */
@@ -1824,8 +1861,7 @@ ol.rank-list li > span {
   align-items: flex-start;
   padding: 16px;
   border-radius: var(--radius);
-  border: var(--dp-border-hairline) solid;
-  border-left-width: 4px;
+  border: 0;
 }
 
 .verdict ul {
@@ -1872,8 +1908,7 @@ ol.rank-list li > span {
   align-items: center;
   flex-wrap: wrap;
   gap: 4px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-2);
   border-radius: var(--dp-radius-control);
   padding: 4px;
   align-self: flex-start;
@@ -1893,7 +1928,6 @@ ol.rank-list li > span {
   padding: 4px;
   background: var(--surface-2);
   border-radius: var(--dp-radius-control);
-  border: var(--dp-border-hairline) solid var(--border);
   overflow-x: auto;
   margin-bottom: 4px;
 }
@@ -1924,12 +1958,15 @@ ol.rank-list li > span {
   }
 }
 
-.tab[aria-selected='true'] {
-  background: var(--surface);
-  color: var(--primary-text);
-  box-shadow: var(--shadow);
+.tab:hover {
+  background: var(--surface-hover);
+}
+
+.tab[aria-selected='true'],
+.tab[aria-selected='true']:hover {
+  background: var(--primary);
+  color: var(--primary-ink);
   font-weight: 600;
-  box-shadow: inset 0 0 0 var(--dp-border-hairline) var(--primary);
 }
 
 .history-totals {
@@ -1960,11 +1997,8 @@ ol.rank-list li > span {
 }
 
 .table thead th {
-  font-size: 0.8rem;
+  font-size: var(--dp-typography-metadata);
   color: var(--muted);
-  font-family: var(--font-data);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   font-weight: 500;
 }
 
@@ -2240,7 +2274,7 @@ ol.rank-list li > span {
 .hbar-fill {
   height: 100%;
   border-radius: 999px;
-  background: var(--value);
+  background: var(--brand);
 }
 
 /* --------------------------------- Modales -------------------------- */
@@ -2263,7 +2297,7 @@ ol.rank-list li > span {
   border-radius: 12px 12px 0 0;
   border: var(--dp-border-hairline) solid var(--border);
   padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
-  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-fenetre);
 }
 
 @media (min-width: 640px) {
@@ -2383,9 +2417,9 @@ ol.rank-list li > span {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 2px solid var(--border-strong);
-  font-family: var(--font-data);
-  font-weight: 500;
+  background: var(--surface-hover);
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .step-current {
@@ -2394,14 +2428,13 @@ ol.rank-list li > span {
 }
 
 .step-current .step-num {
-  border-color: var(--primary);
   background: var(--primary);
   color: var(--primary-ink);
 }
 
 .step-done .step-num {
-  border-color: var(--primary);
-  color: var(--primary);
+  background: var(--fill-doux);
+  color: var(--fill-doux-texte);
 }
 
 .step-label {
@@ -2424,21 +2457,15 @@ ol.rank-list li > span {
 .choice {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-height: 52px;
-  padding: 10px 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--dp-radius-panel);
-  transition: border-color var(--transition), background-color var(--transition);
+  padding: 10px 14px;
+  border-radius: var(--dp-radius-control);
+  background: var(--fill-doux);
+  color: var(--fill-doux-texte);
+  transition: background-color var(--transition), color var(--transition);
   cursor: pointer;
   font-weight: 500;
-}
-
-.choice input {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  accent-color: var(--primary);
 }
 
 .choice span {
@@ -2447,14 +2474,14 @@ ol.rank-list li > span {
 }
 
 .choice:hover {
-  border-color: var(--text-2);
+  background: var(--fill-doux-survol);
 }
 
-/* Option choisie : bord d'accent et liseré supérieur distinct */
-.choice-on {
-  border-color: var(--primary);
-  background: var(--primary-soft);
-  box-shadow: inset 0 3px 0 var(--primary);
+/* Option choisie : bleu plein, texte blanc, point dans le rond */
+.choice-on,
+.choice-on:hover {
+  background: var(--primary);
+  color: var(--primary-ink);
 }
 
 .line-row {
@@ -2462,7 +2489,7 @@ ol.rank-list li > span {
   gap: 10px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   padding: 12px;
-  border: 1px solid var(--border);
+  background: var(--surface-2);
   border-radius: var(--dp-radius-panel);
   align-items: end;
 }
@@ -2532,7 +2559,7 @@ ol.rank-list li > span {
   }
 }
 
-/* ------------------- Configuration : mise en page « Financial » ------------------- */
+/* --------------------- Configuration : mise en page en deux colonnes --------------------- */
 
 .onboarding-main {
   max-width: 1180px;
@@ -2552,7 +2579,6 @@ ol.rank-list li > span {
 .hero-frame > .card {
   position: relative;
   z-index: 1;
-  box-shadow: 0 28px 70px -34px var(--glow);
 }
 
 @media (min-width: 900px) {
@@ -2688,7 +2714,6 @@ ol.rank-list li > span {
   background: var(--primary);
   color: var(--primary-ink);
   border: 3px solid var(--surface);
-  box-shadow: 0 6px 18px -6px var(--glow);
   transition: background-color var(--transition);
 }
 
@@ -2797,3 +2822,28 @@ ol.rank-list li > span {
   margin-top: 2px;
   color: var(--primary-text);
 }
+
+/* ------------------------- Identité claire (v2) ------------------------- */
+
+/* Filtres actifs de l'historique : visibles et effaçables en un geste */
+.filtres-actifs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tag-filtre {
+  background: var(--primary-soft);
+  color: var(--primary-text);
+}
+
+/* Résumé des 7 prochains jours */
+.upcoming-summary {
+  color: var(--text-2);
+  font-size: var(--dp-typography-supporting);
+  line-height: var(--dp-typography-reading-leading);
+  margin-bottom: 4px;
+}
+

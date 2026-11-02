@@ -10,6 +10,7 @@ import {
   monthDiff,
   monthLabel,
   ofMonth,
+  relativeDay,
 } from '../dates';
 
 describe('dates', () => {
@@ -59,3 +60,15 @@ describe('dates', () => {
     expect(monthLabel('2026-08')).toBe('août 2026');
   });
 });
+
+describe('dates relatives des échéances', () => {
+  it('aujourd’hui, demain, dans N jours, puis la date', () => {
+    expect(relativeDay('2026-11-12', '2026-11-12')).toBe('Aujourd’hui');
+    expect(relativeDay('2026-11-13', '2026-11-12')).toBe('Demain');
+    expect(relativeDay('2026-11-15', '2026-11-12')).toBe('Dans 3 jours');
+    expect(relativeDay('2026-11-18', '2026-11-12')).toBe('Dans 6 jours');
+    expect(relativeDay('2026-11-19', '2026-11-12')).toBe('Le 19 nov. 2026');
+    expect(relativeDay('2026-12-01', '2026-11-30')).toBe('Demain');
+  });
+});
+

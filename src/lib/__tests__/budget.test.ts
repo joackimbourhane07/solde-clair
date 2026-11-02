@@ -10,6 +10,7 @@ import {
   monthTransactions,
   transactionsInRange,
   upcomingCharges,
+  upcomingSummary,
 } from '../budget';
 import { fixture, TODAY } from '../../test/fixtures';
 
@@ -214,3 +215,16 @@ describe('transactions', () => {
     expect(series[11].balance).toBe(82151 + 1599);
   });
 });
+
+describe('charges des prochains jours', () => {
+  it('résumé sur 7 jours, aujourd’hui inclus', () => {
+    // Le 12 novembre : forfait le 20 (dans 8 jours), loyer déjà passé le 5
+    expect(upcomingSummary(fixture(), TODAY, 7)).toEqual({ count: 0, total: 0 });
+    expect(upcomingSummary(fixture(), TODAY, 9)).toEqual({ count: 1, total: 1599 });
+    // Le 15 novembre, le forfait du 20 entre dans la semaine
+    expect(upcomingSummary(fixture(), '2026-11-15', 7)).toEqual({ count: 1, total: 1599 });
+    // Vu du 30 novembre : le loyer du 5 décembre (le forfait du 20 est passé)
+    expect(upcomingSummary(fixture(), '2026-11-30', 7)).toEqual({ count: 1, total: 60000 });
+  });
+});
+

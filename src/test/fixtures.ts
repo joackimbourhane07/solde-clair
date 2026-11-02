@@ -17,7 +17,7 @@ export function fixture(): AppData {
       variableEstimate: 40000,
       createdAt: '2026-09-01',
     },
-    settings: { theme: 'system' },
+    settings: { theme: 'system', appearanceVersion: 2 },
     categories: [
       { id: 'c-sal', name: 'Salaire', kind: 'income', budget: null },
       { id: 'c-autre-rev', name: 'Autre revenu', kind: 'income', budget: null },
