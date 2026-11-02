@@ -1,5 +1,5 @@
 import type { AppData, Cents, ISODate, Transaction } from '../types';
-import { carryOverInto, monthTransactions, plannedVariable, transactionsInRange } from './budget';
+import { carryOverInto, monthTransactions, plannedVariable, signedAmount, transactionsInRange } from './budget';
 import { addDays, daysElapsedInMonth, daysInMonth, monthOf } from './dates';
 import { sum } from './money';
 
@@ -42,7 +42,7 @@ export interface BalanceForecast {
   events: ForecastEvent[];
 }
 
-const signed = (t: Transaction): Cents => (t.type === 'revenu' ? t.amount : -t.amount);
+const signed = (t: Transaction): Cents => signedAmount(t);
 
 export function balanceForecast(data: AppData, today: ISODate, horizons: number[] = [7, 15, 30]): BalanceForecast {
   const month = monthOf(today);

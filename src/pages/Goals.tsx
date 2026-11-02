@@ -158,8 +158,8 @@ export function Goals() {
                     {deposits.map((d) => (
                       <li key={d.id}>
                         <span>
-                          {formatDate(d.date)} · <strong>{fmt(d.amount)}</strong>
-                          {d.note && <span className="muted"> · {d.note}</span>}
+                          {formatDate(d.date)} – <strong>{fmt(d.amount)}</strong>
+                          {d.note && <span className="muted"> – {d.note}</span>}
                         </span>
                         <span>
                           <IconButton icon="edit" label={`Modifier le versement du ${formatDate(d.date)}`} onClick={() => setDeposit({ goalId: g.id, initial: d })} />
@@ -184,8 +184,8 @@ export function Goals() {
               .map((d) => (
                 <li key={d.id}>
                   <span>
-                    {formatDate(d.date)} · <strong>{fmt(d.amount)}</strong>
-                    {d.note && <span className="muted"> · {d.note}</span>}
+                    {formatDate(d.date)} – <strong>{fmt(d.amount)}</strong>
+                    {d.note && <span className="muted"> – {d.note}</span>}
                   </span>
                   <span>
                     <IconButton icon="edit" label={`Modifier le versement du ${formatDate(d.date)}`} onClick={() => setDeposit({ goalId: null, initial: d })} />

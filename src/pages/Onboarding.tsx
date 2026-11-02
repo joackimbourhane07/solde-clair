@@ -244,7 +244,7 @@ export function Onboarding() {
               </h1>
               <p className="muted">
                 Étape {step + 1} sur {STEPS.length}
-                {step > 0 && step < 5 && ' · Vous pourrez tout modifier plus tard.'}
+                {step > 0 && step < 5 && '. Vous pourrez tout modifier plus tard.'}
               </p>
 
               <form

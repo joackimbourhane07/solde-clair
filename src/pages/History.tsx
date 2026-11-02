@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { Cents, TransactionType } from '../types';
-import { earliestDate, monthReport, monthsHistory, spendingByCategory, transactionsInRange } from '../lib/budget';
+import { earliestDate, monthReport, monthsHistory, signedAmount, spendingByCategory, transactionsInRange } from '../lib/budget';
 import { capitalize, firstDay, formatDate, lastDay, monthLabel, monthLabelShort, monthOf, ofMonth } from '../lib/dates';
 import { sum } from '../lib/money';
 import { KIND_LABELS } from '../lib/categories';
@@ -16,6 +16,7 @@ const TYPE_LABELS: Record<TransactionType, string> = {
   charge: 'Charge fixe',
   depense: 'Dépense',
   epargne: 'Épargne',
+  ajustement: 'Ajustement',
 };
 
 /** Libellés des puces de filtre (au pluriel). */
@@ -97,8 +98,8 @@ function Transactions() {
     setCategory('');
     setMode('mois');
   };
-  const inflow = sum(filtered.filter((t) => t.type === 'revenu').map((t) => t.amount));
-  const outflow = sum(filtered.filter((t) => t.type !== 'revenu').map((t) => t.amount));
+  const inflow = sum(filtered.map(signedAmount).filter((v) => v > 0));
+  const outflow = -sum(filtered.map(signedAmount).filter((v) => v < 0));
 
   return (
     <>
@@ -178,11 +179,11 @@ function Transactions() {
                     {t.status === 'a_venir' && <span className="tag">À venir</span>}
                   </p>
                   <p className="item-meta">
-                    {formatDate(t.date)} · {t.categoryName}
-                    {t.paymentMethod && ` · ${t.paymentMethod}`}
+                    {formatDate(t.date)} – {t.categoryName}
+                    {t.paymentMethod && ` – ${t.paymentMethod}`}
                   </p>
                 </div>
-                <SignedAmount cents={t.amount} positive={t.type === 'revenu'} />
+                <SignedAmount cents={signedAmount(t)} positive={signedAmount(t) >= 0} />
               </li>
             ))}
           </ul>

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { aller, norm, preparer, stat } from './outils';
+import { aller, chargerDemo, norm, preparer, problemesDeMiseEnPage, stat } from './outils';
 
 test.use({ viewport: { width: 375, height: 812 } });
 
@@ -19,7 +19,7 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   await page.getByRole('button', { name: /Continuer/ }).click();
   await expect(page.getByText('Indiquez un prénom ou un pseudonyme.')).toBeVisible();
   await page.getByLabel('Prénom ou pseudonyme').fill('Léo Test');
-  await page.getByText('Étudiant·e', { exact: true }).click();
+  await page.getByText('Étudiant(e)', { exact: true }).click();
   await page.getByRole('button', { name: /Continuer/ }).click();
 
   const montant = page.getByLabel('Montant mensuel');
@@ -139,5 +139,50 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   await expect(page.getByRole('heading', { name: 'Bonjour Léo Test' })).toBeVisible();
   expect(JSON.parse((await page.evaluate(() => localStorage.getItem('soldeclair:donnees:v1')))!)).toEqual(JSON.parse(sauvegarde!));
 
+  expect(erreurs).toEqual([]);
+});
+
+test('carte restaurant et onglet Compte : revenu, paiement, soldes séparés, ajustement (mobile)', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const erreurs = await preparer(page);
+  await chargerDemo(page);
+
+  // Revenu versé sur la carte restaurant (catégorie ajoutée automatiquement)
+  await aller(page, 'revenus');
+  await page.getByRole('button', { name: 'Ajouter un revenu' }).first().click();
+  const revenu = page.getByRole('dialog');
+  await revenu.getByLabel('Nom').fill('Titres-restaurant');
+  await revenu.getByLabel('Montant', { exact: true }).fill('180');
+  await revenu.getByLabel('Catégorie').selectOption({ label: 'Carte restaurant' });
+  await expect(revenu.getByRole('group', { name: 'Versé sur' }).getByLabel('Carte restaurant')).toBeChecked();
+  await revenu.getByLabel('Date du premier versement').fill('2026-11-01');
+  await revenu.getByRole('button', { name: 'Ajouter le revenu' }).click();
+  expect(await stat(page, 'Sur la carte restaurant')).toBe('180,00 €');
+
+  // Déjeuner payé avec la carte restaurant
+  await aller(page, 'depenses');
+  await page.getByRole('button', { name: 'Ajouter une dépense' }).first().click();
+  const depense = page.getByRole('dialog');
+  await depense.getByLabel('Montant', { exact: true }).fill('9,80');
+  await depense.getByLabel('Description').fill('Déjeuner');
+  await depense.getByLabel(/Moyen de paiement/).selectOption('Carte restaurant');
+  await depense.getByRole('button', { name: 'Ajouter la dépense' }).click();
+
+  // Onglet Compte depuis la barre du bas
+  await page.locator('.bottom-nav').getByRole('link', { name: 'Compte' }).click();
+  await expect(page.getByRole('heading', { name: 'Mon compte' })).toBeVisible();
+  await expect(page.locator('.solde-detail')).toContainText('170,20');
+  await page.getByRole('group', { name: 'Compte affiché' }).getByRole('button', { name: 'Carte restaurant' }).click();
+  await expect(page.locator('.solde-montant')).toHaveText(/^170,20\s€$/);
+  await expect(page.getByText('Déjeuner')).toBeVisible();
+
+  // Ajuster le solde du compte bancaire
+  await page.getByRole('group', { name: 'Compte affiché' }).getByRole('button', { name: 'Tout' }).click();
+  await page.getByRole('button', { name: 'Ajuster le solde' }).click();
+  const ajuster = page.getByRole('dialog', { name: 'Ajuster le solde' });
+  await ajuster.getByLabel('Solde réel – Compte bancaire').fill('1 250,40');
+  await ajuster.getByRole('button', { name: 'Enregistrer le solde' }).click();
+  await expect(page.locator('.solde-detail dd').first()).toHaveText(/^1\s250,40\s€$/);
+  expect(await problemesDeMiseEnPage(page)).toEqual([]);
   expect(erreurs).toEqual([]);
 });

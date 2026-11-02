@@ -2,10 +2,10 @@ import type { Category, CategoryKind, ProfileType } from '../types';
 import { newId } from './id';
 
 export const PROFILE_LABELS: Record<ProfileType, string> = {
-  etudiant: 'Étudiant·e',
-  alternant: 'Alternant·e',
-  salarie: 'Salarié·e',
-  independant: 'Indépendant·e',
+  etudiant: 'Étudiant(e)',
+  alternant: 'Alternant(e)',
+  salarie: 'Salarié(e)',
+  independant: 'Indépendant(e)',
   autre: 'Autre situation',
 };
 
@@ -18,7 +18,7 @@ export const KIND_LABELS: Record<CategoryKind, string> = {
 /** Catégories générales suggérées pour tous les profils. */
 export const GENERAL_CATEGORIES: Record<CategoryKind, string[]> = {
   income: [
-    'Salaire', 'Bourse', 'Allocation', 'Aide familiale', 'Prime', 'Remboursement',
+    'Salaire', 'Carte restaurant', 'Bourse', 'Allocation', 'Aide familiale', 'Prime', 'Remboursement',
     'Vente', 'Revenus indépendants', 'Revenus locatifs', 'Autre revenu',
   ],
   fixed: [
@@ -51,21 +51,21 @@ export const PROFILE_PRESETS: Record<ProfileType, ProfilePreset> = {
     suggestedCharges: ['Loyer', 'Téléphone', 'Transport', 'Frais scolaires'],
   },
   alternant: {
-    income: ['Salaire', 'Aides', 'Prime', 'Aide familiale', 'Autre revenu'],
+    income: ['Salaire', 'Carte restaurant', 'Aides', 'Prime', 'Aide familiale', 'Autre revenu'],
     fixed: ['Loyer', 'Transport', 'Téléphone', 'Internet', 'Assurance', 'Abonnements', 'Crédit', 'Autre charge'],
     variable: ['Alimentation', 'Carburant', 'Transport', 'Restaurants', 'Loisirs', 'Shopping', 'Santé', 'Imprévus', 'Autre dépense'],
     variableWeights: { Alimentation: 35, Carburant: 15, Transport: 5, Restaurants: 10, Loisirs: 12, Shopping: 10, Santé: 5, Imprévus: 5, 'Autre dépense': 3 },
     suggestedCharges: ['Loyer', 'Téléphone', 'Abonnements', 'Assurance'],
   },
   salarie: {
-    income: ['Salaire', 'Primes', 'Allocations', 'Remboursement', 'Revenus locatifs', 'Autre revenu'],
+    income: ['Salaire', 'Carte restaurant', 'Primes', 'Allocations', 'Remboursement', 'Revenus locatifs', 'Autre revenu'],
     fixed: ['Loyer ou crédit', 'Assurances', 'Énergie', 'Eau', 'Internet', 'Téléphone', 'Transport', 'Enfants', 'Abonnements', 'Autre charge'],
     variable: ['Alimentation', 'Carburant', 'Enfants', 'Loisirs', 'Restaurants', 'Shopping', 'Santé', 'Cadeaux', 'Voyages', 'Imprévus', 'Autre dépense'],
     variableWeights: { Alimentation: 35, Carburant: 10, Enfants: 10, Loisirs: 10, Restaurants: 8, Shopping: 8, Santé: 5, Cadeaux: 3, Voyages: 5, Imprévus: 4, 'Autre dépense': 2 },
     suggestedCharges: ['Loyer ou crédit', 'Assurances', 'Énergie', 'Internet', 'Téléphone'],
   },
   independant: {
-    income: ['Revenus indépendants', 'Remboursement', 'Allocation', 'Vente', 'Autre revenu'],
+    income: ['Revenus indépendants', 'Carte restaurant', 'Remboursement', 'Allocation', 'Vente', 'Autre revenu'],
     fixed: ['Loyer', 'Cotisations sociales', 'Assurance', 'Téléphone', 'Internet', 'Électricité', 'Abonnements', 'Logiciels', 'Autre charge'],
     variable: ['Alimentation', 'Carburant', 'Transport', 'Matériel', 'Restaurants', 'Loisirs', 'Santé', 'Imprévus', 'Autre dépense'],
     variableWeights: { Alimentation: 35, Carburant: 10, Transport: 5, Matériel: 12, Restaurants: 10, Loisirs: 12, Santé: 6, Imprévus: 7, 'Autre dépense': 3 },
@@ -109,4 +109,4 @@ export function isDuplicateName(categories: Category[], kind: CategoryKind, name
   return categories.some((c) => c.kind === kind && c.id !== exceptId && c.name.toLocaleLowerCase('fr') === n);
 }
 
-export const PAYMENT_METHODS = ['Carte bancaire', 'Espèces', 'Virement', 'Prélèvement', 'Chèque', 'Paiement mobile', 'Autre'];
+export const PAYMENT_METHODS = ['Carte bancaire', 'Carte restaurant', 'Espèces', 'Virement', 'Prélèvement', 'Chèque', 'Paiement mobile', 'Autre'];

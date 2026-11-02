@@ -3,6 +3,7 @@ import {
   addDays,
   addMonths,
   addMonthsToDate,
+  dayHeader,
   daysInMonth,
   daysRemainingInMonth,
   formatDate,
@@ -57,6 +58,8 @@ describe('dates', () => {
     expect(isValidISODate('2026-13-01')).toBe(false);
     expect(formatDate('2026-11-05')).toBe('5 nov. 2026');
     expect(formatDate('2026-07-14', true)).toBe('14 juillet 2026');
+    expect(formatDate('2026-12-01')).toBe('1er déc. 2026');
+    expect(formatDate('2026-12-01', true)).toBe('1er décembre 2026');
     expect(monthLabel('2026-08')).toBe('août 2026');
   });
 });
@@ -68,7 +71,15 @@ describe('dates relatives des échéances', () => {
     expect(relativeDay('2026-11-15', '2026-11-12')).toBe('Dans 3 jours');
     expect(relativeDay('2026-11-18', '2026-11-12')).toBe('Dans 6 jours');
     expect(relativeDay('2026-11-19', '2026-11-12')).toBe('Le 19 nov. 2026');
+    expect(relativeDay('2026-12-01', '2026-11-12')).toBe('Le 1er déc. 2026');
     expect(relativeDay('2026-12-01', '2026-11-30')).toBe('Demain');
+  });
+
+  it('en-têtes de jour du relevé, comme une appli bancaire', () => {
+    expect(dayHeader('2026-11-12', '2026-11-12')).toBe('Aujourd’hui');
+    expect(dayHeader('2026-11-11', '2026-11-12')).toBe('Hier');
+    expect(dayHeader('2026-11-04', '2026-11-12')).toBe('Mercredi 4 novembre 2026');
+    expect(dayHeader('2026-12-01', '2026-12-10')).toBe('Mardi 1er décembre 2026');
   });
 });
 

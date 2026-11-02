@@ -8,6 +8,7 @@ import { useApp } from '../state/AppState';
 
 export const NAV_ITEMS = [
   { to: '/', label: 'Tableau de bord', short: 'Accueil', icon: 'home' },
+  { to: '/compte', label: 'Mon compte', short: 'Compte', icon: 'wallet' },
   { to: '/depenses', label: 'Dépenses', short: 'Dépenses', icon: 'expense' },
   { to: '/revenus', label: 'Revenus', short: 'Revenus', icon: 'income' },
   { to: '/charges', label: 'Charges fixes', short: 'Charges', icon: 'calendar' },
@@ -18,8 +19,8 @@ export const NAV_ITEMS = [
   { to: '/parametres', label: 'Paramètres', short: 'Paramètres', icon: 'settings' },
 ];
 
-// Barre du bas (mobile) : Accueil, Dépenses, [+ Ajouter], Budgets, Plus.
-const MOBILE_MAIN = ['/', '/depenses', '/budgets'];
+// Barre du bas (mobile) : Accueil, Compte, [+ Ajouter], Budgets, Plus (Dépenses est dans « Plus »).
+const MOBILE_MAIN = ['/', '/compte', '/budgets'];
 
 /** Logo : ramène à la page d'accueil (continuer avec son profil ou en créer un autre). */
 function Logo() {
@@ -140,7 +141,7 @@ export function Layout({ children }: { children: ReactNode }) {
           {NAV_ITEMS.filter((i) => MOBILE_MAIN.includes(i.to))
             .flatMap((item) => [
               item,
-              ...(item.to === '/depenses' ? [null] : []), // emplacement central du bouton « + »
+              ...(item.to === '/compte' ? [null] : []), // emplacement central du bouton « + »
             ])
             .map((item) =>
               item ? (

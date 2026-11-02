@@ -140,11 +140,26 @@ export function monthLabelShort(month: MonthKey): string {
   return `${MONTH_SHORT[m - 1]} ${String(year).slice(2)}`;
 }
 
-/** « 5 nov. 2026 » ou « 5 novembre 2026 ». */
+/** Numéro du jour à la française : « 1er », puis « 2 », « 3 »… */
+const jour = (day: number) => (day === 1 ? '1er' : String(day));
+
+/** « 5 nov. 2026 » ou « 5 novembre 2026 » (« 1er nov. 2026 » le premier du mois). */
 export function formatDate(date: ISODate, long = false): string {
   const { year, month, day } = parseISO(date);
-  if (long) return `${day} ${MONTH_NAMES[month - 1]} ${year}`;
-  return `${day} ${MONTH_SHORT[month - 1]} ${year}`;
+  if (long) return `${jour(day)} ${MONTH_NAMES[month - 1]} ${year}`;
+  return `${jour(day)} ${MONTH_SHORT[month - 1]} ${year}`;
+}
+
+const WEEKDAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+
+/** En-tête de journée d'un relevé : « Aujourd’hui », « Hier », sinon « Mercredi 11 novembre 2026 ». */
+export function dayHeader(date: ISODate, today: ISODate): string {
+  const n = dayDiff(date, today);
+  if (n === 0) return 'Aujourd’hui';
+  if (n === 1) return 'Hier';
+  const { year, month, day } = parseISO(date);
+  const weekday = WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
+  return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${jour(day)} ${MONTH_NAMES[month - 1]} ${year}`;
 }
 
 /** Date relative pour les échéances proches : « Aujourd’hui », « Demain », « Dans 3 jours », sinon « Le 3 déc. 2026 ». */

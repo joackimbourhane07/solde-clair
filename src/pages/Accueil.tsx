@@ -164,7 +164,7 @@ export default function Accueil() {
       <main id="contenu">
         {/* 2. Introduction */}
         <section className="accueil-intro accueil-conteneur" aria-labelledby="accueil-titre">
-          <p className="accueil-surtitre">Budget personnel · gratuit · sans banque</p>
+          <p className="accueil-surtitre">Budget personnel, gratuit et sans banque</p>
           <h1 id="accueil-titre" ref={titreRef} tabIndex={-1}>
             Votre budget devient enfin clair.
           </h1>
@@ -286,7 +286,7 @@ export default function Accueil() {
               <p className="maquette-phrase">
                 Il vous reste <strong>425{N}€</strong> pour terminer le mois, soit environ <strong>14{N}€</strong> par jour.
               </p>
-              <p className="maquette-meta">30 jours restants · 62{N}% des revenus déjà dépensés</p>
+              <p className="maquette-meta">30 jours restants – 62{N}% des revenus déjà dépensés</p>
               <div className="maquette-barre">
                 <span style={{ width: '62%' }} />
               </div>
@@ -406,21 +406,21 @@ export default function Accueil() {
           <ul className="accueil-profils">
             <li className="accueil-carte">
               <ProfilEtudiant />
-              <h3>Étudiant·e</h3>
+              <h3>Étudiant(e)</h3>
               <p>Bourse, aide au logement, petits jobs, frais d’inscription : l’essentiel est prêt.</p>
             </li>
             <li className="accueil-carte">
               <ProfilAlternant />
-              <h3>Alternant·e</h3>
+              <h3>Alternant(e)</h3>
               <p>Salaire d’alternance, transports, premier logement : un budget qui suit votre rythme.</p>
             </li>
             <li className="accueil-carte">
               <ProfilSalarie />
-              <h3>Salarié·e</h3>
+              <h3>Salarié(e)</h3>
               <p>Salaire, loyer ou crédit, épargne de précaution : une vue claire de chaque mois.</p>
             </li>
           </ul>
-          <p className="accueil-texte centre petit">Indépendant·e ou autre situation ? SoldeClair s’adapte aussi.</p>
+          <p className="accueil-texte centre petit">Indépendant(e) ou autre situation ? SoldeClair s’adapte aussi.</p>
         </section>
 
         {/* 10. Confidentialité */}

@@ -8,6 +8,7 @@ import type { AppData } from '../types';
 import { PROFILES_KEY, STORAGE_KEY, emptyData, exportJSON, parseBackup } from '../lib/storage';
 import { fixture, TODAY } from '../test/fixtures';
 import pageHtml from '../../index.html?raw';
+import iconeSvg from '../../public/icone-soldeclair.svg?raw';
 
 const norm = (s: string | null | undefined) => (s ?? '').replace(/[  ]/g, ' ');
 
@@ -35,7 +36,7 @@ describe('configuration initiale', () => {
     expect(screen.getByText('Indiquez un prénom ou un pseudonyme.')).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Prénom ou pseudonyme'), 'Sam');
-    await user.click(screen.getByLabelText('Alternant·e'));
+    await user.click(screen.getByLabelText('Alternant(e)'));
     await user.click(screen.getByRole('button', { name: /Continuer/ }));
 
     // Revenus
@@ -398,7 +399,7 @@ describe('identité claire et améliorations v2', () => {
   it('accueil : résumé des 7 prochains jours et dates relatives', () => {
     renderApp();
     expect(screen.getByText('Aucune charge prévue dans les 7 prochains jours.')).toBeInTheDocument();
-    expect(screen.getByText(/Le 20 nov\. 2026 · Téléphone/)).toBeInTheDocument();
+    expect(screen.getByText(/Le 20 nov\. 2026 – Téléphone/)).toBeInTheDocument();
   });
 
   it('historique : filtres actifs visibles et effaçables en un geste', async () => {
@@ -657,10 +658,10 @@ describe('historique et bilan', () => {
   it('budgets : l’essentiel en une phrase, et une piste quand la limite est dépassée', async () => {
     const user = renderApp(fixture(), '/budgets');
     const alim = screen.getByRole('heading', { name: 'Alimentation' }).closest('.card')! as HTMLElement;
-    expect(norm(alim.querySelector('.budget-phrase')!.textContent)).toBe('58,00 € dépensés sur 50,00 € · dépassement de 8,00 €');
+    expect(norm(alim.querySelector('.budget-phrase')!.textContent)).toBe('58,00 € dépensés sur 50,00 €, dépassement de 8,00 €');
     expect(within(alim).getByText(/Vous pouvez consulter les dépenses concernées ou ajuster cette limite pour le mois/)).toBeInTheDocument();
     const loisirs = screen.getByRole('heading', { name: 'Loisirs' }).closest('.card')! as HTMLElement;
-    expect(norm(loisirs.querySelector('.budget-phrase')!.textContent)).toBe('60,00 € dépensés sur 80,00 € (75 %) · il reste 20,00 €');
+    expect(norm(loisirs.querySelector('.budget-phrase')!.textContent)).toBe('60,00 € dépensés sur 80,00 € (75 %), il reste 20,00 €');
     // « Voir les dépenses » ouvre la liste filtrée sur la catégorie
     await user.click(within(alim).getByRole('link', { name: 'Voir les dépenses' }));
     expect(screen.getByLabelText('Catégorie')).toHaveValue('c-alim');
@@ -672,5 +673,143 @@ describe('historique et bilan', () => {
     const row = screen.getByRole('row', { name: /Dépenses variables/ });
     expect(norm(row.textContent)).toContain('118,00 €');
     expect(norm(row.textContent)).toContain('en hausse de 18,00 €');
+  });
+});
+
+/** Jeu fictif avec une carte restaurant : 180 € versés le 1er, un déjeuner de 9,80 € le 11. */
+function avecCarte(): AppData {
+  const d = fixture();
+  d.categories.push({ id: 'c-cr', name: 'Carte restaurant', kind: 'income', budget: null });
+  d.incomes.push({ id: 'i-cr', name: 'Titres-restaurant', amount: 18000, date: '2026-11-01', categoryId: 'c-cr', recurring: true, frequency: 'mensuel', endDate: null, note: '' });
+  d.expenses.push({ id: 'e-cr', amount: 980, categoryId: 'c-alim', date: '2026-11-11', description: 'Déjeuner', paymentMethod: 'Carte restaurant' });
+  return d;
+}
+
+describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
+  it('onglet Compte : solde du jour et opérations jour par jour, comme une appli bancaire', () => {
+    renderApp(fixture(), '/compte');
+    expect(screen.getByRole('heading', { name: 'Mon compte' })).toBeInTheDocument();
+    expect(screen.getByText('Compte bancaire – solde aujourd’hui')).toBeInTheDocument();
+    expect(norm(document.querySelector('.solde-montant')?.textContent)).toBe('2 590,52 €');
+    // Sans carte restaurant, pas de choix de compte
+    expect(screen.queryByRole('group', { name: 'Compte affiché' })).not.toBeInTheDocument();
+    // Jour du concert : opération et solde de fin de journée
+    const jour = screen.getByRole('region', { name: 'Hier' });
+    expect(within(jour).getByText('Concert')).toBeInTheDocument();
+    expect(norm(jour.querySelector('.releve-solde')?.textContent)).toBe('Solde : 2 590,52 €');
+    // À venir : le forfait du 20
+    expect(screen.getByText('Forfait')).toBeInTheDocument();
+  });
+
+  it('« Ajuster le solde » : le solde réel est enregistré, l’ajustement se supprime', async () => {
+    const user = renderApp(fixture(), '/compte');
+    await user.click(screen.getByRole('button', { name: 'Ajuster le solde' }));
+    const dialog = screen.getByRole('dialog', { name: 'Ajuster le solde' });
+    const champ = within(dialog).getByLabelText('Solde réel – Compte bancaire');
+    await user.clear(champ);
+    await user.type(champ, '2600');
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer le solde' }));
+    await waitFor(() => expect(stored().adjustments).toMatchObject([{ account: 'compte', date: TODAY, amount: 948 }]));
+    expect(norm(document.querySelector('.solde-montant')?.textContent)).toBe('2 600,00 €');
+    const aujourdhui = screen.getByRole('region', { name: 'Aujourd’hui' });
+    expect(within(aujourdhui).getByText('Ajustement du solde')).toBeInTheDocument();
+    await user.click(within(aujourdhui).getByRole('button', { name: /Supprimer cet ajustement/ }));
+    await user.click(within(screen.getByRole('alertdialog', { name: 'Supprimer cet ajustement ?' })).getByRole('button', { name: 'Supprimer' }));
+    await waitFor(() => expect(stored().adjustments).toEqual([]));
+  });
+
+  it('« Ajuster le solde » : un solde négatif (découvert) est possible', async () => {
+    const user = renderApp(fixture(), '/compte');
+    await user.click(screen.getByRole('button', { name: 'Ajuster le solde' }));
+    const dialog = screen.getByRole('dialog', { name: 'Ajuster le solde' });
+    const champ = within(dialog).getByLabelText('Solde réel – Compte bancaire');
+    await user.clear(champ);
+    await user.type(champ, '50');
+    await user.click(within(dialog).getByLabelText('Solde négatif (découvert)'));
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer le solde' }));
+    expect(norm(document.querySelector('.solde-montant')?.textContent)).toBe('− 50,00 €');
+  });
+
+  it('carte restaurant : soldes séparés et filtre par compte', async () => {
+    const user = renderApp(avecCarte(), '/compte');
+    const choix = screen.getByRole('group', { name: 'Compte affiché' });
+    expect(within(choix).getAllByRole('button').map((b) => b.textContent)).toEqual(['Tout', 'Compte bancaire', 'Carte restaurant']);
+    const detail = document.querySelector('.solde-detail')!;
+    expect(norm(detail.textContent)).toContain('Compte bancaire2 590,52 €');
+    expect(norm(detail.textContent)).toContain('Carte restaurant170,20 €');
+    expect(norm(document.querySelector('.solde-montant')?.textContent)).toBe('2 760,72 €');
+    await user.click(within(choix).getByRole('button', { name: 'Carte restaurant' }));
+    expect(screen.getByText('Carte restaurant – solde aujourd’hui')).toBeInTheDocument();
+    expect(norm(document.querySelector('.solde-montant')?.textContent)).toBe('170,20 €');
+    expect(screen.getByText('Déjeuner')).toBeInTheDocument();
+    expect(screen.queryByText('Concert')).not.toBeInTheDocument();
+  });
+
+  it('revenus : le cumul de toutes les sources, puis compte bancaire et carte restaurant à part', () => {
+    renderApp(avecCarte(), '/revenus');
+    const stat = (label: string) => norm(screen.getByText(label).parentElement!.textContent);
+    expect(stat('Revenus de novembre 2026')).toContain('1 880,50 €');
+    expect(stat('Revenus de novembre 2026')).toContain('Toutes les sources');
+    expect(stat('Sur le compte bancaire')).toContain('1 700,50 €');
+    expect(stat('Sur la carte restaurant')).toContain('180,00 €');
+  });
+
+  it('revenu : « Versé sur » se règle tout seul sur la carte restaurant pour cette catégorie', async () => {
+    const user = renderApp(avecCarte(), '/revenus');
+    await user.click(screen.getAllByRole('button', { name: 'Ajouter un revenu' })[0]);
+    const dialog = screen.getByRole('dialog');
+    const verse = within(dialog).getByRole('group', { name: 'Versé sur' });
+    expect(within(verse).getByLabelText('Compte bancaire')).toBeChecked();
+    await user.selectOptions(within(dialog).getByLabelText('Catégorie'), 'c-cr');
+    expect(within(verse).getByLabelText('Carte restaurant')).toBeChecked();
+  });
+
+  it('dépense : « Carte restaurant » parmi les moyens de paiement', async () => {
+    const user = renderApp(fixture(), '/depenses');
+    await user.click(screen.getAllByRole('button', { name: 'Ajouter une dépense' })[0]);
+    const options = within(within(screen.getByRole('dialog')).getByLabelText(/Moyen de paiement/)).getAllByRole('option').map((o) => o.textContent);
+    expect(options).toEqual(expect.arrayContaining(['Carte bancaire', 'Carte restaurant', 'Espèces']));
+  });
+
+  it('tableau de bord : épargne du mois en pourcentage et objectifs en cours', () => {
+    renderApp();
+    // 100 € épargnés sur 150 € → 67 %
+    expect(screen.getByText(norm('67 % de l’objectif du mois : il vous manque 50,00 €.'), { normalizer: norm })).toBeInTheDocument();
+    const objectifs = screen.getByRole('list', { name: 'Objectifs en cours' });
+    expect(norm(objectifs.textContent)).toContain('Voyage');
+    expect(norm(objectifs.textContent)).toContain('35 %');
+  });
+
+  it('tableau de bord : objectif dépassé → « atteint à 300 % »', () => {
+    const d = fixture();
+    d.profile!.monthlySavingsTarget = 3333;
+    renderApp(d);
+    expect(screen.getByText(norm('Objectif du mois atteint à 300 %. Bravo !'), { normalizer: norm })).toBeInTheDocument();
+  });
+
+  it('navigation : « Mon compte » dans le menu, « Compte » dans la barre du bas', () => {
+    renderApp();
+    expect(within(screen.getByRole('complementary', { name: 'Navigation principale' })).getByRole('link', { name: /Mon compte/ })).toBeInTheDocument();
+    const bas = screen.getByRole('navigation', { name: 'Navigation principale (mobile)' });
+    expect(within(bas).getAllByRole('link').map((l) => l.textContent)).toEqual(['Accueil', 'Compte', 'Budgets']);
+  });
+
+  it('aucun séparateur « · » dans l’interface', () => {
+    const pages = ['/', '/compte', '/revenus', '/depenses', '/charges', '/budgets', '/objectifs', '/simulateur', '/historique', '/parametres', '/presentation'];
+    for (const page of pages) {
+      renderApp(avecCarte(), page);
+      expect(document.body.textContent, page).not.toContain('·');
+      cleanup();
+    }
+    renderApp(emptyData(), '/bienvenue');
+    expect(document.body.textContent).not.toContain('·');
+  });
+
+  it('icône de l’onglet : bleue, sous un nouveau nom (l’ancienne orange n’est plus utilisée)', () => {
+    expect(pageHtml).toContain('href="/icone-soldeclair.svg"');
+    expect(pageHtml).toContain('href="/icone-32.png"');
+    expect(pageHtml).toContain('rel="apple-touch-icon"');
+    expect(pageHtml).not.toContain('favicon.svg');
+    expect(iconeSvg.toLowerCase()).toContain('#2383e2');
   });
 });

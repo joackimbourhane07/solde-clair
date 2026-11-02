@@ -1,4 +1,5 @@
 import type {
+  AccountId,
   AppData,
   Category,
   Cents,
@@ -44,6 +45,24 @@ export function chargeStatus(charge: FixedCharge, date: ISODate, today: ISODate)
 }
 
 /* -------------------------------------------------------------------------- */
+/* Comptes : compte bancaire et carte restaurant                               */
+/* -------------------------------------------------------------------------- */
+
+/** Reconnaît la carte restaurant / les titres-restaurant dans un nom (catégorie, revenu, moyen de paiement). */
+export function isCarteRestaurant(nom: string): boolean {
+  // « Restaurants » (catégorie de dépenses) ne doit pas être confondu avec la carte restaurant.
+  return /(?:cartes?|titres?|tickets?)[- ]?rest(?:o|aurant)s?\b|swile|edenred|pluxee|sodexo|up d[ée]j|bimpli|apetiz|conecs/i.test(nom);
+}
+
+export const PAIEMENT_CARTE_RESTAURANT = 'Carte restaurant';
+
+/** Mouvement signé : + pour une entrée, − pour une sortie (un ajustement porte déjà son signe). */
+export function signedAmount(t: Transaction): Cents {
+  if (t.type === 'revenu' || t.type === 'ajustement') return t.amount;
+  return -t.amount;
+}
+
+/* -------------------------------------------------------------------------- */
 /* Transactions d'un mois                                                      */
 /* -------------------------------------------------------------------------- */
 
@@ -54,6 +73,8 @@ export function monthTransactions(data: AppData, month: MonthKey, today: ISODate
   const goalName = (id: string | null) =>
     id ? data.goals.find((g) => g.id === id)?.name ?? 'Objectif supprimé' : 'Épargne libre';
   const list: Transaction[] = [];
+  const compteRevenu = (inc: AppData['incomes'][number]): AccountId =>
+    inc.account ?? (isCarteRestaurant(name(inc.categoryId)) || isCarteRestaurant(inc.name) ? 'carte-restaurant' : 'compte');
 
   for (const inc of data.incomes) {
     const dates =
@@ -74,6 +95,7 @@ export function monthTransactions(data: AppData, month: MonthKey, today: ISODate
         amount: inc.amount,
         note: inc.note,
         paymentMethod: '',
+        account: compteRevenu(inc),
       });
     }
   }
@@ -92,6 +114,7 @@ export function monthTransactions(data: AppData, month: MonthKey, today: ISODate
         note: ch.note,
         paymentMethod: '',
         status: chargeStatus(ch, date, today),
+        account: 'compte',
       });
     }
   }
@@ -109,6 +132,7 @@ export function monthTransactions(data: AppData, month: MonthKey, today: ISODate
       amount: ex.amount,
       note: '',
       paymentMethod: ex.paymentMethod,
+      account: isCarteRestaurant(ex.paymentMethod) ? 'carte-restaurant' : 'compte',
     });
   }
 
@@ -125,6 +149,24 @@ export function monthTransactions(data: AppData, month: MonthKey, today: ISODate
       amount: s.amount,
       note: s.note,
       paymentMethod: '',
+      account: 'compte',
+    });
+  }
+
+  for (const a of data.adjustments ?? []) {
+    if (monthOf(a.date) !== month) continue;
+    list.push({
+      key: `aju-${a.id}`,
+      sourceId: a.id,
+      type: 'ajustement',
+      date: a.date,
+      label: 'Ajustement du solde',
+      categoryId: null,
+      categoryName: a.account === 'carte-restaurant' ? 'Carte restaurant' : 'Compte bancaire',
+      amount: a.amount,
+      note: a.note,
+      paymentMethod: '',
+      account: a.account,
     });
   }
 
@@ -153,6 +195,7 @@ export function earliestDate(data: AppData, today: ISODate): ISODate {
     ...data.fixedCharges.map((c) => c.date),
     ...data.expenses.map((e) => e.date),
     ...data.savings.map((s) => s.date),
+    ...(data.adjustments ?? []).map((a) => a.date),
   ];
   return dates.reduce((min, d) => (d < min ? d : min), today);
 }
@@ -169,7 +212,7 @@ export type ForecastBasis = 'reel' | 'rythme' | 'plan';
 
 /** Solde propre d'un mois, sans report : revenus − charges fixes − dépenses variables − épargne versée. */
 function monthNet(data: AppData, month: MonthKey, today: ISODate): Cents {
-  return sum(monthTransactions(data, month, today).map((t) => (t.type === 'revenu' ? t.amount : -t.amount)));
+  return sum(monthTransactions(data, month, today).map(signedAmount));
 }
 
 /** Le report est actif par défaut ; il peut être désactivé dans les paramètres. */
@@ -222,6 +265,8 @@ export interface MonthSummary {
   savingsRemaining: Cents;
   /** Reste (ou dépassement) des mois précédents reporté sur ce mois ; 0 si le report est désactivé. */
   carryOver: Cents;
+  /** Ajustements de solde datés de ce mois (signés). */
+  adjustments: Cents;
   /** Solde disponible = report + revenus − charges fixes − dépenses variables − épargne versée. */
   available: Cents;
   /** Part des revenus consommée par les dépenses (charges + variables), en %. */
@@ -260,7 +305,9 @@ export function monthSummary(data: AppData, month: MonthKey, today: ISODate): Mo
   const savingsRemaining = Math.max(0, savingsTarget - saved);
   const totalExpenses = fixed + variable;
   const carryOver = carryOverInto(data, month, today);
-  const available = carryOver + income - totalExpenses - saved;
+  // Ajustements de solde du mois (onglet Compte) : ils corrigent l'argent réellement disponible.
+  const adjustments = sum(of('ajustement').map((t) => t.amount));
+  const available = carryOver + adjustments + income - totalExpenses - saved;
 
   const dim = daysInMonth(month);
   const daysRemaining = daysRemainingInMonth(month, today);
@@ -299,6 +346,7 @@ export function monthSummary(data: AppData, month: MonthKey, today: ISODate): Mo
     savingsTarget,
     savingsRemaining,
     carryOver,
+    adjustments,
     available,
     budgetUsedPct: percent(totalExpenses, income),
     daysInMonth: dim,
@@ -308,7 +356,7 @@ export function monthSummary(data: AppData, month: MonthKey, today: ISODate): Mo
     plannedVariable: plan,
     projectedVariable,
     forecastBasis,
-    forecastEndBalance: carryOver + income - fixed - saved - projectedVariable,
+    forecastEndBalance: carryOver + adjustments + income - fixed - saved - projectedVariable,
     period,
   };
 }
@@ -430,7 +478,7 @@ export function dailyBalanceSeries(data: AppData, month: MonthKey, today: ISODat
   let i = 0;
   for (let date = firstDay(month); date <= lastIncluded && monthOf(date) === month; date = addDays(date, 1)) {
     while (i < tx.length && tx[i].date <= date) {
-      balance += tx[i].type === 'revenu' ? tx[i].amount : -tx[i].amount;
+      balance += signedAmount(tx[i]);
       i += 1;
     }
     series.push({ date, balance });

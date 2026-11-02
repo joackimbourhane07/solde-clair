@@ -18,7 +18,8 @@ export function fixture(): AppData {
       createdAt: '2026-09-01',
     },
     // Mois séparés (sans report) : chiffres simples à vérifier ; le report a ses propres tests.
-    settings: { theme: 'system', appearanceVersion: 2, carryOver: false },
+    settings: { theme: 'system', appearanceVersion: 2, presetsVersion: 3, carryOver: false },
+    adjustments: [],
     categories: [
       { id: 'c-sal', name: 'Salaire', kind: 'income', budget: null },
       { id: 'c-autre-rev', name: 'Autre revenu', kind: 'income', budget: null },

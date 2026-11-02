@@ -148,7 +148,7 @@ export function CategoryBarsChart({
               <div className="hbar-text">
                 <span className="hbar-name">{r.name}</span>
                 <span className="hbar-value">
-                  {fmt(r.amount)} <span className="muted">· {total ? Math.round((r.amount * 100) / total) : 0}{'\u00a0'}%</span>
+                  {fmt(r.amount)} <span className="muted">({total ? Math.round((r.amount * 100) / total) : 0}{'\u00a0'}%)</span>
                 </span>
               </div>
               <div className="hbar-track" aria-hidden="true">
