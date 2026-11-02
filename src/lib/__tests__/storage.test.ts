@@ -46,9 +46,9 @@ describe('export / import JSON', () => {
 
   it('date de dernière sauvegarde : conservée si valide, ignorée sinon', () => {
     const ok = validateData({ ...fixture(), settings: { theme: 'light', lastBackup: '2026-10-01' } });
-    expect(ok.ok && ok.data.settings).toEqual({ theme: 'light', lastBackup: '2026-10-01' });
+    expect(ok.ok && ok.data.settings).toEqual({ theme: 'light', appearanceVersion: 2, lastBackup: '2026-10-01' });
     const ko = validateData({ ...fixture(), settings: { theme: 'light', lastBackup: 'hier' } });
-    expect(ko.ok && ko.data.settings).toEqual({ theme: 'light' });
+    expect(ko.ok && ko.data.settings).toEqual({ theme: 'light', appearanceVersion: 2 });
   });
 
   it('préférence « masquer les montants » conservée à l’import', () => {
@@ -60,12 +60,21 @@ describe('export / import JSON', () => {
     expect(r3.ok && r3.data.settings.hideAmounts).toBe(false);
   });
 
+  it('apparence v2 : l’ancien thème sombre par défaut passe au clair une seule fois, un choix récent est conservé', () => {
+    const ancien = validateData({ ...fixture(), settings: { theme: 'dark' } });
+    expect(ancien.ok && ancien.data.settings).toEqual({ theme: 'light', appearanceVersion: 2 });
+    const recent = validateData({ ...fixture(), settings: { theme: 'dark', appearanceVersion: 2 } });
+    expect(recent.ok && recent.data.settings.theme).toBe('dark');
+    const auto = validateData({ ...fixture(), settings: { theme: 'system' } });
+    expect(auto.ok && auto.data.settings.theme).toBe('system');
+  });
+
   it('nettoie les valeurs inconnues', () => {
     const d = { ...fixture(), settings: { theme: 'fluo' }, profile: { ...fixture().profile, type: 'astronaute', currency: 'xx' } };
     const r = validateData(d);
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.data.settings.theme).toBe('dark');
+      expect(r.data.settings.theme).toBe('light');
       expect(r.data.profile?.type).toBe('autre');
       expect(r.data.profile?.currency).toBe('EUR');
     }

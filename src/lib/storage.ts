@@ -20,12 +20,19 @@ import { centsToInput } from './money';
  */
 export const STORAGE_KEY = 'soldeclair:donnees:v1';
 
+/**
+ * Version de l'apparence. Avant la version 2, le thème sombre était choisi par défaut :
+ * les données plus anciennes passent une seule fois au thème clair, le nouveau défaut.
+ * Un choix fait ensuite dans les paramètres est conservé.
+ */
+export const APPEARANCE_VERSION = 2;
+
 export function emptyData(): AppData {
   return {
     version: 1,
     profile: null,
-    // Identité « Financial » : thème sombre par défaut (clair et automatique restent disponibles).
-    settings: { theme: 'dark' },
+    // Thème clair par défaut (sombre et automatique restent disponibles).
+    settings: { theme: 'light', appearanceVersion: APPEARANCE_VERSION },
     categories: [],
     incomes: [],
     fixedCharges: [],
@@ -116,9 +123,10 @@ export function validateData(input: unknown): ValidationResult {
     }
 
     const settingsIn = isObj(root.settings) ? root.settings : {};
-    const theme = ['system', 'light', 'dark'].includes(settingsIn.theme as string)
+    let theme: AppData['settings']['theme'] = ['system', 'light', 'dark'].includes(settingsIn.theme as string)
       ? (settingsIn.theme as AppData['settings']['theme'])
-      : 'dark';
+      : 'light';
+    if (settingsIn.appearanceVersion !== APPEARANCE_VERSION && theme === 'dark') theme = 'light';
 
     const categories: Category[] = checkArray(root.categories, 'catégories').map((c, i) => {
       if (!isObj(c) || !isStr(c.name) || !['income', 'fixed', 'variable'].includes(c.kind as string))
@@ -216,6 +224,7 @@ export function validateData(input: unknown): ValidationResult {
         profile,
         settings: {
           theme,
+          appearanceVersion: APPEARANCE_VERSION,
           ...(isValidISODate(settingsIn.lastBackup) ? { lastBackup: settingsIn.lastBackup } : {}),
           ...(typeof settingsIn.hideAmounts === 'boolean' ? { hideAmounts: settingsIn.hideAmounts } : {}),
         },

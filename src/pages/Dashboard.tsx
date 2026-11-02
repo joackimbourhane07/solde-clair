@@ -8,8 +8,9 @@ import {
   monthTransactions,
   spendingByCategory,
   upcomingCharges,
+  upcomingSummary,
 } from '../lib/budget';
-import { defaultDateFor, formatDate, monthOf, ofMonth, parseISO } from '../lib/dates';
+import { defaultDateFor, formatDate, monthOf, ofMonth, parseISO, relativeDay } from '../lib/dates';
 import { PROFILE_LABELS } from '../lib/categories';
 import { Card, Montant, MonthSwitcher, Notice, ProgressBar, SignedAmount, Stat } from '../components/ui';
 import { ExpenseForm } from '../components/forms';
@@ -29,6 +30,7 @@ export function Dashboard() {
     [data, month, today],
   );
   const upcoming = useMemo(() => upcomingCharges(data, today, 30).slice(0, 5), [data, today]);
+  const semaine = useMemo(() => upcomingSummary(data, today, 7), [data, today]);
   const byCategory = useMemo(() => spendingByCategory(data, month, today), [data, month, today]);
   const series = useMemo(() => dailyBalanceSeries(data, month, today), [data, month, today]);
   const profile = data.profile!;
@@ -36,7 +38,7 @@ export function Dashboard() {
   const short = (c: number) => fmtShort(c, 'prudent');
   const over = (c: number) => fmtShort(c, 'majore');
 
-  // Les montants de la phrase principale sont mis en valeur (couleur « valeur »).
+  // Les montants de la phrase principale sont mis en valeur (accent bleu).
   const V = ({ children }: { children: ReactNode }) => <span className="valeur">{children}</span>;
   let headline: ReactNode;
   let subline: string | null = null;
@@ -282,6 +284,11 @@ export function Dashboard() {
         </Card>
 
         <Card title="Prochaines charges fixes" actions={<Link to="/charges" className="link">Gérer</Link>}>
+          <p className="upcoming-summary">
+            {semaine.count === 0
+              ? 'Aucune charge prévue dans les 7 prochains jours.'
+              : `Dans les 7 prochains jours : ${semaine.count === 1 ? '1 charge prévue' : `${semaine.count} charges prévues`} pour un total de ${fmt(semaine.total)}.`}
+          </p>
           {upcoming.length === 0 ? (
             <p className="muted">Aucune charge à venir dans les 30 prochains jours.</p>
           ) : (
@@ -291,7 +298,7 @@ export function Dashboard() {
                   <div>
                     <p className="tx-label">{t.label}</p>
                     <p className="tx-meta">
-                      {t.date === today ? 'Aujourd’hui' : `Le ${formatDate(t.date)}`} · {t.categoryName}
+                      {relativeDay(t.date, today)} · {t.categoryName}
                     </p>
                   </div>
                   <span className="montant">{fmt(t.amount)}</span>

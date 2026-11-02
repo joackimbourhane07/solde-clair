@@ -7,6 +7,7 @@ import { AppRoutes } from '../App';
 import type { AppData } from '../types';
 import { STORAGE_KEY, emptyData, exportJSON, parseBackup } from '../lib/storage';
 import { fixture, TODAY } from '../test/fixtures';
+import pageHtml from '../../index.html?raw';
 
 const norm = (s: string | null | undefined) => (s ?? '').replace(/[  ]/g, ' ');
 
@@ -192,7 +193,7 @@ describe('améliorations de simplicité (recherche et audit)', () => {
   });
 
   it('la sauvegarde JSON contient sa propre date : la restauration retrouve l’état exact', () => {
-    const d = { ...fixture(), settings: { theme: 'dark' as const, lastBackup: TODAY } };
+    const d = { ...fixture(), settings: { theme: 'dark' as const, appearanceVersion: 2, lastBackup: TODAY } };
     const r = parseBackup(exportJSON(d, TODAY));
     expect(r.ok && r.data).toEqual(d);
   });
@@ -237,8 +238,42 @@ describe('améliorations de simplicité (recherche et audit)', () => {
     expect(document.activeElement).toHaveTextContent('Ou bien…');
   });
 
-  it('nouveau profil : thème sombre « Financial » par défaut', () => {
-    expect(emptyData().settings.theme).toBe('dark');
+  it('nouveau profil : thème clair par défaut', () => {
+    expect(emptyData().settings.theme).toBe('light');
+  });
+});
+
+describe('identité claire et améliorations v2', () => {
+  it('titre de la page : « SoldeClair » seulement', () => {
+    expect(pageHtml).toContain('<title>SoldeClair</title>');
+  });
+
+  it('accueil : résumé des 7 prochains jours et dates relatives', () => {
+    renderApp();
+    expect(screen.getByText('Aucune charge prévue dans les 7 prochains jours.')).toBeInTheDocument();
+    expect(screen.getByText(/Le 20 nov\. 2026 · Téléphone/)).toBeInTheDocument();
+  });
+
+  it('historique : filtres actifs visibles et effaçables en un geste', async () => {
+    const user = renderApp(fixture(), '/historique');
+    expect(screen.queryByText(/filtre actif/)).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText('Rechercher'), 'introuvable');
+    expect(screen.getByText('1 filtre actif')).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText('Type'), 'depense');
+    expect(screen.getByText('2 filtres actifs')).toBeInTheDocument();
+    expect(screen.getByText('Aucun mouvement ne correspond à ces critères.')).toBeInTheDocument();
+    await user.click(screen.getAllByRole('button', { name: 'Effacer les filtres' })[0]);
+    expect(screen.getByLabelText('Rechercher')).toHaveValue('');
+    expect(screen.getByLabelText('Type')).toHaveValue('');
+    expect(screen.queryByText(/filtres? actifs?/)).not.toBeInTheDocument();
+    expect(screen.getByText('Concert')).toBeInTheDocument();
+  });
+
+  it('objectifs : pourcentage atteint et prochaine petite étape', () => {
+    renderApp(fixture(), '/objectifs');
+    // 200 € de départ + 100 € (novembre) + 50 € (octobre) = 350 € sur 1 000 €
+    expect(screen.getByText(norm('Vous avez atteint 35\u00a0% de votre objectif. Ce mois-ci, vous avez déjà mis 100,00\u00a0€ de côté pour cet objectif.'))).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ajouter un versement' })).toHaveClass('btn-secondaire');
   });
 });
 

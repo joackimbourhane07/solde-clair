@@ -147,6 +147,15 @@ export function formatDate(date: ISODate, long = false): string {
   return `${day} ${MONTH_SHORT[month - 1]} ${year}`;
 }
 
+/** Date relative pour les échéances proches : « Aujourd’hui », « Demain », « Dans 3 jours », sinon « Le 3 déc. 2026 ». */
+export function relativeDay(date: ISODate, today: ISODate): string {
+  const n = dayDiff(today, date);
+  if (n === 0) return 'Aujourd’hui';
+  if (n === 1) return 'Demain';
+  if (n > 1 && n < 7) return `Dans ${n} jours`;
+  return `Le ${formatDate(date)}`;
+}
+
 export function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }

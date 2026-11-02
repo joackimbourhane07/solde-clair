@@ -64,6 +64,9 @@ export function Goals() {
           {goals.map((g) => {
             const p = goalProgress(g, data.savings, today);
             const deposits = data.savings.filter((s) => s.goalId === g.id).sort((a, b) => b.date.localeCompare(a.date));
+            const verseCeMois = sum(deposits.filter((d) => monthOf(d.date) === currentMonth).map((d) => d.amount));
+            // Prochaine petite étape : l'effort du mois (celui qui permet de tenir la date si elle est menacée).
+            const etape = p.onTrack === false ? (p.monthlyNeeded ?? 0) : g.monthlyContribution || (p.monthlyNeeded ?? 0);
             return (
               <Card key={g.id} title={g.name} headingLevel={3} className="goal-card">
                 <p className="goal-meta">
@@ -73,9 +76,19 @@ export function Goals() {
                 </p>
                 {g.description && <p className="muted">{g.description}</p>}
                 <p className="goal-amounts">
-                  <strong>{fmt(p.current)}</strong> sur {fmt(g.target)} · {p.pct}{'\u00a0'}%
+                  <strong>{fmt(p.current)}</strong> sur {fmt(g.target)}
                 </p>
                 <ProgressBar value={p.current} max={g.target} level="objectif" label={`Progression de ${g.name}`} valueText={`${p.pct}\u00a0%`} />
+                {!p.reached && (
+                  <p className="goal-step">
+                    {p.pct > 0 ? `Vous avez atteint ${p.pct}\u00a0% de votre objectif.` : 'Votre objectif commence ici.'}{' '}
+                    {verseCeMois > 0
+                      ? `Ce mois-ci, vous avez déjà mis ${fmt(verseCeMois)} de côté pour cet objectif.`
+                      : etape > 0
+                        ? `Prochaine étape : mettre ${fmt(etape)} de côté ce mois-ci.`
+                        : ''}
+                  </p>
+                )}
                 <dl className="goal-figures">
                   <div>
                     <dt>Reste à épargner</dt>
@@ -90,7 +103,8 @@ export function Goals() {
                       <div>
                         <dt>Date souhaitée</dt>
                         <dd>
-                          {formatDate(g.targetDate)} ({p.monthsRemaining} mois)
+                          {formatDate(g.targetDate)}
+                          <span className="goal-sub">dans {p.monthsRemaining} mois</span>
                         </dd>
                       </div>
                       <div>
@@ -102,11 +116,16 @@ export function Goals() {
                   <div>
                     <dt>Atteinte estimée</dt>
                     <dd>
-                      {p.reached
-                        ? 'Déjà atteint'
-                        : p.estimatedDate
-                          ? `${monthLabel(monthOf(p.estimatedDate))} (${p.monthsToReach} mois)`
-                          : 'Indiquez une contribution mensuelle'}
+                      {p.reached ? (
+                        'Déjà atteint'
+                      ) : p.estimatedDate ? (
+                        <>
+                          {monthLabel(monthOf(p.estimatedDate))}
+                          <span className="goal-sub">dans {p.monthsToReach} mois</span>
+                        </>
+                      ) : (
+                        'Indiquez une contribution mensuelle'
+                      )}
                     </dd>
                   </div>
                 </dl>
@@ -119,7 +138,7 @@ export function Goals() {
                 )}
                 {p.onTrack === true && !p.reached && <Notice tone="succes">Votre contribution permet d’atteindre l’objectif à temps.</Notice>}
                 <div className="card-footer">
-                  <Button variant="primaire" className="btn-small" icon="plus" onClick={() => setDeposit({ goalId: g.id })}>
+                  <Button variant="secondaire" className="btn-small" icon="plus" onClick={() => setDeposit({ goalId: g.id })}>
                     Ajouter un versement
                   </Button>
                   <Button

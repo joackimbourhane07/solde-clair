@@ -49,14 +49,14 @@ Permettre à chacun de :
 | Page | Ce qu’elle permet |
 | --- | --- |
 | **Configuration initiale** | Parcours en 6 étapes : prénom ou pseudonyme, situation (étudiant, alternant, salarié, indépendant, autre), devise (euro par défaut), revenu principal et revenus complémentaires, charges fixes, estimation des dépenses variables, objectif d’épargne mensuel, objectif à long terme, choix des catégories proposées selon le profil. Possibilité de charger une démonstration ou d’importer une sauvegarde. |
-| **Tableau de bord** | Phrase principale (reste à vivre total et par jour, jours restants) avec le détail du calcul, **quatre chiffres seulement** (revenus, total des dépenses, solde disponible, épargné ce mois) ; le reste (charges fixes, dépenses variables, reste à vivre par jour, prévision de fin de mois, objectif d’épargne) est rangé dans « Détail du mois ». Alertes avec une piste d’action, dernières transactions, prochaines charges, **ajout rapide d’une dépense**, graphiques. Navigation de mois en mois. |
+| **Tableau de bord** | Phrase principale (reste à vivre total et par jour, jours restants) avec le détail du calcul, **quatre chiffres seulement** (revenus, total des dépenses, solde disponible, épargné ce mois) ; le reste (charges fixes, dépenses variables, reste à vivre par jour, prévision de fin de mois, objectif d’épargne) est rangé dans « Détail du mois ». Alertes avec une piste d’action, dernières transactions, prochaines charges (résumé « Dans les 7 prochains jours… » et dates relatives : aujourd’hui, demain, dans 3 jours), **ajout rapide d’une dépense**, graphiques. Navigation de mois en mois. |
 | **Revenus** | Ajout, modification, suppression. Nom, montant, date, catégorie, récurrent ou exceptionnel, fréquence, date de fin facultative, note. |
 | **Dépenses** | Ajout, modification, suppression, recherche et filtre par catégorie. Montant, catégorie, date, description et moyen de paiement facultatifs. |
 | **Charges fixes** | Ajout, modification, suppression. Nom, montant, date de prélèvement, catégorie, fréquence (hebdomadaire à annuelle), statut **payé / à venir** modifiable pour chaque échéance, note. |
 | **Budgets par catégorie** | Limite mensuelle par catégorie : prévu, dépensé, restant, pourcentage, barre de progression avec repères à 75 % et 90 %. Alertes à **75 %**, **90 %** et en cas de **dépassement**, signalées par un texte et une icône (pas seulement par la couleur). Les catégories **sans limite** sont regroupées dans une liste courte, avec un bouton « Fixer une limite ». |
-| **Objectifs d’épargne** | Plusieurs objectifs : nom, description, montant cible, montant déjà disponible, date souhaitée, priorité, contribution mensuelle. Calcul automatique du restant, des mois restants, du montant mensuel nécessaire, du pourcentage et de la date d’atteinte estimée. Enregistrement des versements. |
+| **Objectifs d’épargne** | Plusieurs objectifs : nom, description, montant cible, montant déjà disponible, date souhaitée, priorité, contribution mensuelle. Calcul automatique du restant, des mois restants, du montant mensuel nécessaire, du pourcentage et de la date d’atteinte estimée. Enregistrement des versements. Progression résumée en une phrase (« Vous avez atteint 43 % de votre objectif ») avec la prochaine petite étape. |
 | **Simulateur d’achat** | Solde après achat, nouveau reste à vivre quotidien, impact sur l’épargne du mois, impact sur chaque objectif, dépassement éventuel d’une catégorie, et appréciation : *situation confortable*, *achat possible avec prudence* ou *achat susceptible de déséquilibrer le budget* (indication budgétaire, pas un conseil financier). |
-| **Historique et bilan** | Historique complet avec recherche et filtres (période, dates, type, catégorie), bilan mensuel (revenus, charges, dépenses, épargne, solde final, catégories les plus coûteuses, budgets dépassés), comparaison avec le mois précédent, export CSV. |
+| **Historique et bilan** | Historique complet avec recherche et filtres (période, dates, type, catégorie), filtres actifs visibles et effaçables en un geste, bilan mensuel (revenus, charges, dépenses, épargne, solde final, catégories les plus coûteuses, budgets dépassés), comparaison avec le mois précédent, export CSV. |
 | **Paramètres** | Sauvegarde en premier (export CSV, sauvegarde JSON avec la date de la dernière sauvegarde et un rappel au-delà de 30 jours, import JSON), profil, devise, objectif d’épargne, thème clair / sombre / automatique, catégories (ajouter, renommer, supprimer), données de démonstration, effacement total avec **double confirmation**. |
 
 **Partout dans l’application** :
@@ -69,7 +69,7 @@ Permettre à chacun de :
 **Graphiques** (lisibles sur smartphone, avec une vue « tableau » accessible pour chacun) :
 répartition des dépenses par catégorie, revenus et dépenses sur 6 mois, évolution du solde au cours du mois, évolution de l’épargne, progression des objectifs.
 
-**Apparence « Financial »** : fond bleu nuit presque noir, panneaux opaques séparés par des filets fins, actions en orange chaud, montants importants en or pâle et en police à chasse fixe. Le thème sombre est utilisé par défaut ; le mode clair (couleurs ajustées pour le contraste) et le mode automatique restent disponibles dans les paramètres. Les animations sont supprimées si l’appareil demande de réduire les mouvements.
+**Apparence** : fond blanc, texte presque noir, un seul accent bleu, vert pour les bonnes nouvelles, orange pour l’attention, rouge pour les dépassements. Cartes à bordures fines, coins légèrement arrondis, presque aucune ombre ; chiffres alignés (chiffres tabulaires). Le thème clair est utilisé par défaut ; le mode sombre (graphite) et le mode automatique restent disponibles dans les paramètres. Les teintes utilisées pour le texte sont assombries pour respecter le contraste WCAG AA. Les animations sont supprimées si l’appareil demande de réduire les mouvements.
 
 **Accessibilité** : libellés sur tous les champs, messages d’erreur explicites reliés aux champs, navigation complète au clavier (lien d’évitement, fenêtres qui gardent le focus et se ferment avec Échap, graphiques parcourables avec les flèches), contrastes renforcés, zones tactiles d’au moins 44 px, montants signés « + / − », états des budgets indiqués par texte + icône + hachures, respect de « réduire les animations ».
 
@@ -81,7 +81,7 @@ répartition des dépenses par catégorie, revenus et dépenses sur 6 mois, évo
 - **Vitest + Testing Library** pour les tests rapides (calculs et interface).
 - **Playwright + axe-core** pour les tests dans un vrai navigateur (parcours, affichage, accessibilité).
 - Graphiques en **SVG faits maison** (aucune bibliothèque de graphiques).
-- Polices **IBM Plex Sans et IBM Plex Mono** (licence libre), installées avec `@fontsource` et **hébergées avec l’application** : aucune requête vers un service externe.
+- Police **IBM Plex Sans** (licence libre), installée avec `@fontsource` et **hébergée avec l’application** : aucune requête vers un service externe.
 
 **Pourquoi ce choix ?**
 
@@ -89,7 +89,7 @@ répartition des dépenses par catégorie, revenus et dépenses sur 6 mois, évo
 - **Gratuit et stable** : uniquement des outils open source très répandus, sans service payant.
 - **Facile à maintenir** : TypeScript détecte les erreurs avant l’exécution ; les calculs sont des fonctions pures, séparées de l’interface et testées.
 - **Fiable pour l’argent** : tous les montants sont stockés **en centimes (nombres entiers)** pour éviter les erreurs d’arrondi (0,1 + 0,2 ≠ 0,3 en informatique).
-- **Léger** : peu de dépendances, environ 125 Ko de code compressé et 100 Ko de polices.
+- **Léger** : peu de dépendances, environ 125 Ko de code compressé et 70 Ko de police.
 
 ## Prérequis
 
@@ -181,9 +181,9 @@ Ils vérifient :
 
 - un parcours complet de nouvel utilisateur : configuration, tableau de bord, dépense, changement de mois, budget dépassé, simulateur sans effet sur les données, export JSON, effacement et réimport ;
 - toutes les pages aux formats petit mobile (320 px), mobile, tablette et ordinateur, en mode clair et sombre : aucune erreur dans la console, aucun débordement ni texte coupé ;
-- l’accessibilité WCAG 2.1 AA avec axe-core (contrastes, libellés, rôles…) ;
+- l’accessibilité WCAG 2.2 AA avec axe-core, en mode clair et sombre (contrastes, libellés, rôles, taille des cibles…) ;
 - la navigation au clavier (lien d’évitement, contour de focus, fenêtres) et les trois thèmes ;
-- le chargement local des polices (aucune requête externe) et l’absence de transitions en mouvement réduit.
+- le chargement local de la police (aucune requête externe), les chiffres alignés et l’absence de transitions en mouvement réduit.
 
 ## Organisation des fichiers
 
@@ -197,7 +197,7 @@ solde-clair/
 ├── tsconfig.node.json         Configuration TypeScript (outils et tests navigateur)
 ├── .github/workflows/         Publication automatique sur GitHub Pages
 ├── e2e/                       Tests dans un vrai navigateur (Playwright)
-├── docs/                      Rapport de recherche, d’audit et de refonte (avec captures)
+├── docs/                      Recherche, audit, références et plan (avec captures)
 ├── public/favicon.svg         Icône
 └── src/
     ├── main.tsx               Démarrage de l’application
@@ -225,8 +225,8 @@ solde-clair/
     │   ├── Icon.tsx           Icônes
     │   └── charts/Charts.tsx  Graphiques SVG
     ├── pages/                 Une page par écran
-    ├── styles/global.css      Identité « Financial » (jetons --dp-*), thèmes, responsive
-    ├── styles/fonts.css       Polices IBM Plex hébergées localement
+    ├── styles/global.css      Identité claire (palette --dp-*), thèmes clair et sombre, responsive
+    ├── styles/fonts.css       Police IBM Plex Sans hébergée localement
     ├── test/                  Configuration et jeu de données des tests
     └── __tests__/             Tests de l’interface
 ```

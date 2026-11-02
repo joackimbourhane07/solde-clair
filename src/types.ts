@@ -110,6 +110,8 @@ export interface Settings {
   lastBackup?: ISODate | null;
   /** Masquer les montants à l'écran (utilisation en public). */
   hideAmounts?: boolean;
+  /** Version de l'apparence (2 = thème clair par défaut). */
+  appearanceVersion?: number;
 }
 
 export interface AppData {

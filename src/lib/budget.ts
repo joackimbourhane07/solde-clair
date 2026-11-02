@@ -360,6 +360,12 @@ export function upcomingCharges(data: AppData, today: ISODate, horizonDays = 30)
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
+/** Charges encore à venir sur les `days` prochains jours, aujourd'hui inclus (7 = aujourd'hui + 6 jours). */
+export function upcomingSummary(data: AppData, today: ISODate, days = 7): { count: number; total: Cents } {
+  const list = upcomingCharges(data, today, days - 1);
+  return { count: list.length, total: sum(list.map((t) => t.amount)) };
+}
+
 /** Solde cumulé jour après jour (jusqu'à aujourd'hui pour le mois en cours). */
 export function dailyBalanceSeries(data: AppData, month: MonthKey, today: ISODate): { date: ISODate; balance: Cents }[] {
   const tx = monthTransactions(data, month, today);

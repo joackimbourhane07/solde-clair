@@ -56,6 +56,14 @@ function Transactions() {
       return `${t.label} ${t.categoryName} ${t.note} ${t.paymentMethod}`.toLocaleLowerCase('fr').includes(q);
     })
     .reverse();
+  // Filtres actifs visibles et effaçables en un geste
+  const filtresActifs = [query.trim() !== '', type !== '', category !== '', mode !== 'mois'].filter(Boolean).length;
+  const effacerFiltres = () => {
+    setQuery('');
+    setType('');
+    setCategory('');
+    setMode('mois');
+  };
   const inflow = sum(filtered.filter((t) => t.type === 'revenu').map((t) => t.amount));
   const outflow = sum(filtered.filter((t) => t.type !== 'revenu').map((t) => t.amount));
 
@@ -100,6 +108,16 @@ function Transactions() {
           </SelectField>
         </div>
         {mode === 'mois' && <MonthSwitcher />}
+        {filtresActifs > 0 && (
+          <div className="filtres-actifs">
+            <span className="tag tag-filtre">
+              {filtresActifs === 1 ? '1 filtre actif' : `${filtresActifs} filtres actifs`}
+            </span>
+            <Button variant="discret" className="btn-small" icon="close" onClick={effacerFiltres}>
+              Effacer les filtres
+            </Button>
+          </div>
+        )}
         <p className="history-totals" aria-live="polite">
           <span>{filtered.length} transaction(s)</span>
           <span>
@@ -113,7 +131,18 @@ function Transactions() {
 
       <Card>
         {filtered.length === 0 ? (
-          <EmptyState title="Aucune transaction">Aucun mouvement ne correspond à ces critères.</EmptyState>
+          <EmptyState
+            title="Aucune transaction"
+            action={
+              filtresActifs > 0 ? (
+                <Button variant="secondaire" onClick={effacerFiltres}>
+                  Effacer les filtres
+                </Button>
+              ) : undefined
+            }
+          >
+            {filtresActifs > 0 ? 'Aucun mouvement ne correspond à ces critères.' : 'Aucun mouvement sur cette période.'}
+          </EmptyState>
         ) : (
           <ul className="item-list">
             {filtered.map((t) => (
