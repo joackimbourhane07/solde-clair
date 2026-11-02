@@ -3,7 +3,7 @@
  *
  * Les graduations tombent toujours sur des euros entiers, couvrent toujours
  * la plus grande valeur, et gardent au moins 10 € d'écart pour éviter des
- * libellés en double (« 1 €, 1 €, 0 € ») quand les montants sont minuscules.
+ * libellés en double (« 1 €, 1 €, 0 € ») quand les montants sont minuscules.
  */
 export function niceTicks(min: number, max: number, count = 4): number[] {
   const lo = Math.min(min, max);

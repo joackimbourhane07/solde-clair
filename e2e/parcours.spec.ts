@@ -184,16 +184,16 @@ test('carte restaurant et onglet Compte : revenu, paiement, soldes séparés, aj
   await ajuster.getByRole('button', { name: 'Enregistrer le solde' }).click();
   await expect(page.locator('.solde-detail dd').first()).toHaveText(/^1\s250,40\s€$/);
 
-  // Couleurs exactes : pastille du solde vert vif, montants lisibles (vert foncé / rouge)
+  // Couleurs : solde écrit en vert lisible, icônes en rouge vif exact, montants sortants en rouge lisible
   const couleurs = await page.evaluate(() => {
     const css = (sel: string, prop: string) => getComputedStyle(document.querySelector(sel)!).getPropertyValue(prop);
     return {
-      pastille: css('.pastille-solde', 'background-color'),
+      solde: css('.solde-montant', 'color'),
       iconeSortie: css('.operation-icone.sens-sortie', 'background-color'),
       montantSortie: css('.montant-moins', 'color'),
     };
   });
-  expect(couleurs).toEqual({ pastille: 'rgb(71, 212, 90)', iconeSortie: 'rgb(255, 0, 0)', montantSortie: 'rgb(217, 0, 0)' });
+  expect(couleurs).toEqual({ solde: 'rgb(24, 122, 41)', iconeSortie: 'rgb(255, 0, 0)', montantSortie: 'rgb(217, 0, 0)' });
 
   // « À venir » : une bulle qui ouvre son propre onglet
   await page.getByRole('tab', { name: /^À venir/ }).click();

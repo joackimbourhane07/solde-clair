@@ -73,7 +73,7 @@ export function reducer(state: AppData, action: Action): AppData {
     case 'setHideAmounts':
       return { ...state, settings: { ...state.settings, hideAmounts: action.hide } };
     case 'mettreAJourCategories': {
-      // Une seule fois par profil : ajoute « Carte restaurant » aux catégories de revenus si elle manque.
+      // Une seule fois par profil : ajoute « Carte restaurant » aux catégories de revenus si elle manque.
       const manque = !state.categories.some((c) => c.kind === 'income' && isCarteRestaurant(c.name));
       return {
         ...state,
@@ -100,7 +100,7 @@ export function reducer(state: AppData, action: Action): AppData {
       return { ...state, [action.collection]: list.filter((x) => x.id !== action.id) };
     }
     case 'removeGoal':
-      // Les versements déjà effectués restent comptés comme « épargne libre ».
+      // Les versements déjà effectués restent comptés comme « épargne libre ».
       return {
         ...state,
         goals: state.goals.filter((g) => g.id !== action.id),
@@ -110,7 +110,7 @@ export function reducer(state: AppData, action: Action): AppData {
       const cat = state.categories.find((c) => c.id === action.id);
       if (!cat) return state;
       let categories = state.categories.filter((c) => c.id !== action.id);
-      // Les éléments de la catégorie supprimée sont rattachés à « Autre … ».
+      // Les éléments de la catégorie supprimée sont rattachés à « Autre … ».
       const fallbackName = FALLBACK_NAMES[cat.kind];
       let fallback = categories.find((c) => c.kind === cat.kind && c.name === fallbackName);
       const used =
@@ -166,7 +166,7 @@ interface AppContextValue {
   month: MonthKey;
   setMonth: (m: MonthKey) => void;
   currency: string;
-  /** Montant formaté (masqué si l'option « masquer les montants » est active). */
+  /** Montant formaté (masqué si l'option « masquer les montants » est active). */
   fmt: (cents: number) => string;
   /** Montant arrondi à l'euro (masqué si besoin). */
   fmtShort: (cents: number, mode?: 'arrondi' | 'prudent' | 'majore') => string;
@@ -235,7 +235,7 @@ export function AppProvider({
       !data.profile &&
       [data.categories, data.incomes, data.fixedCharges, data.expenses, data.goals, data.savings, data.adjustments ?? []].every((l) => l.length === 0);
     if (isEmpty) {
-      clearData(profilActif); // après « Tout effacer », rien ne reste dans le navigateur pour ce profil
+      clearData(profilActif); // après « Tout effacer », rien ne reste dans le navigateur pour ce profil
       saveIndex({ actif: profilActif, ids: index.ids.filter((id) => id !== profilActif) });
       setProfils(listProfiles());
       return;
@@ -284,7 +284,7 @@ export function AppProvider({
     setProfils(listProfiles());
   }, [data.settings.theme, today, garderProfilOuvert]);
 
-  // Profils créés avant l'ajout de « Carte restaurant » : mise à jour unique des catégories.
+  // Profils créés avant l'ajout de « Carte restaurant » : mise à jour unique des catégories.
   useEffect(() => {
     if (data.profile && (data.settings.presetsVersion ?? 0) < PRESETS_VERSION) dispatch({ type: 'mettreAJourCategories' });
   }, [data.profile, data.settings.presetsVersion]);
@@ -298,7 +298,7 @@ export function AppProvider({
 
   const currency = data.profile?.currency ?? 'EUR';
   const masque = data.settings.hideAmounts === true;
-  // En mode masqué, chaque montant devient « ••• € » (symbole de la devise conservé).
+  // En mode masqué, chaque montant devient « ••• € » (symbole de la devise conservé).
   const montantMasque = useMemo(() => `•••\u00a0${formatMoney(0, currency).replace(/[\d,.\s\u00a0-]/g, '')}`, [currency]);
   const fmt = useCallback((cents: number) => (masque ? montantMasque : formatMoney(cents, currency)), [currency, masque, montantMasque]);
   const fmtShort = useCallback(

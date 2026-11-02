@@ -18,7 +18,7 @@ import {
   ProfilEtudiant,
   ProfilSalarie,
 } from '../components/accueil/Illustrations';
-// Vraies captures de SoldeClair (profil de démonstration « Léa, étudiante » : données fictives)
+// Vraies captures de SoldeClair (profil de démonstration « Léa, étudiante » : données fictives)
 import captureOrdinateur from '../assets/accueil/ordi-tableau.webp';
 import captureTableau from '../assets/accueil/tel-tableau.webp';
 import captureAjout from '../assets/accueil/tel-ajout.webp';
@@ -204,7 +204,7 @@ export default function Accueil() {
               <div className="ecran">
                 <img
                   src={captureOrdinateur}
-                  alt="Tableau de bord de SoldeClair sur ordinateur : « Il vous reste 134 € pour terminer le mois, soit environ 7 € par jour », charges à venir et chiffres du mois."
+                  alt="Tableau de bord de SoldeClair sur ordinateur : « Il vous reste 134 € pour terminer le mois, soit environ 7 € par jour », charges à venir et chiffres du mois."
                   width={1440}
                   height={900}
                   decoding="async"
@@ -216,7 +216,7 @@ export default function Accueil() {
               src={captureTableau}
               eager
               className="vitrine-tel"
-              alt="Le même tableau de bord sur téléphone, avec le bouton « + » pour ajouter une dépense au pouce."
+              alt="Le même tableau de bord sur téléphone, avec le bouton « + » pour ajouter une dépense au pouce."
             />
             <div className="vitrine-objet objet-calendrier">
               <PetitCalendrier />
@@ -330,7 +330,7 @@ export default function Accueil() {
           </div>
           <div className="accueil-colonne-visuel visuel-tel duo-tel">
             <Telephone src={captureAjout} className="tel-arriere" alt="Ajout d’une dépense : montant, catégories fréquentes en un geste, description et date." />
-            <Telephone src={captureAVenir} className="tel-avant" alt="Carte « À venir » : « Dans les 7 prochains jours : 1 charge prévue », prélèvements et revenus attendus avec leurs dates." />
+            <Telephone src={captureAVenir} className="tel-avant" alt="Carte « À venir » : « Dans les 7 prochains jours : 1 charge prévue », prélèvements et revenus attendus avec leurs dates." />
             <div className="objet-coin objet-coin-bas" aria-hidden="true">
               <PetitTicket />
             </div>
@@ -360,7 +360,7 @@ export default function Accueil() {
             </ul>
           </div>
           <div className="accueil-colonne-visuel visuel-tel">
-            <Telephone src={captureObjectifs} alt="Objectif « Ordinateur » : 310 € sur 900 €, « Vous avez atteint 34 % de votre objectif », reste à épargner et date estimée." />
+            <Telephone src={captureObjectifs} alt="Objectif « Ordinateur » : 310 € sur 900 €, « Vous avez atteint 34 % de votre objectif », reste à épargner et date estimée." />
             <div className="objet-coin objet-coin-bas grand" aria-hidden="true">
               <IllustrationBocal />
             </div>
@@ -390,7 +390,7 @@ export default function Accueil() {
             </ul>
           </div>
           <div className="accueil-colonne-visuel visuel-tel">
-            <Telephone src={captureSimulateur} alt="Simulateur : achat de 25 € en loisirs, « Achat possible avec prudence », solde avant et après l’achat." />
+            <Telephone src={captureSimulateur} alt="Simulateur : achat de 25 € en loisirs, « Achat possible avec prudence », solde avant et après l’achat." />
             <div className="objet-coin objet-coin-bas grand" aria-hidden="true">
               <IllustrationBalance />
             </div>

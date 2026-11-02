@@ -232,7 +232,7 @@ export function Goals() {
       {toDelete && (
         <ConfirmDialog
           title="Supprimer cet objectif ?"
-          message={`L’objectif « ${toDelete.name} » sera supprimé. Les versements déjà enregistrés resteront comptés comme épargne libre.`}
+          message={`L’objectif « ${toDelete.name} » sera supprimé. Les versements déjà enregistrés resteront comptés comme épargne libre.`}
           onCancel={() => setToDelete(null)}
           onConfirm={() => {
             dispatch({ type: 'removeGoal', id: toDelete.id });

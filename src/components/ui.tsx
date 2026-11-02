@@ -263,7 +263,7 @@ export function Card({
   );
 }
 
-/** Sépare « 1 234,56 € » en chiffres et unité, pour afficher l'unité plus discrètement. */
+/** Sépare « 1 234,56 € » en chiffres et unité, pour afficher l'unité plus discrètement. */
 function decouperMontant(texte: string): [string, string] | null {
   const m = /^(.*\d)([\u00a0\u202f ][^\d\s]+)$/.exec(texte);
   return m ? [m[1], m[2]] : null;

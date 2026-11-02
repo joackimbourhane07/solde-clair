@@ -4,7 +4,7 @@ import { addDays, dayDiff, formatDate, monthOf } from './dates';
 
 /**
  * Petites actions utiles proposées sur le tableau de bord (3 au maximum).
- * Chaque action a un identifiant stable : « Ignorer » la masque jusqu'au mois suivant
+ * Chaque action a un identifiant stable : « Ignorer » la masque jusqu'au mois suivant
  * (l'identifiant contient le mois) ou jusqu'à ce que la situation change.
  */
 export interface BudgetAction {
@@ -38,7 +38,7 @@ export function suggestedActions(data: AppData, today: ISODate, fmt: (c: Cents) 
       actions.push({
         id: `limite:${line.category.id}:${month}`,
         priority: 1,
-        title: `Votre budget « ${nom} » est dépassé de ${fmt(-(line.remaining ?? 0))}.`,
+        title: `Votre budget « ${nom} » est dépassé de ${fmt(-(line.remaining ?? 0))}.`,
         detail: 'Vous pouvez consulter les dépenses concernées ou ajuster cette limite pour le mois.',
         cta: 'Ajuster la limite',
         to: '/budgets',
@@ -47,7 +47,7 @@ export function suggestedActions(data: AppData, today: ISODate, fmt: (c: Cents) 
       actions.push({
         id: `presque:${line.category.id}:${month}`,
         priority: 2,
-        title: `Budget « ${nom} » presque atteint : il reste ${fmt(line.remaining ?? 0)}.`,
+        title: `Budget « ${nom} » presque atteint : il reste ${fmt(line.remaining ?? 0)}.`,
         detail: `${line.pct} % de la limite est déjà utilisé.`,
         cta: 'Voir le budget',
         to: '/budgets',
@@ -77,7 +77,7 @@ export function suggestedActions(data: AppData, today: ISODate, fmt: (c: Cents) 
     actions.push({
       id: `charge:${imminent.key}`,
       priority: 2,
-      title: `Prélèvement « ${imminent.label} » ${quand} : ${fmt(imminent.amount)}.`,
+      title: `Prélèvement « ${imminent.label} » ${quand} : ${fmt(imminent.amount)}.`,
       detail: 'Vérifiez que le montant est prévu sur votre compte, puis marquez-le comme payé.',
       cta: 'Voir mes charges',
       to: '/charges',
@@ -95,7 +95,7 @@ export function suggestedActions(data: AppData, today: ISODate, fmt: (c: Cents) 
       actions.push({
         id: `inhabituelle:${e.id}`,
         priority: 2,
-        title: `Dépense inhabituelle : ${e.description ? `« ${e.description} »` : 'une dépense'} de ${fmt(e.amount)}.`,
+        title: `Dépense inhabituelle : ${e.description ? `« ${e.description} »` : 'une dépense'} de ${fmt(e.amount)}.`,
         detail: `Le ${formatDate(e.date)}, environ ${Math.round(e.amount / Math.max(med, 1))} fois plus que d’habitude dans cette catégorie. Vérifiez qu’elle est correcte.`,
         cta: 'Vérifier',
         to: '/depenses',

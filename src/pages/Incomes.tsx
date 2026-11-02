@@ -149,8 +149,8 @@ export function Incomes() {
           title="Supprimer ce revenu ?"
           message={
             toDelete.recurring
-              ? `« ${toDelete.name} » sera supprimé de tous les mois, y compris les mois passés. Pour l’arrêter seulement à partir d’une date, modifiez-le et indiquez une date de fin.`
-              : `« ${toDelete.name} » (${fmt(toDelete.amount)}) sera définitivement supprimé.`
+              ? `« ${toDelete.name} » sera supprimé de tous les mois, y compris les mois passés. Pour l’arrêter seulement à partir d’une date, modifiez-le et indiquez une date de fin.`
+              : `« ${toDelete.name} » (${fmt(toDelete.amount)}) sera définitivement supprimé.`
           }
           onCancel={() => setToDelete(null)}
           onConfirm={() => {

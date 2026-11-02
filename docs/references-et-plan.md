@@ -275,7 +275,19 @@ Sources de cette série : [Journal du Net, agréments DSP2 des fintech](https://
 | « À venir » prend trop de place dans Mon compte | Deux bulles sous le solde : « Opérations » (ouverte par défaut) et « À venir » avec le nombre d'opérations ; un clic ouvre la liste dans son propre onglet (flèches du clavier prises en charge, adresse `#/compte?vue=a-venir`) |
 | Vert #47D45A pour le solde positif et l'argent qui entre, rouge #FF0000 pour les dépenses et l'argent qui sort | Appliqué partout. Couleurs exactes pour la pastille du solde, les icônes rondes des opérations et les barres du graphique revenus / dépenses ; montants écrits en vert #187A29 et rouge #D90000 (mode clair) ou #47D45A et #FF6B6B (mode sombre), car #47D45A n'offre que 1,9:1 et #FF0000 4,0:1 sur fond blanc (4,5:1 requis). Choix validé par la propriétaire |
 
-## 13. Sources consultées
+## 13. Retours de la propriétaire (5ᵉ série) et corrections
+
+| Retour | Correction |
+|---|---|
+| Pas d’encadré vert autour du solde total, mais le montant en vert | Pastille retirée ; montant écrit en vert lisible (rouge s’il est négatif) |
+| Le total doit cumuler compte + carte restaurant ; chaque compte doit montrer son propre montant | C’était déjà le calcul (total = compte bancaire + carte restaurant) ; les 0 € venaient de l’absence de solde de départ et de revenus encore à venir. Aide ajoutée tant qu’aucun solde réel n’est indiqué, avec un bouton « Indiquer mon solde réel » |
+| « -0,00 € » dans les sorties | Zéro négatif corrigé dans tout l’affichage des montants |
+| Le nombre dans la bulle « À venir » seulement 7 jours avant | Nombre limité aux opérations des 7 prochains jours (et charges en retard) ; rien s’il n’y en a pas |
+| Comment en faire une application ? | Manifeste web, icônes 192 / 512 / masquable, balises iPhone ; guide dans Paramètres et dans le README. Pas d’App Store (compte développeur payant) |
+
+Sources : [iOS 26, toute page ajoutée à l’écran d’accueil s’ouvre en app web (heise)](https://heise.de/-10749652), [iDownloadBlog](https://www.idownloadblog.com/?p=1042117), [The Register, stockage des apps web de l’écran d’accueil](https://www.theregister.com/2020/03/26/apple_relax_were_not_totally/).
+
+## 14. Sources consultées
 
 - Notion : [teardown de la page d'accueil (uirip)](https://uirip.pages.dev/blog/teardowns/notion), [analyse du design marketing](https://webtrends.pages.dev/posts/notion-marketing-design-analysis), [étude de design (Blake Crosley)](https://blakecrosley.com/blog/design-study-notion), [divulgation progressive (LogRocket)](https://blog.logrocket.com/ux-design/progressive-disclosure-ux-types-use-cases)
 - Stripe : [composant de paiements](https://docs.stripe.com/connect/supported-embedded-components/payments), [tableau des comptes et statuts](https://docs.stripe.com/connect/dashboard/viewing-all-accounts)

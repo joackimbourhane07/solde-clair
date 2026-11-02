@@ -89,7 +89,7 @@ export function Dashboard() {
   const visibles = actions.slice(0, MAX_ACTIONS);
   const epargneManque = Math.max(0, s.savingsTarget - s.saved);
   const epargnePct = s.savingsTarget > 0 ? Math.round((s.saved * 100) / s.savingsTarget) : null;
-  // Objectifs en cours, avec leur pourcentage atteint (pour la carte « Épargne du mois »)
+  // Objectifs en cours, avec leur pourcentage atteint (pour la carte « Épargne du mois »)
   const objectifs = useMemo(
     () =>
       sortGoals(data.goals)
@@ -413,13 +413,13 @@ export function Dashboard() {
           </Card>
         )}
 
-        {/* Ajout rapide : sur ordinateur (sur mobile, le bouton « + » de la barre du bas suffit) */}
+        {/* Ajout rapide : sur ordinateur (sur mobile, le bouton « + » de la barre du bas suffit) */}
         <Card title="Ajouter une dépense" className="quick-add">
           <ExpenseForm quick defaultDate={defaultDateFor(month, today)} />
         </Card>
       </div>
 
-      {/* 7. Un seul graphique visible ; le reste dans « Détail du mois » */}
+      {/* 7. Un seul graphique visible ; le reste dans « Détail du mois » */}
       <Card>
         <CategoryBarsChart title="Répartition des dépenses variables" items={byCategory} />
       </Card>

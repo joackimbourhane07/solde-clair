@@ -37,6 +37,11 @@ describe('affichage', () => {
     expect(norm(formatMoney(-2550))).toBe('-25,50 €');
   });
 
+  it('jamais de « -0 » : un zéro négatif s’affiche 0', () => {
+    expect(norm(formatMoney(-0))).toBe('0,00 €');
+    expect(norm(formatMoneyShort(-40, 'EUR', 'prudent'))).toBe('0 €');
+  });
+
   it('arrondi à l’euro prudent (jamais de surestimation du reste)', () => {
     expect(norm(formatMoneyShort(128760, 'EUR', 'prudent'))).toBe('1 287 €');
     expect(norm(formatMoneyShort(4292, 'EUR', 'prudent'))).toBe('42 €');

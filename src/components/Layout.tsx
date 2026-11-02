@@ -19,7 +19,7 @@ export const NAV_ITEMS = [
   { to: '/parametres', label: 'Paramètres', short: 'Paramètres', icon: 'settings' },
 ];
 
-// Barre du bas (mobile) : Accueil, Compte, [+ Ajouter], Budgets, Plus (Dépenses est dans « Plus »).
+// Barre du bas (mobile) : Accueil, Compte, [+ Ajouter], Budgets, Plus (Dépenses est dans « Plus »).
 const MOBILE_MAIN = ['/', '/compte', '/budgets'];
 
 /** Logo : ramène à la page d'accueil (continuer avec son profil ou en créer un autre). */
@@ -37,7 +37,7 @@ function Logo() {
   );
 }
 
-/** Bouton « masquer / afficher les montants » (utilisation en public). */
+/** Bouton « masquer / afficher les montants » (utilisation en public). */
 function MasquerMontants({ compact = false }: { compact?: boolean }) {
   const { masque, dispatch } = useApp();
   const libelle = masque ? 'Afficher les montants' : 'Masquer les montants';
@@ -66,7 +66,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setMenuOpen(false);
-    // Au premier affichage, on laisse le focus en haut de page (lien « Aller au contenu »).
+    // Au premier affichage, on laisse le focus en haut de page (lien « Aller au contenu »).
     if (firstRender.current) {
       firstRender.current = false;
       return;
@@ -141,7 +141,7 @@ export function Layout({ children }: { children: ReactNode }) {
           {NAV_ITEMS.filter((i) => MOBILE_MAIN.includes(i.to))
             .flatMap((item) => [
               item,
-              ...(item.to === '/compte' ? [null] : []), // emplacement central du bouton « + »
+              ...(item.to === '/compte' ? [null] : []), // emplacement central du bouton « + »
             ])
             .map((item) =>
               item ? (
