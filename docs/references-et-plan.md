@@ -268,7 +268,14 @@ Dessinées spécialement en SVG (vecteurs légers), style à plat avec un trait 
 
 Sources de cette série : [Journal du Net, agréments DSP2 des fintech](https://www.journaldunet.com/fintech/1486993-dsp2-que-font-les-fintech-de-leurs-agrements/), [Hayot Expertise, open banking et DSP2 en 2026](https://hayot-expertise.fr/blog/connecter-banque-logiciel-comptable-open-banking), [La finance pour tous, DSP2](https://www.lafinancepourtous.com/decryptages/finance-perso/banque-et-credit/directives-europeennes-sur-les-services-de-paiement/deuxieme-directive-europeenne-sur-les-services-de-paiement-dsp2/), [TechCrunch, FinanceKit](https://techcrunch.com/2024/03/06/apple-releases-a-new-api-to-fetch-transactions-from-apple-card-and-apple-cash/amp), [PYMNTS, FinanceKit](https://www.pymnts.com/apple/2024/apples-new-api-offers-users-peek-at-balances/).
 
-## 12. Sources consultées
+## 12. Retours de la propriétaire (4ᵉ série) et corrections
+
+| Retour | Correction |
+|---|---|
+| « À venir » prend trop de place dans Mon compte | Deux bulles sous le solde : « Opérations » (ouverte par défaut) et « À venir » avec le nombre d'opérations ; un clic ouvre la liste dans son propre onglet (flèches du clavier prises en charge, adresse `#/compte?vue=a-venir`) |
+| Vert #47D45A pour le solde positif et l'argent qui entre, rouge #FF0000 pour les dépenses et l'argent qui sort | Appliqué partout. Couleurs exactes pour la pastille du solde, les icônes rondes des opérations et les barres du graphique revenus / dépenses ; montants écrits en vert #187A29 et rouge #D90000 (mode clair) ou #47D45A et #FF6B6B (mode sombre), car #47D45A n'offre que 1,9:1 et #FF0000 4,0:1 sur fond blanc (4,5:1 requis). Choix validé par la propriétaire |
+
+## 13. Sources consultées
 
 - Notion : [teardown de la page d'accueil (uirip)](https://uirip.pages.dev/blog/teardowns/notion), [analyse du design marketing](https://webtrends.pages.dev/posts/notion-marketing-design-analysis), [étude de design (Blake Crosley)](https://blakecrosley.com/blog/design-study-notion), [divulgation progressive (LogRocket)](https://blog.logrocket.com/ux-design/progressive-disclosure-ux-types-use-cases)
 - Stripe : [composant de paiements](https://docs.stripe.com/connect/supported-embedded-components/payments), [tableau des comptes et statuts](https://docs.stripe.com/connect/dashboard/viewing-all-accounts)

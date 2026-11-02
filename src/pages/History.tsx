@@ -147,10 +147,10 @@ function Transactions() {
         <p className="history-totals" aria-live="polite">
           <span>{filtered.length} transaction(s)</span>
           <span>
-            Entrées : <strong>{fmt(inflow)}</strong>
+            Entrées : <strong className="montant-plus">+ {fmt(inflow)}</strong>
           </span>
           <span>
-            Sorties : <strong>{fmt(outflow)}</strong>
+            Sorties : <strong className="montant-moins">− {fmt(outflow)}</strong>
           </span>
         </p>
       </Card>
@@ -199,13 +199,16 @@ function Report() {
   const history = useMemo(() => monthsHistory(data, month, 6, today), [data, month, today]);
   const s = r.summary;
   const p = r.previous;
-  const rows: { label: string; cur: Cents; prev: Cents; delta: Cents; goodWhenUp: boolean }[] = [
-    { label: 'Revenus du mois', cur: s.income, prev: p.income, delta: r.delta.income, goodWhenUp: true },
-    { label: 'Charges fixes', cur: s.fixed, prev: p.fixed, delta: r.delta.fixed, goodWhenUp: false },
-    { label: 'Dépenses variables', cur: s.variable, prev: p.variable, delta: r.delta.variable, goodWhenUp: false },
-    { label: 'Montant épargné', cur: s.saved, prev: p.saved, delta: r.delta.saved, goodWhenUp: true },
-    { label: 'Solde final', cur: s.available, prev: p.available, delta: r.delta.available, goodWhenUp: true },
+  // sens : couleur du montant (vert pour ce qui entre ou un solde positif, rouge pour ce qui sort ou un solde négatif)
+  const rows: { label: string; cur: Cents; prev: Cents; delta: Cents; goodWhenUp: boolean; sens: 'entree' | 'sortie' | 'solde' | null }[] = [
+    { label: 'Revenus du mois', cur: s.income, prev: p.income, delta: r.delta.income, goodWhenUp: true, sens: 'entree' },
+    { label: 'Charges fixes', cur: s.fixed, prev: p.fixed, delta: r.delta.fixed, goodWhenUp: false, sens: 'sortie' },
+    { label: 'Dépenses variables', cur: s.variable, prev: p.variable, delta: r.delta.variable, goodWhenUp: false, sens: 'sortie' },
+    { label: 'Montant épargné', cur: s.saved, prev: p.saved, delta: r.delta.saved, goodWhenUp: true, sens: null },
+    { label: 'Solde final', cur: s.available, prev: p.available, delta: r.delta.available, goodWhenUp: true, sens: 'solde' },
   ];
+  const couleur = (sens: (typeof rows)[number]['sens'], v: Cents) =>
+    sens === 'entree' || (sens === 'solde' && v >= 0) ? 'montant-plus' : sens === 'sortie' || (sens === 'solde' && v < 0) ? 'montant-moins' : '';
 
   return (
     <>
@@ -245,8 +248,8 @@ function Report() {
                       <Delta value={row.delta} goodWhenUp={row.goodWhenUp} />
                     </span>
                   </th>
-                  <td className="num">{fmt(row.cur)}</td>
-                  <td className="num">{fmt(row.prev)}</td>
+                  <td className={`num ${couleur(row.sens, row.cur)}`}>{fmt(row.cur)}</td>
+                  <td className={`num ${couleur(row.sens, row.prev)}`}>{fmt(row.prev)}</td>
                   <td className="col-evolution">
                     <Delta value={row.delta} goodWhenUp={row.goodWhenUp} />
                   </td>

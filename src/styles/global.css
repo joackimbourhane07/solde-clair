@@ -27,6 +27,8 @@
   --dp-color-orange-clair: #faebdd;
   --dp-color-rouge: #e03e3e;
   --dp-color-rouge-clair: #fbe4e4;
+  --dp-color-entree: #47d45a; /* vert vif : argent qui entre, solde positif */
+  --dp-color-sortie: #ff0000; /* rouge vif : dépenses, argent qui sort */
 
   /* --- Typographie, espacements, formes --- */
   --dp-typography-body-face: 'SoldeClair Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
@@ -85,6 +87,15 @@
   --danger-fill: #c22f2f;
   --on-danger: #ffffff;
 
+  /* Entrées et sorties d'argent : couleurs vives pour les pastilles, icônes et barres ;
+     teintes plus foncées de la même couleur pour les montants écrits (contraste ≥ 4,5:1). */
+  --entree-vif: var(--dp-color-entree);
+  --sortie-vif: var(--dp-color-sortie);
+  --entree: #187a29; /* 4,7:1 sur le gris de survol, 5,5:1 sur blanc */
+  --sortie: #d90000; /* 4,6:1 sur le gris de survol, 5,3:1 sur blanc */
+  --entree-encre: #0b2e12; /* texte sur vert vif : 7,7:1 */
+  --sortie-encre: #ffffff; /* texte sur rouge vif (grands chiffres uniquement) : 4:1 */
+
   /* Graphiques : bleu pour la série principale, vert pour la seconde */
   --serie-1: var(--dp-color-bleu);
   --serie-2: var(--dp-color-vert);
@@ -142,6 +153,8 @@
     --danger-bar: #e03e3e;
     --danger-fill: #f27e7e;
     --on-danger: #191919;
+    --entree: #47d45a; /* 6,7:1 et plus sur les fonds sombres */
+    --sortie: #ff6b6b; /* 4,7:1 et plus sur les fonds sombres */
     --serie-1: #5aa5ec;
     --serie-2: #4db6a2;
     --chart-grid: #2a2a2a;
@@ -189,6 +202,8 @@
   --danger-bar: #e03e3e;
   --danger-fill: #f27e7e;
   --on-danger: #191919;
+  --entree: #47d45a;
+  --sortie: #ff6b6b;
   --serie-1: #5aa5ec;
   --serie-2: #4db6a2;
   --chart-grid: #2a2a2a;
@@ -924,8 +939,14 @@ strong {
   margin-top: 4px;
 }
 
-.stat-negatif .stat-value {
-  color: var(--danger);
+.stat-positif .stat-value,
+.stat-entree .stat-value {
+  color: var(--entree);
+}
+
+.stat-negatif .stat-value,
+.stat-sortie .stat-value {
+  color: var(--sortie);
 }
 
 .stat-negatif .stat-value::before {
@@ -1471,8 +1492,13 @@ textarea.input {
   font-variant-numeric: tabular-nums;
 }
 
+/* Vert : argent qui entre et solde positif. Rouge : dépenses et argent qui sort. */
 .montant-plus {
-  color: var(--ok);
+  color: var(--entree);
+}
+
+.montant-moins {
+  color: var(--sortie);
 }
 
 .alert-list {
@@ -2161,6 +2187,16 @@ ol.rank-list li > span {
   background: var(--serie-2);
 }
 
+/* Revenus en vert vif, dépenses en rouge vif ; un liseré plus foncé garde les barres visibles sur fond clair */
+.legend-swatch.serie-entree {
+  background: var(--entree-vif);
+  box-shadow: inset 0 0 0 1px var(--entree);
+}
+
+.legend-swatch.serie-sortie {
+  background: var(--sortie-vif);
+}
+
 .chart-plot {
   position: relative;
   width: 100%;
@@ -2207,6 +2243,16 @@ ol.rank-list li > span {
 
 .chart .bar.serie-2 {
   fill: var(--serie-2);
+}
+
+.chart .bar.serie-entree {
+  fill: var(--entree-vif);
+  stroke: var(--entree);
+  stroke-width: 1;
+}
+
+.chart .bar.serie-sortie {
+  fill: var(--sortie-vif);
 }
 
 .chart .line {
@@ -3006,10 +3052,11 @@ ol.rank-list li > span {
   font-weight: 600;
   font-size: 1.05rem;
   overflow-wrap: anywhere;
+  color: var(--entree);
 }
 
 .prevision-points .negatif dd {
-  color: var(--danger);
+  color: var(--sortie);
 }
 
 /* Carte étroite (téléphone, colonne du tableau de bord) : une ligne par échéance, le montant ne se coupe plus */
@@ -3162,8 +3209,23 @@ ol.rank-list li > span {
   overflow-wrap: anywhere;
 }
 
-.solde-montant.negatif {
-  color: var(--danger);
+/* Solde du jour dans une pastille : vert vif s'il est positif, rouge vif s'il est négatif */
+.pastille-solde {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.12em 0.45em;
+  border-radius: 0.4em;
+  font-variant-numeric: tabular-nums;
+}
+
+.pastille-positive {
+  background: var(--entree-vif);
+  color: var(--entree-encre);
+}
+
+.pastille-negative {
+  background: var(--sortie-vif);
+  color: var(--sortie-encre);
 }
 
 .solde-detail {
@@ -3228,24 +3290,77 @@ ol.rank-list li > span {
   color: var(--text-2);
 }
 
-.operation-icone.type-depense,
-.operation-icone.type-ajustement {
-  background: var(--surface-hover);
+/* Pastille ronde : vert vif quand l'argent entre, rouge vif quand il sort ; le pictogramme indique le type */
+.operation-icone.sens-entree {
+  background: var(--entree-vif);
+  color: var(--entree-encre);
 }
 
-.operation-icone.type-revenu {
-  background: var(--ok-bg);
-  color: var(--ok);
+.operation-icone.sens-sortie {
+  background: var(--sortie-vif);
+  color: var(--sortie-encre);
 }
 
-.operation-icone.type-epargne {
-  background: var(--info-bg);
-  color: var(--info);
+/* Bulles « Opérations » / « À venir » : chacune ouvre son propre onglet */
+.bulles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.operation-icone.type-charge {
-  background: var(--warn-bg);
-  color: var(--warn);
+.bulle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--fill-doux);
+  color: var(--fill-doux-texte);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition), color var(--transition);
+}
+
+.bulle:hover {
+  background: var(--fill-doux-survol);
+}
+
+.bulle[aria-selected='true'],
+.bulle[aria-selected='true']:hover {
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
+.bulle:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.bulle-nombre {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.panneau-compte {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.a-venir-resume {
+  color: var(--text-2);
+  font-size: var(--dp-typography-supporting);
 }
 
 .operation-texte {
@@ -3316,7 +3431,6 @@ ol.rank-list li > span {
 }
 
 .releve-solde strong {
-  color: var(--text);
   font-weight: 600;
 }
 

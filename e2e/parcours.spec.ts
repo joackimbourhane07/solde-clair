@@ -183,6 +183,22 @@ test('carte restaurant et onglet Compte : revenu, paiement, soldes séparés, aj
   await ajuster.getByLabel('Solde réel – Compte bancaire').fill('1 250,40');
   await ajuster.getByRole('button', { name: 'Enregistrer le solde' }).click();
   await expect(page.locator('.solde-detail dd').first()).toHaveText(/^1\s250,40\s€$/);
+
+  // Couleurs exactes : pastille du solde vert vif, montants lisibles (vert foncé / rouge)
+  const couleurs = await page.evaluate(() => {
+    const css = (sel: string, prop: string) => getComputedStyle(document.querySelector(sel)!).getPropertyValue(prop);
+    return {
+      pastille: css('.pastille-solde', 'background-color'),
+      iconeSortie: css('.operation-icone.sens-sortie', 'background-color'),
+      montantSortie: css('.montant-moins', 'color'),
+    };
+  });
+  expect(couleurs).toEqual({ pastille: 'rgb(71, 212, 90)', iconeSortie: 'rgb(255, 0, 0)', montantSortie: 'rgb(217, 0, 0)' });
+
+  // « À venir » : une bulle qui ouvre son propre onglet
+  await page.getByRole('tab', { name: /^À venir/ }).click();
+  await expect(page.getByRole('tabpanel')).toContainText('Titres-restaurant');
+  await expect(page.getByLabel('Rechercher une opération')).toBeHidden();
   expect(await problemesDeMiseEnPage(page)).toEqual([]);
   expect(erreurs).toEqual([]);
 });

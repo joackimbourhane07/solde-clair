@@ -1,4 +1,5 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { AccountId, Transaction } from '../types';
 import { accountBalance, ACCOUNT_LABELS, operationsAVenir, releve, totaux, usesCarteRestaurant, type FiltreCompte } from '../lib/accounts';
@@ -6,8 +7,10 @@ import { earliestDate, signedAmount } from '../lib/budget';
 import { addMonths, dayHeader, firstDay, monthLabel, monthOf, ofMonth, relativeDay } from '../lib/dates';
 import { centsToInput, parseAmount, sum } from '../lib/money';
 import { newId } from '../lib/id';
-import { Button, Card, CheckboxField, ConfirmDialog, EmptyState, IconButton, Modal, MoneyField, PageHeader, SignedAmount, TextField } from '../components/ui';
+import { Button, CheckboxField, ConfirmDialog, EmptyState, IconButton, Modal, MoneyField, PageHeader, SignedAmount, TextField } from '../components/ui';
 import { Icon } from '../components/Icon';
+
+type Vue = 'operations' | 'a-venir';
 
 const ICONES: Record<Transaction['type'], string> = {
   revenu: 'income',
@@ -28,13 +31,20 @@ function details(t: Transaction, avecCompte: boolean): string {
   return morceaux.join(' – ');
 }
 
+/** Pastille ronde : verte pour l'argent qui entre, rouge pour l'argent qui sort ; le pictogramme indique le type. */
+function IconeOperation({ t }: { t: Transaction }) {
+  return (
+    <span className={`operation-icone ${signedAmount(t) >= 0 ? 'sens-entree' : 'sens-sortie'}`} aria-hidden="true">
+      <Icon name={ICONES[t.type]} size={18} />
+    </span>
+  );
+}
+
 function Operation({ t, avecCompte, onSupprimer }: { t: Transaction; avecCompte: boolean; onSupprimer?: () => void }) {
   const montant = signedAmount(t);
   return (
     <li className="operation">
-      <span className={`operation-icone type-${t.type}`} aria-hidden="true">
-        <Icon name={ICONES[t.type]} size={18} />
-      </span>
+      <IconeOperation t={t} />
       <div className="operation-texte">
         <p className="operation-libelle">{t.label}</p>
         <p className="operation-detail">{details(t, avecCompte)}</p>
@@ -116,6 +126,17 @@ export function Compte() {
   const [mois, setMois] = useState(1);
   const [recherche, setRecherche] = useState('');
   const [ajuster, setAjuster] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const vue: Vue = params.get('vue') === 'a-venir' ? 'a-venir' : 'operations';
+  const choisirVue = (v: Vue) => setParams(v === 'a-venir' ? { vue: 'a-venir' } : {}, { replace: true });
+  // Flèches gauche / droite : passer d'une bulle à l'autre (comportement attendu d'onglets)
+  const changerAvecFleches = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'Home' && e.key !== 'End') return;
+    e.preventDefault();
+    const suivante: Vue = e.key === 'Home' ? 'operations' : e.key === 'End' ? 'a-venir' : vue === 'operations' ? 'a-venir' : 'operations';
+    choisirVue(suivante);
+    document.getElementById(`bulle-${suivante}`)?.focus();
+  };
   const [aSupprimer, setASupprimer] = useState<Transaction | null>(null);
 
   const actif: FiltreCompte = avecCarte ? filtre : 'compte';
@@ -125,6 +146,7 @@ export function Compte() {
   const soldeCarte = useMemo(() => accountBalance(data, 'carte-restaurant', today, today), [data, today]);
   const aVenir = useMemo(() => operationsAVenir(data, actif, today, 30), [data, actif, today]);
   const soldePrevu = solde + sum(aVenir.map(signedAmount));
+  const aVenirTotaux = totaux(aVenir);
   const jours = useMemo(() => releve(data, actif, debut, today, today), [data, actif, debut, today]);
   const q = recherche.trim().toLocaleLowerCase('fr');
   const joursFiltres = q
@@ -170,93 +192,134 @@ export function Compte() {
         <p id="solde-titre" className="solde-libelle">
           {actif === 'tout' ? 'Solde total aujourd’hui' : `${ACCOUNT_LABELS[actif]} – solde aujourd’hui`}
         </p>
-        <p className={`solde-montant ${solde < 0 ? 'negatif' : ''}`}>{solde < 0 ? `− ${fmt(-solde)}` : fmt(solde)}</p>
+        <p className="solde-montant">
+          <span className={`pastille-solde ${solde < 0 ? 'pastille-negative' : 'pastille-positive'}`}>{solde < 0 ? `− ${fmt(-solde)}` : fmt(solde)}</span>
+        </p>
         {actif === 'tout' && avecCarte && (
           <dl className="solde-detail">
             <div>
               <dt>Compte bancaire</dt>
-              <dd>{soldeCompte < 0 ? `− ${fmt(-soldeCompte)}` : fmt(soldeCompte)}</dd>
+              <dd className={soldeCompte < 0 ? 'montant-moins' : 'montant-plus'}>{soldeCompte < 0 ? `− ${fmt(-soldeCompte)}` : fmt(soldeCompte)}</dd>
             </div>
             <div>
               <dt>Carte restaurant</dt>
-              <dd>{soldeCarte < 0 ? `− ${fmt(-soldeCarte)}` : fmt(soldeCarte)}</dd>
+              <dd className={soldeCarte < 0 ? 'montant-moins' : 'montant-plus'}>{soldeCarte < 0 ? `− ${fmt(-soldeCarte)}` : fmt(soldeCarte)}</dd>
             </div>
           </dl>
         )}
         <p className="solde-prevu">
-          Après les opérations prévues dans les 30 prochains jours : <strong>{soldePrevu < 0 ? `− ${fmt(-soldePrevu)}` : fmt(soldePrevu)}</strong>
+          Après les opérations prévues dans les 30 prochains jours :{' '}
+          <strong className={soldePrevu < 0 ? 'montant-moins' : 'montant-plus'}>{soldePrevu < 0 ? `− ${fmt(-soldePrevu)}` : fmt(soldePrevu)}</strong>
         </p>
       </section>
 
-      <Card title="À venir" actions={<span className="tag">{aVenir.length === 0 ? 'Rien de prévu' : `${aVenir.length} opération${aVenir.length > 1 ? 's' : ''}`}</span>}>
-        {aVenir.length === 0 ? (
-          <p className="muted">Aucune opération prévue dans les 30 prochains jours.</p>
-        ) : (
-          <ul className="operations">
-            {aVenir.slice(0, 8).map((t) => (
-              <li key={t.key} className="operation a-venir">
-                <span className={`operation-icone type-${t.type}`} aria-hidden="true">
-                  <Icon name={ICONES[t.type]} size={18} />
-                </span>
-                <div className="operation-texte">
-                  <p className="operation-libelle">{t.label}</p>
-                  <p className="operation-detail">
-                    {t.date < today ? `Prévu le ${dayHeader(t.date, today).toLocaleLowerCase('fr')}, pas encore payé` : relativeDay(t.date, today)} –{' '}
-                    {details(t, avecCompte)}
-                  </p>
-                </div>
-                <SignedAmount cents={Math.abs(signedAmount(t))} positive={signedAmount(t) >= 0} />
-              </li>
-            ))}
-          </ul>
-        )}
-        {aVenir.length > 8 && <p className="muted petit-texte">Et {aVenir.length - 8} autre(s) opération(s) dans les 30 jours.</p>}
-      </Card>
+      {/* Deux bulles : les opérations passées, ou ce qui est à venir (chacune dans son propre onglet) */}
+      <div className="bulles" role="tablist" aria-label="Opérations affichées" onKeyDown={changerAvecFleches}>
+        {(
+          [
+            ['operations', 'Opérations', null],
+            ['a-venir', 'À venir', aVenir.length],
+          ] as [Vue, string, number | null][]
+        ).map(([v, libelle, nombre]) => (
+          <button
+            key={v}
+            id={`bulle-${v}`}
+            type="button"
+            role="tab"
+            className="bulle"
+            aria-selected={vue === v}
+            aria-controls="panneau-compte"
+            tabIndex={vue === v ? 0 : -1}
+            aria-label={nombre === null ? libelle : `${libelle} (${nombre} opération${nombre > 1 ? 's' : ''})`}
+            onClick={() => choisirVue(v)}
+          >
+            <span>{libelle}</span>
+            {nombre !== null && (
+              <span className="bulle-nombre" aria-hidden="true">
+                {nombre}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
 
-      <Card title="Opérations">
-        <div className="operations-outils">
-          <TextField label="Rechercher une opération" type="search" value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Libellé, catégorie…" />
-          <p className="operations-totaux" aria-live="polite">
-            <span>
-              Entrées : <strong className="montant-plus">+ {fmt(entrees)}</strong>
-            </span>
-            <span>
-              Sorties : <strong>− {fmt(sorties)}</strong>
-            </span>
-            <span className="muted">depuis le 1er {monthLabel(monthOf(debut))}</span>
-          </p>
-        </div>
-        {joursFiltres.length === 0 ? (
-          <EmptyState title={q ? 'Aucune opération trouvée' : 'Aucune opération pour l’instant'}>
-            {q ? 'Essayez un autre mot.' : 'Vos revenus, dépenses et prélèvements apparaîtront ici, jour par jour.'}
-          </EmptyState>
+      <section id="panneau-compte" className="card panneau-compte" role="tabpanel" aria-labelledby={`bulle-${vue}`}>
+        {vue === 'a-venir' ? (
+          <>
+            <h2 className="sr-only">Opérations à venir</h2>
+            <p className="a-venir-resume">
+              Dans les 30 prochains jours : <strong className="montant-plus">+ {fmt(aVenirTotaux.entrees)}</strong> qui entrent,{' '}
+              <strong className="montant-moins">− {fmt(aVenirTotaux.sorties)}</strong> qui sortent. Solde prévu :{' '}
+              <strong className={soldePrevu < 0 ? 'montant-moins' : 'montant-plus'}>{soldePrevu < 0 ? `− ${fmt(-soldePrevu)}` : fmt(soldePrevu)}</strong>.
+            </p>
+            {aVenir.length === 0 ? (
+              <EmptyState title="Rien de prévu">Aucune opération prévue dans les 30 prochains jours.</EmptyState>
+            ) : (
+              <ul className="operations">
+                {aVenir.map((t) => (
+                  <li key={t.key} className="operation a-venir">
+                    <IconeOperation t={t} />
+                    <div className="operation-texte">
+                      <p className="operation-libelle">{t.label}</p>
+                      <p className="operation-detail">
+                        {t.date < today ? `Prévu le ${dayHeader(t.date, today).toLocaleLowerCase('fr')}, pas encore payé` : relativeDay(t.date, today)} –{' '}
+                        {details(t, avecCompte)}
+                      </p>
+                    </div>
+                    <SignedAmount cents={Math.abs(signedAmount(t))} positive={signedAmount(t) >= 0} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
         ) : (
-          <div className="releve">
-            {joursFiltres.map((j) => (
-              <section key={j.date} className="releve-jour" aria-label={dayHeader(j.date, today)}>
-                <h3 className="releve-date">
-                  <span>{dayHeader(j.date, today)}</span>
-                  <span className="releve-solde">
-                    Solde : <strong>{j.solde < 0 ? `− ${fmt(-j.solde)}` : fmt(j.solde)}</strong>
-                  </span>
-                </h3>
-                <ul className="operations">
-                  {j.operations.map((t) => (
-                    <Operation key={t.key} t={t} avecCompte={avecCompte} onSupprimer={t.type === 'ajustement' ? () => setASupprimer(t) : undefined} />
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </div>
+          <>
+            <h2 className="sr-only">Opérations passées</h2>
+            <div className="operations-outils">
+              <TextField label="Rechercher une opération" type="search" value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Libellé, catégorie…" />
+              <p className="operations-totaux" aria-live="polite">
+                <span>
+                  Entrées : <strong className="montant-plus">+ {fmt(entrees)}</strong>
+                </span>
+                <span>
+                  Sorties : <strong className="montant-moins">− {fmt(sorties)}</strong>
+                </span>
+                <span className="muted">depuis le 1er {monthLabel(monthOf(debut))}</span>
+              </p>
+            </div>
+            {joursFiltres.length === 0 ? (
+              <EmptyState title={q ? 'Aucune opération trouvée' : 'Aucune opération pour l’instant'}>
+                {q ? 'Essayez un autre mot.' : 'Vos revenus, dépenses et prélèvements apparaîtront ici, jour par jour.'}
+              </EmptyState>
+            ) : (
+              <div className="releve">
+                {joursFiltres.map((j) => (
+                  <section key={j.date} className="releve-jour" aria-label={dayHeader(j.date, today)}>
+                    <h3 className="releve-date">
+                      <span>{dayHeader(j.date, today)}</span>
+                      <span className="releve-solde">
+                        Solde : <strong className={j.solde < 0 ? 'montant-moins' : 'montant-plus'}>{j.solde < 0 ? `− ${fmt(-j.solde)}` : fmt(j.solde)}</strong>
+                      </span>
+                    </h3>
+                    <ul className="operations">
+                      {j.operations.map((t) => (
+                        <Operation key={t.key} t={t} avecCompte={avecCompte} onSupprimer={t.type === 'ajustement' ? () => setASupprimer(t) : undefined} />
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            )}
+            {!toutAffiche && (
+              <div className="releve-plus">
+                <Button variant="secondaire" icon="history" onClick={() => setMois(mois + 1)}>
+                  Voir les opérations {ofMonth(moisPrecedent)}
+                </Button>
+              </div>
+            )}
+          </>
         )}
-        {!toutAffiche && (
-          <div className="releve-plus">
-            <Button variant="secondaire" icon="history" onClick={() => setMois(mois + 1)}>
-              Voir les opérations {ofMonth(moisPrecedent)}
-            </Button>
-          </div>
-        )}
-      </Card>
+      </section>
 
       {ajuster && <AjusterSolde comptes={avecCarte ? ['compte', 'carte-restaurant'] : ['compte']} onClose={() => setAjuster(false)} />}
       {aSupprimer && (

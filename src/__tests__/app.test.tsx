@@ -353,7 +353,8 @@ describe('retours de la propriétaire : report, catégories, messages', () => {
 
   it('tableau de bord : le report figure dans le calcul et dans « Ce mois-ci »', async () => {
     const user = renderApp(avecReport());
-    expect(screen.getByText(/Report des mois précédents : \+ 1 753,02 €, compté dans votre disponible/, { normalizer: norm })).toBeInTheDocument();
+    expect(norm(document.querySelector('.report-ligne')?.textContent)).toContain('Report des mois précédents : + 1 753,02 €, compté dans votre disponible');
+    expect(document.querySelector('.report-ligne strong')).toHaveClass('montant-plus');
     await user.click(screen.getByText('Comment est-ce calculé ?'));
     const calcul = screen.getByText('= Solde disponible du mois').closest('dl')!;
     expect(norm(calcul.textContent)).toContain('+ Report des mois précédents1 753,02 €');
@@ -697,9 +698,79 @@ describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
     const jour = screen.getByRole('region', { name: 'Hier' });
     expect(within(jour).getByText('Concert')).toBeInTheDocument();
     expect(norm(jour.querySelector('.releve-solde')?.textContent)).toBe('Solde : 2 590,52 €');
-    // À venir : le forfait du 20
+    // « À venir » est rangé dans sa propre bulle : rien d'autre n'encombre la page
+    expect(screen.queryByText('Forfait')).not.toBeInTheDocument();
+  });
+
+  it('onglet Compte : « Opérations » et « À venir » sont deux bulles, chacune avec son onglet', async () => {
+    const user = renderApp(fixture(), '/compte');
+    const bulles = screen.getByRole('tablist', { name: 'Opérations affichées' });
+    const [operations, aVenir] = within(bulles).getAllByRole('tab');
+    expect(operations).toHaveAccessibleName('Opérations');
+    expect(aVenir).toHaveAccessibleName('À venir (3 opérations)');
+    expect(operations).toHaveAttribute('aria-selected', 'true');
+    await user.click(aVenir);
+    expect(aVenir).toHaveAttribute('aria-selected', 'true');
+    const panneau = screen.getByRole('tabpanel');
+    expect(panneau).toHaveAccessibleName('À venir (3 opérations)');
+    // Forfait (le 20), salaire et loyer de décembre ; plus de relevé ni de recherche
+    expect(within(panneau).getByText('Forfait')).toBeInTheDocument();
+    expect(within(panneau).getByText('Salaire')).toBeInTheDocument();
+    expect(within(panneau).queryByLabelText('Rechercher une opération')).not.toBeInTheDocument();
+    expect(norm(within(panneau).getByText(/Dans les 30 prochains jours/).textContent)).toContain('+ 1 500,00 € qui entrent');
+    // Flèches du clavier : retour aux opérations
+    await user.keyboard('{ArrowLeft}');
+    expect(operations).toHaveAttribute('aria-selected', 'true');
+    expect(operations).toHaveFocus();
+    expect(screen.getByLabelText('Rechercher une opération')).toBeInTheDocument();
+  });
+
+  it('adresse directe vers « À venir » (compte?vue=a-venir)', () => {
+    renderApp(fixture(), '/compte?vue=a-venir');
+    expect(screen.getByRole('tab', { name: /À venir/ })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByText('Forfait')).toBeInTheDocument();
   });
+
+  it('couleurs : vert pour l’argent qui entre et le solde positif, rouge pour ce qui sort', async () => {
+    const user = renderApp(fixture(), '/compte');
+    // Solde positif dans une pastille verte
+    expect(document.querySelector('.solde-montant .pastille-solde')).toHaveClass('pastille-positive');
+    // Le concert (dépense) : pastille et montant rouges ; le salaire : vert
+    const concert = screen.getByText('Concert').closest('li')!;
+    expect(concert.querySelector('.operation-icone')).toHaveClass('sens-sortie');
+    expect(within(concert).getByText(/60,00/)).toHaveClass('montant-moins');
+    const salaire = screen.getAllByText('Salaire')[0].closest('li')!;
+    expect(salaire.querySelector('.operation-icone')).toHaveClass('sens-entree');
+    expect(within(salaire).getByText(/1 500,00/, { normalizer: norm })).toHaveClass('montant-plus');
+    // Découvert : pastille rouge
+    await user.click(screen.getByRole('button', { name: 'Ajuster le solde' }));
+    const dialog = screen.getByRole('dialog', { name: 'Ajuster le solde' });
+    await user.clear(within(dialog).getByLabelText('Solde réel – Compte bancaire'));
+    await user.type(within(dialog).getByLabelText('Solde réel – Compte bancaire'), '20');
+    await user.click(within(dialog).getByLabelText('Solde négatif (découvert)'));
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer le solde' }));
+    expect(document.querySelector('.solde-montant .pastille-solde')).toHaveClass('pastille-negative');
+  });
+
+  it('couleurs partout : dépenses et charges en rouge avec « − », revenus en vert avec « + »', () => {
+    renderApp(fixture(), '/depenses');
+    const courses = screen.getByText('Courses').closest('li')!;
+    expect(norm(courses.querySelector('.montant')?.textContent)).toBe('− 45,30 €');
+    expect(courses.querySelector('.montant')).toHaveClass('montant-moins');
+    expect(screen.getByText('Total de novembre 2026').closest('.stat')).toHaveClass('stat-sortie');
+    cleanup();
+    renderApp(fixture(), '/revenus');
+    expect(screen.getByText('Revenus de novembre 2026').closest('.stat')).toHaveClass('stat-entree');
+    expect(document.querySelector('.item .montant')).toHaveClass('montant-plus');
+    cleanup();
+    renderApp(fixture(), '/charges');
+    expect(document.querySelector('.item .montant')).toHaveClass('montant-moins');
+    cleanup();
+    // Tableau de bord : le reste à vivre (positif) en vert
+    renderApp();
+    expect(document.querySelector('.hero-text .valeur')).toHaveClass('montant-plus');
+  });
+
 
   it('« Ajuster le solde » : le solde réel est enregistré, l’ajustement se supprime', async () => {
     const user = renderApp(fixture(), '/compte');

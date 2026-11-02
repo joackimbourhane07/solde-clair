@@ -51,7 +51,7 @@ export function Dashboard() {
   const over = (c: number) => fmtShort(c, 'majore');
 
   // Les montants de la phrase principale sont mis en valeur (accent bleu).
-  const V = ({ children }: { children: ReactNode }) => <span className="valeur">{children}</span>;
+  const V = ({ children }: { children: ReactNode }) => <span className={`valeur ${s.available < 0 ? 'montant-moins' : 'montant-plus'}`}>{children}</span>;
   let headline: ReactNode;
   let subline: string | null = null;
   if (s.period === 'passe') {
@@ -147,34 +147,34 @@ export function Dashboard() {
               {s.carryOver !== 0 && (
                 <div>
                   <dt>{s.carryOver > 0 ? '+' : '−'} Report des mois précédents</dt>
-                  <dd>{fmt(Math.abs(s.carryOver))}</dd>
+                  <dd className={s.carryOver > 0 ? 'montant-plus' : 'montant-moins'}>{fmt(Math.abs(s.carryOver))}</dd>
                 </div>
               )}
               {s.adjustments !== 0 && (
                 <div>
                   <dt>{s.adjustments > 0 ? '+' : '−'} Ajustements du solde (onglet Compte)</dt>
-                  <dd>{fmt(Math.abs(s.adjustments))}</dd>
+                  <dd className={s.adjustments > 0 ? 'montant-plus' : 'montant-moins'}>{fmt(Math.abs(s.adjustments))}</dd>
                 </div>
               )}
               <div>
                 <dt>+ Revenus du mois</dt>
-                <dd>{fmt(s.income)}</dd>
+                <dd className="montant-plus">{fmt(s.income)}</dd>
               </div>
               <div>
                 <dt>− Charges fixes (payées et à venir)</dt>
-                <dd>{fmt(s.fixed)}</dd>
+                <dd className="montant-moins">{fmt(s.fixed)}</dd>
               </div>
               <div>
                 <dt>− Dépenses variables</dt>
-                <dd>{fmt(s.variable)}</dd>
+                <dd className="montant-moins">{fmt(s.variable)}</dd>
               </div>
               <div>
                 <dt>− Épargne déjà versée</dt>
-                <dd>{fmt(s.saved)}</dd>
+                <dd className="montant-moins">{fmt(s.saved)}</dd>
               </div>
               <div className="calcul-total">
                 <dt>= Solde disponible du mois</dt>
-                <dd>{fmt(s.available)}</dd>
+                <dd className={s.available < 0 ? 'montant-moins' : 'montant-plus'}>{fmt(s.available)}</dd>
               </div>
             </dl>
             {s.dailyRemaining !== null && (
@@ -208,7 +208,7 @@ export function Dashboard() {
                       {relativeDay(t.date, today)} – {t.type === 'revenu' ? 'Revenu attendu' : t.categoryName}
                     </p>
                   </div>
-                  {t.type === 'revenu' ? <SignedAmount cents={t.amount} positive /> : <span className="montant">{fmt(t.amount)}</span>}
+                  <SignedAmount cents={t.amount} positive={t.type === 'revenu'} />
                 </li>
               ))}
             </ul>
@@ -218,15 +218,16 @@ export function Dashboard() {
         {/* 4. Revenus et dépenses du mois */}
         <Card title={`Ce mois-ci`} actions={<Link to="/historique" className="link">Tout l’historique</Link>}>
           <div className="stats-grid stats-duo">
-            <Stat label="Revenus" value={fmt(s.income)} />
-            <Stat label="Total des dépenses" value={fmt(s.totalExpenses)} detail="Charges fixes + dépenses variables" />
+            <Stat label="Revenus" value={fmt(s.income)} tone="entree" />
+            <Stat label="Total des dépenses" value={fmt(s.totalExpenses)} tone="sortie" detail="Charges fixes + dépenses variables" />
           </div>
           {avecCarte && (
             <p className="report-ligne">
               <Icon name="wallet" size={16} />
               <span>
-                Soldes aujourd’hui : compte bancaire {soldeCompte < 0 ? `− ${fmt(-soldeCompte)}` : fmt(soldeCompte)}, carte restaurant{' '}
-                {soldeCarte < 0 ? `− ${fmt(-soldeCarte)}` : fmt(soldeCarte)}.{' '}
+                Soldes aujourd’hui : compte bancaire{' '}
+                <strong className={soldeCompte < 0 ? 'montant-moins' : 'montant-plus'}>{soldeCompte < 0 ? `− ${fmt(-soldeCompte)}` : fmt(soldeCompte)}</strong>, carte
+                restaurant <strong className={soldeCarte < 0 ? 'montant-moins' : 'montant-plus'}>{soldeCarte < 0 ? `− ${fmt(-soldeCarte)}` : fmt(soldeCarte)}</strong>.{' '}
                 <Link to="/compte" className="link">
                   Mon compte
                 </Link>
@@ -235,7 +236,14 @@ export function Dashboard() {
           )}
           {s.carryOver !== 0 && (
             <p className="report-ligne">
-              <Icon name="repeat" size={16} /> Report des mois précédents : {s.carryOver > 0 ? '+' : '−'} {fmt(Math.abs(s.carryOver))}, compté dans votre disponible.
+              <Icon name="repeat" size={16} />
+              <span>
+                Report des mois précédents :{' '}
+                <strong className={s.carryOver > 0 ? 'montant-plus' : 'montant-moins'}>
+                  {s.carryOver > 0 ? '+' : '−'} {fmt(Math.abs(s.carryOver))}
+                </strong>
+                , compté dans votre disponible.
+              </span>
             </p>
           )}
           {recent.length === 0 ? (
@@ -424,19 +432,24 @@ export function Dashboard() {
               <Stat
                 label="Report des mois précédents"
                 value={s.carryOver < 0 ? `− ${fmt(-s.carryOver)}` : fmt(s.carryOver)}
-                tone={s.carryOver < 0 ? 'negatif' : undefined}
+                tone={s.carryOver < 0 ? 'negatif' : 'positif'}
                 detail="Reste (ou dépassement) des mois d’avant"
               />
             )}
-            <Stat label="Charges fixes" value={fmt(s.fixed)} detail={`${fmt(s.fixedUpcoming)} encore à venir`} />
-            <Stat label="Dépenses variables" value={fmt(s.variable)} />
+            <Stat label="Charges fixes" value={fmt(s.fixed)} tone="sortie" detail={`${fmt(s.fixedUpcoming)} encore à venir`} />
+            <Stat label="Dépenses variables" value={fmt(s.variable)} tone="sortie" />
             <Stat label="Solde disponible" value={fmt(s.available)} tone={s.available < 0 ? 'negatif' : 'positif'} detail="Revenus − dépenses − épargne" />
             <Stat label="Épargné ce mois" value={fmt(s.saved)} detail={s.savingsTarget > 0 ? `Objectif du mois : ${fmt(s.savingsTarget)}` : 'Pas d’objectif mensuel'} />
-            <Stat label="Reste à vivre par jour" value={s.dailyRemaining === null ? '—' : fmt(s.dailyRemaining)} detail={`${s.daysRemaining} jour(s) restant(s)`} />
+            <Stat
+              label="Reste à vivre par jour"
+              value={s.dailyRemaining === null ? '—' : fmt(s.dailyRemaining)}
+              tone={s.dailyRemaining === null ? undefined : s.dailyRemaining < 0 ? 'negatif' : 'positif'}
+              detail={`${s.daysRemaining} jour(s) restant(s)`}
+            />
             <Stat
               label="Prévision fin de mois"
               value={fmt(s.forecastEndBalance)}
-              tone={s.forecastEndBalance < 0 ? 'negatif' : undefined}
+              tone={s.forecastEndBalance < 0 ? 'negatif' : 'positif'}
               detail={
                 s.forecastBasis === 'rythme'
                   ? 'Si vous gardez le même rythme de dépenses'

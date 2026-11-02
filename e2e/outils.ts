@@ -6,6 +6,7 @@ export const AUJOURDHUI = new Date('2026-11-12T10:00:00');
 export const PAGES: [string, string][] = [
   ['', 'Tableau de bord'],
   ['compte', 'Mon compte'],
+  ['compte?vue=a-venir', 'Mon compte, à venir'],
   ['depenses', 'Dépenses'],
   ['revenus', 'Revenus'],
   ['charges', 'Charges fixes'],
