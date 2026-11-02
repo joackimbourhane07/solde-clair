@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { ProfileType } from '../types';
 import { CURRENCIES, formatMoney, parseAmount } from '../lib/money';
@@ -66,6 +66,7 @@ function LineRow({
 export function Onboarding() {
   const { data: donnees, dispatch, today, notify } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState(0);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
@@ -99,7 +100,13 @@ export function Onboarding() {
   }, [type]);
 
   useEffect(() => {
-    headingRef.current?.focus();
+    // Depuis la présentation (« Essayer la démonstration ») : on amène directement à la démonstration et à l'import.
+    const alt = (location.state as { demo?: boolean } | null)?.demo && step === 0 ? document.getElementById('alt-titre') : null;
+    if (alt) {
+      alt.focus();
+      alt.scrollIntoView?.({ block: 'start' });
+    } else headingRef.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
   const amountOf = (v: string) => (v.trim() ? parseAmount(v) ?? 0 : 0);
@@ -172,13 +179,15 @@ export function Onboarding() {
   return (
     <div className="onboarding">
       <header className="onboarding-header">
-        <span className="logo">
-          <svg viewBox="0 0 64 64" width="32" height="32" aria-hidden="true">
-            <rect width="64" height="64" rx="14" fill="currentColor" />
-            <path d="M18 40c3 4 8 6 14 6 8 0 13-4 13-10 0-12-25-7-25-17 0-4 4-7 11-7 5 0 9 2 11 5" fill="none" stroke="var(--logo-ink)" strokeWidth="6" strokeLinecap="round" />
-          </svg>
-          <span className="logo-text">SoldeClair</span>
-        </span>
+        <Link to="/presentation" className="logo-lien" aria-label="SoldeClair, retour à la présentation">
+          <span className="logo">
+            <svg viewBox="0 0 64 64" width="32" height="32" aria-hidden="true">
+              <rect width="64" height="64" rx="14" fill="currentColor" />
+              <path d="M18 40c3 4 8 6 14 6 8 0 13-4 13-10 0-12-25-7-25-17 0-4 4-7 11-7 5 0 9 2 11 5" fill="none" stroke="var(--logo-ink)" strokeWidth="6" strokeLinecap="round" />
+            </svg>
+            <span className="logo-text">SoldeClair</span>
+          </span>
+        </Link>
         <p className="onboarding-privacy">
           <Icon name="lock" size={16} /> Sans compte, sans banque : vos données restent sur cet appareil.
         </p>

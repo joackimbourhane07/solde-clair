@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Icon } from './Icon';
 import { Modal, Toasts } from './ui';
 import { ExpenseForm } from './forms';
@@ -124,7 +124,10 @@ export function Layout({ children }: { children: ReactNode }) {
           <Icon name="lock" size={16} />
           <p>
             Vos données restent dans ce navigateur, sur cet appareil : elles ne sont ni envoyées sur Internet ni partagées avec d’autres
-            personnes. Pensez à faire une sauvegarde dans les paramètres.
+            personnes. Pensez à faire une sauvegarde dans les paramètres.{' '}
+            <Link to="/presentation" className="link">
+              Voir la présentation de SoldeClair
+            </Link>
           </p>
         </footer>
       </main>

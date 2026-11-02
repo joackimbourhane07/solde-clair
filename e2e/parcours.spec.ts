@@ -10,6 +10,11 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   const erreurs = await preparer(page);
   await page.goto('./');
 
+  // --- Présentation : premier écran d'un nouveau visiteur ---
+  await expect(page.getByRole('heading', { level: 1, name: 'Votre budget devient enfin clair.' })).toBeVisible();
+  await page.getByRole('main').getByRole('button', { name: 'Commencer' }).first().click();
+  await expect(page.getByRole('heading', { name: 'Bienvenue sur SoldeClair' })).toBeVisible();
+
   // --- Configuration initiale ---
   await page.getByRole('button', { name: /Continuer/ }).click();
   await expect(page.getByText('Indiquez un prénom ou un pseudonyme.')).toBeVisible();
@@ -43,10 +48,13 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   await expect(page.getByRole('heading', { name: 'Bonjour Léo Test' })).toBeVisible();
   expect(norm(await page.locator('.hero-text').innerText())).toBe('Il vous reste 270 € pour terminer le mois, soit environ 14 € par jour.');
   expect(await stat(page, 'Solde disponible')).toBe('270,51 €');
-  expect(norm(await page.locator('.hero-figure').innerText())).toBe('14,23 €');
-  // Les chiffres secondaires sont dans « Détail du mois »
+  // Une seule carte principale ; les chiffres secondaires sont dans « Détail du mois »
+  await expect(page.locator('.hero-figure')).toHaveCount(0);
   await page.getByText('Détail du mois').click();
+  await expect(page.locator('.stat').filter({ hasText: 'Reste à vivre par jour' })).toBeVisible();
   expect(await stat(page, 'Reste à vivre par jour')).toBe('14,23 €');
+  // Sur mobile, le formulaire d'ajout rapide laisse la place au bouton « + »
+  await expect(page.getByRole('form', { name: 'Ajout rapide d’une dépense' })).toBeHidden();
 
   // --- Bouton « + » central (mobile) depuis une autre page ---
   await aller(page, 'budgets');
@@ -64,10 +72,12 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   expect(await stat(page, 'Solde disponible')).toBe('••• €');
   await page.locator('.topbar').getByRole('button', { name: 'Afficher les montants' }).click();
 
-  // --- Dépense rapide ---
-  const rapide = page.getByRole('form', { name: 'Ajout rapide d’une dépense' });
+  // --- Dépense rapide depuis l'accueil, au pouce ---
+  await page.locator('.bottom-nav').getByRole('button', { name: 'Ajouter une dépense' }).click();
+  const rapide = page.getByRole('dialog', { name: 'Nouvelle dépense' });
   await rapide.getByLabel('Montant', { exact: true }).fill('7,89');
   await rapide.getByRole('button', { name: 'Ajouter la dépense' }).click();
+  await expect(rapide).toHaveCount(0);
   expect(await stat(page, 'Solde disponible')).toBe('261,62 €');
 
   // --- Libellés avec élision au changement de mois ---
@@ -119,8 +129,11 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   await page.getByRole('alertdialog').getByRole('button', { name: 'Continuer' }).click();
   await page.getByRole('textbox', { name: 'Confirmation' }).fill('EFFACER');
   await page.getByRole('button', { name: 'Tout effacer définitivement' }).click();
-  await expect(page.getByRole('heading', { name: 'Bienvenue sur SoldeClair' })).toBeVisible();
+  // Retour à la présentation, comme un nouveau visiteur ; l'import se trouve dans la configuration
+  await expect(page.getByRole('heading', { level: 1, name: 'Votre budget devient enfin clair.' })).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('soldeclair:donnees:v1'))).toBeNull();
+  await page.getByRole('contentinfo').getByRole('button', { name: 'Importer une sauvegarde' }).click();
+  await expect(page.getByRole('heading', { name: 'Bienvenue sur SoldeClair' })).toBeVisible();
 
   await page.setInputFiles('input[type=file]', fichier);
   await expect(page.getByRole('heading', { name: 'Bonjour Léo Test' })).toBeVisible();

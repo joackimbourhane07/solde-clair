@@ -48,15 +48,16 @@ Permettre à chacun de :
 
 | Page | Ce qu’elle permet |
 | --- | --- |
+| **Page d’accueil (présentation)** | Premier écran d’un nouveau visiteur : grand titre « Votre budget devient enfin clair. », boutons « Commencer » et « Découvrir SoldeClair », illustrations originales, sections sur le reste à vivre, les charges à venir, l’épargne, le simulateur, les profils et la confidentialité, appel à l’action et pied de page. Si des données existent déjà, le bouton devient « Accéder à mon tableau de bord ». Chargée séparément (≈ 9 Ko compressés) ; accessible à tout moment depuis le bas de l’application. |
 | **Configuration initiale** | Parcours en 6 étapes : prénom ou pseudonyme, situation (étudiant, alternant, salarié, indépendant, autre), devise (euro par défaut), revenu principal et revenus complémentaires, charges fixes, estimation des dépenses variables, objectif d’épargne mensuel, objectif à long terme, choix des catégories proposées selon le profil. Possibilité de charger une démonstration ou d’importer une sauvegarde. |
-| **Tableau de bord** | Phrase principale (reste à vivre total et par jour, jours restants) avec le détail du calcul, **quatre chiffres seulement** (revenus, total des dépenses, solde disponible, épargné ce mois) ; le reste (charges fixes, dépenses variables, reste à vivre par jour, prévision de fin de mois, objectif d’épargne) est rangé dans « Détail du mois ». Alertes avec une piste d’action, dernières transactions, prochaines charges (résumé « Dans les 7 prochains jours… » et dates relatives : aujourd’hui, demain, dans 3 jours), **ajout rapide d’une dépense**, graphiques. Navigation de mois en mois. |
+| **Tableau de bord** | Dans l’ordre : **carte principale** (« Il vous reste X € pour terminer le mois, soit environ Y € par jour », jours restants, part des revenus dépensée, détail du calcul), **À venir** (« Dans les 7 prochains jours : … », charges et revenus attendus avec des dates relatives), **Ce mois-ci** (revenus, dépenses, dernières opérations), **Épargne du mois**, **À faire** (3 petites actions au maximum : limite dépassée, rythme trop rapide, prélèvement de demain, dépense inhabituelle, versement d’épargne, sauvegarde ; chacune peut être ignorée), **Estimation des 30 prochains jours** (disponible estimé à 7, 15 et 30 jours, point le plus bas, événements pris en compte), ajout rapide (sur ordinateur), **un seul graphique** ; le reste dans « Détail du mois ». Navigation de mois en mois. |
 | **Revenus** | Ajout, modification, suppression. Nom, montant, date, catégorie, récurrent ou exceptionnel, fréquence, date de fin facultative, note. |
 | **Dépenses** | Ajout, modification, suppression, recherche et filtre par catégorie. Montant, catégorie, date, description et moyen de paiement facultatifs. |
 | **Charges fixes** | Ajout, modification, suppression. Nom, montant, date de prélèvement, catégorie, fréquence (hebdomadaire à annuelle), statut **payé / à venir** modifiable pour chaque échéance, note. |
-| **Budgets par catégorie** | Limite mensuelle par catégorie : prévu, dépensé, restant, pourcentage, barre de progression avec repères à 75 % et 90 %. Alertes à **75 %**, **90 %** et en cas de **dépassement**, signalées par un texte et une icône (pas seulement par la couleur). Les catégories **sans limite** sont regroupées dans une liste courte, avec un bouton « Fixer une limite ». |
+| **Budgets par catégorie** | Limite mensuelle par catégorie résumée en une phrase (« 45,40 € dépensés sur 60,00 € (76 %) · il reste 14,60 € ») avec une barre de progression et des repères à 75 % et 90 %. Alertes à **75 %**, **90 %** et en cas de **dépassement**, signalées par un texte et une icône (pas seulement par la couleur) ; en cas de dépassement, lien direct vers les dépenses de la catégorie. Les catégories **sans limite** sont regroupées dans une liste courte, avec un bouton « Fixer une limite ». |
 | **Objectifs d’épargne** | Plusieurs objectifs : nom, description, montant cible, montant déjà disponible, date souhaitée, priorité, contribution mensuelle. Calcul automatique du restant, des mois restants, du montant mensuel nécessaire, du pourcentage et de la date d’atteinte estimée. Enregistrement des versements. Progression résumée en une phrase (« Vous avez atteint 43 % de votre objectif ») avec la prochaine petite étape. |
 | **Simulateur d’achat** | Solde après achat, nouveau reste à vivre quotidien, impact sur l’épargne du mois, impact sur chaque objectif, dépassement éventuel d’une catégorie, et appréciation : *situation confortable*, *achat possible avec prudence* ou *achat susceptible de déséquilibrer le budget* (indication budgétaire, pas un conseil financier). |
-| **Historique et bilan** | Historique complet avec recherche et filtres (période, dates, type, catégorie), filtres actifs visibles et effaçables en un geste, bilan mensuel (revenus, charges, dépenses, épargne, solde final, catégories les plus coûteuses, budgets dépassés), comparaison avec le mois précédent, export CSV. |
+| **Historique et bilan** | Historique complet avec recherche, **puces** pour la période et le type, liste pour la catégorie, filtres actifs visibles et effaçables en un geste, bilan mensuel (revenus, charges, dépenses, épargne, solde final, catégories les plus coûteuses, budgets dépassés), comparaison avec le mois précédent, export CSV. |
 | **Paramètres** | Sauvegarde en premier (export CSV, sauvegarde JSON avec la date de la dernière sauvegarde et un rappel au-delà de 30 jours, import JSON), profil, devise, objectif d’épargne, thème clair / sombre / automatique, catégories (ajouter, renommer, supprimer), données de démonstration, effacement total avec **double confirmation**. |
 
 **Partout dans l’application** :
@@ -69,7 +70,7 @@ Permettre à chacun de :
 **Graphiques** (lisibles sur smartphone, avec une vue « tableau » accessible pour chacun) :
 répartition des dépenses par catégorie, revenus et dépenses sur 6 mois, évolution du solde au cours du mois, évolution de l’épargne, progression des objectifs.
 
-**Apparence** : fond blanc, texte presque noir, un seul accent bleu, vert pour les bonnes nouvelles, orange pour l’attention, rouge pour les dépassements. Cartes à bordures fines, coins légèrement arrondis, presque aucune ombre ; chiffres alignés (chiffres tabulaires). Le thème clair est utilisé par défaut ; le mode sombre (graphite) et le mode automatique restent disponibles dans les paramètres. Les teintes utilisées pour le texte sont assombries pour respecter le contraste WCAG AA. Les animations sont supprimées si l’appareil demande de réduire les mouvements.
+**Apparence** : fond blanc, texte presque noir, un seul accent bleu, vert pour les bonnes nouvelles, orange pour l’attention, rouge pour les dépassements. Panneaux gris très clair **sans bordure**, boutons et choix remplis (bleu plein pour l’action principale ou le choix sélectionné, bleu clair pour les autres), coins légèrement arrondis, presque aucune ombre ; chiffres alignés (chiffres tabulaires). Le thème clair est utilisé par défaut ; le mode sombre (graphite) et le mode automatique restent disponibles dans les paramètres. Les teintes utilisées pour le texte sont assombries pour respecter le contraste WCAG AA. Les animations sont supprimées si l’appareil demande de réduire les mouvements.
 
 **Accessibilité** : libellés sur tous les champs, messages d’erreur explicites reliés aux champs, navigation complète au clavier (lien d’évitement, fenêtres qui gardent le focus et se ferment avec Échap, graphiques parcourables avec les flèches), contrastes renforcés, zones tactiles d’au moins 44 px, montants signés « + / − », états des budgets indiqués par texte + icône + hachures, respect de « réduire les animations ».
 
@@ -210,6 +211,8 @@ solde-clair/
     │   ├── budget.ts          Totaux, solde, reste à vivre, budgets, alertes, bilan
     │   ├── goals.ts           Objectifs d’épargne
     │   ├── simulator.ts       Simulateur d’achat
+    │   ├── forecast.ts        Estimation du disponible à 7, 15 et 30 jours
+    │   ├── actions.ts         Petites actions utiles du tableau de bord
     │   ├── categories.ts      Catégories proposées selon le profil
     │   ├── setup.ts           Création des données après la configuration
     │   ├── demo.ts            Trois profils de démonstration fictifs
@@ -223,10 +226,12 @@ solde-clair/
     │   ├── forms.tsx          Formulaires (dépense, revenu, charge, objectif, versement)
     │   ├── Layout.tsx         Navigation (barre latérale / barre du bas sur mobile)
     │   ├── Icon.tsx           Icônes
+    │   ├── accueil/           Illustrations originales de la présentation (SVG)
     │   └── charts/Charts.tsx  Graphiques SVG
-    ├── pages/                 Une page par écran
+    ├── pages/                 Une page par écran (Accueil.tsx : présentation, chargée séparément)
     ├── styles/global.css      Identité claire (palette --dp-*), thèmes clair et sombre, responsive
     ├── styles/fonts.css       Police IBM Plex Sans hébergée localement
+    ├── styles/accueil.css     Styles de la présentation
     ├── test/                  Configuration et jeu de données des tests
     └── __tests__/             Tests de l’interface
 ```
@@ -280,6 +285,8 @@ Tous les calculs se font en centimes entiers ; la conversion en euros n’a lieu
 | Objectif : mois restants | Mois calendaires jusqu’à la date souhaitée (au moins 1 si la date est dans le mois en cours). |
 | Objectif : effort mensuel | Montant restant ÷ mois restants, arrondi au centime supérieur. |
 | Objectif : date estimée | Aujourd’hui + ⌈restant ÷ contribution mensuelle⌉ mois. |
+| Estimation à 7, 15 et 30 jours | Disponible du jour (revenus reçus − charges, dépenses et épargne du mois jusqu’à aujourd’hui) + revenus prévus − charges prévues − dépenses courantes estimées (rythme du mois dès le 7ᵉ jour, sinon limites prévues ÷ jours du mois). L’argent des mois précédents n’est pas compté : c’est une estimation indicative. Le point le plus bas est signalé. |
+| À faire | Limite dépassée ou à 90 %, rythme qui ferait finir le mois dans le rouge, prélèvement aujourd’hui ou demain, dépense des 7 derniers jours au moins 3 fois supérieure à la médiane de sa catégorie (90 jours, au moins 4 dépenses, 30 € minimum), épargne du mois incomplète à partir du 10, sauvegarde absente ou de plus de 30 jours. 3 actions au maximum, par priorité ; « Ignorer » la masque jusqu’au mois suivant. |
 | Simulateur | *Déséquilibre* si le solde devient négatif ; *prudence* si l’achat entame l’épargne prévue du mois, fait dépasser une limite ou dépasse la moitié du solde disponible ; sinon *confortable*. |
 
 ## Limites actuelles

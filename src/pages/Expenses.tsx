@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { Expense } from '../types';
 import { defaultDateFor, formatDate, monthOf, ofMonth } from '../lib/dates';
@@ -11,7 +12,12 @@ export function Expenses() {
   const { data, month, today, fmt, dispatch, notify } = useApp();
   const [editing, setEditing] = useState<Expense | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<Expense | null>(null);
-  const [category, setCategory] = useState('');
+  // « Voir les dépenses » depuis un budget : la catégorie est présélectionnée (?categorie=…).
+  const [params] = useSearchParams();
+  const [category, setCategory] = useState(() => {
+    const id = params.get('categorie') ?? '';
+    return data.categories.some((c) => c.id === id) ? id : '';
+  });
   const [query, setQuery] = useState('');
 
   const monthExpenses = useMemo(

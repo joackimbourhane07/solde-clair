@@ -39,6 +39,7 @@ export type Action =
   | { type: 'setTheme'; theme: ThemeChoice }
   | { type: 'setLastBackup'; date: ISODate }
   | { type: 'setHideAmounts'; hide: boolean }
+  | { type: 'dismissAction'; id: string }
   | { [K in CollectionName]: { type: 'upsert'; collection: K; item: Collections[K] } }[CollectionName]
   | { type: 'remove'; collection: Exclude<CollectionName, 'categories' | 'goals'>; id: string }
   | { type: 'removeGoal'; id: string }
@@ -65,6 +66,12 @@ export function reducer(state: AppData, action: Action): AppData {
       return { ...state, settings: { ...state.settings, lastBackup: action.date } };
     case 'setHideAmounts':
       return { ...state, settings: { ...state.settings, hideAmounts: action.hide } };
+    case 'dismissAction': {
+      // On garde les 50 derniers identifiants : la liste ne grossit pas indéfiniment.
+      const deja = state.settings.dismissedActions ?? [];
+      if (deja.includes(action.id)) return state;
+      return { ...state, settings: { ...state.settings, dismissedActions: [...deja, action.id].slice(-50) } };
+    }
     case 'upsert': {
       const list = state[action.collection] as { id: string }[];
       const exists = list.some((x) => x.id === action.item.id);

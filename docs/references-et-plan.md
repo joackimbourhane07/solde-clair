@@ -103,6 +103,19 @@ Colonnes : référence · problème résolu · solution · page · priorité (1 
 | B9 | Airbnb | Configuration | Bouton « Passer » sur les étapes facultatives et une phrase « Pourquoi on vous le demande » | Configuration | 2 | Faible | Faible | Parcours e2e |
 | B10 | YNAB | Débutants | Limites suggérées selon le profil (modifiables) | Budgets | 3 | Moyenne | Faible | Tests |
 
+### 3c. Vos décisions et ce qui a été fait
+
+| Proposition | Décision | Réalisation |
+|---|---|---|
+| B1 Page d'accueil | Validée | 12 sections dans l'ordre demandé, illustrations SVG originales, « Commencer » → configuration, « Accéder à mon tableau de bord » si des données existent, chargée séparément (≈ 9 Ko compressés) |
+| B2 Nouvel ordre du tableau de bord | Validée | Carte principale unique, À venir, Ce mois-ci, Épargne du mois, À faire, Estimation, un seul graphique ; « Détail du mois » pour le reste ; page mobile 20 % plus courte |
+| B3 Filtres en puces | Validée | Période et type en puces, catégorie en liste, filtres actifs effaçables |
+| B4 Budget en une phrase | Validée | « 45,40 € dépensés sur 60,00 € (76 %) · il reste 14,60 € » ; dépassement : piste + lien vers les dépenses filtrées |
+| B5 À faire | Validée | 3 actions au maximum, priorité écrite en mots, « Ignorer » mémorisé (et inclus dans la sauvegarde) |
+| B6 Estimation 7 / 15 / 30 jours | Validée | Marquée « Estimation », point le plus bas signalé, événements listés, lien vers le simulateur |
+| Panneaux | Votre choix | Gris très clair, sans bordure (les champs de saisie gardent un trait fin) |
+| B7 à B10 | Non retenues pour l'instant | — |
+
 ## 4. Direction visuelle unique
 
 Votre palette est la base. Quelques teintes sont **légèrement assombries pour le texte**, afin que les petits textes atteignent le contraste WCAG AA (4,5:1). Les couleurs d'origine restent utilisées pour les icônes, barres, illustrations et contours.
@@ -138,7 +151,7 @@ Note : la consigne générale proposait « bleu nuit + orange » ; votre choix e
 4. **Comprendre** : « Comment est-ce calculé ? » et « Détail du mois » s'ouvrent sur place, sans changer de page.
 5. Barre du bas inchangée : Accueil · Dépenses · **+** · Budgets · Plus.
 
-## 6. Tableau de bord proposé (B2, à valider)
+## 6. Tableau de bord (B2, validé et appliqué)
 
 Ordre demandé, au maximum 4 chiffres visibles en même temps :
 
@@ -151,7 +164,7 @@ Ordre demandé, au maximum 4 chiffres visibles en même temps :
 
 Le formulaire d'ajout rapide resterait sur ordinateur et serait remplacé par le bouton « + » sur mobile.
 
-## 7. Page d'accueil (B1) — à valider avant tout code
+## 7. Page d’accueil (B1, validée et créée)
 
 ### Structure (de haut en bas)
 
@@ -203,32 +216,34 @@ Dessinées spécialement en SVG (vecteurs légers), style à plat avec un trait 
 
 ## 9. Résultats de cette version
 
-### Vérifications (toutes réussies)
+### Vérifications (toutes réussies, dernière version)
 
 | Vérification | Résultat |
 |---|---|
 | `npm ci` | installation propre, 0 vulnérabilité |
 | Vérification TypeScript | aucune erreur |
-| Tests unitaires et d'interface (`npm test`) | **165 / 165** (dont 7 nouveaux : dates relatives, résumé des 7 jours, filtres actifs, prochaine étape d'un objectif, migration du thème, titre) |
-| Tests navigateur (`npm run test:e2e`) | **15 / 15** : parcours complet (ajout, modification, suppression, sauvegarde et restauration), 4 formats × clair / sombre, **WCAG 2.2 AA** (axe-core), clavier, thèmes, police locale, mouvement réduit |
-| `npm run build` | réussi ; police allégée de 100 Ko à 70 Ko |
-| Largeurs 1440, 1100, 800, 520, 390, 320 px × clair / sombre × 10 pages | 0 débordement, 0 erreur ni avertissement dans la console |
-| Version GitHub Pages (chemin `/solde-clair/`, serveur local identique) | 23 / 23 : fond blanc par défaut, titre « SoldeClair », ressources chargées, actualisation, page 404, démonstration, revenu, dépense, calcul du tableau de bord, 4 formats, données non partagées entre deux visiteurs, aucune requête externe |
+| Tests unitaires et d'interface (`npm test`) | **180 / 180** : dont estimation 7/15/30 jours, actions « À faire », présentation, ordre du tableau de bord, budgets en une phrase, filtres en puces, migration du thème, titre |
+| Tests navigateur (`npm run test:e2e`) | **15 / 15** : parcours complet depuis la présentation (configuration, ajout, modification, suppression, sauvegarde, effacement, restauration), 4 formats × clair / sombre pour la présentation et les 10 pages, **WCAG 2.2 AA** (axe-core), clavier, ajout au pouce, thèmes, police locale, mouvement réduit |
+| `npm run build` | réussi ; présentation chargée à part : 6,4 Ko (JS) + 2,4 Ko (CSS) compressés ; police allégée de 100 à 70 Ko |
+| Largeurs 1440, 1100, 800, 520, 390, 320 px × clair / sombre | présentation + 10 pages : 0 débordement, 0 erreur ni avertissement dans la console |
+| Hauteur des pages sur mobile (390 px) | tableau de bord 3 981 → 3 210 px ; budgets 3 680 → 3 055 px |
+| Version GitHub Pages (chemin `/solde-clair/`, serveur local identique) | 25 / 25 : présentation, « Commencer », fond blanc, titre « SoldeClair », ressources, actualisation, page 404, démonstration, revenu, dépense, calcul, 4 formats, données non partagées entre deux visiteurs, aucune requête externe |
 | Migration | des données de l'ancienne version (sombre par défaut) s'affichent en clair ; un choix sombre fait ensuite est conservé |
 | Contrastes | texte ≥ 4,5:1, champs et icônes ≥ 3:1 (tableau de la section 4) |
 
 ### Captures avant / après
 
-[Configuration (ordinateur)](captures/v2/configuration-ordinateur.jpg) · [Tableau de bord (ordinateur)](captures/v2/tableau-de-bord-ordinateur.jpg) · [Tableau de bord (mobile)](captures/v2/tableau-de-bord-mobile.jpg) · [Tableau de bord, mode sombre (mobile)](captures/v2/tableau-de-bord-mobile-sombre.jpg) · [Historique](captures/v2/historique-mobile.jpg) · [Budgets](captures/v2/budgets-mobile.jpg) · [Objectifs](captures/v2/objectifs-mobile.jpg)
+[Configuration (ordinateur)](captures/v2/configuration-ordinateur.jpg) · [Tableau de bord (ordinateur)](captures/v2/tableau-de-bord-ordinateur.jpg) · [Tableau de bord (mobile)](captures/v2/tableau-de-bord-mobile.jpg) · [Tableau de bord, mode sombre (mobile)](captures/v2/tableau-de-bord-mobile-sombre.jpg) · [Historique](captures/v2/historique-mobile.jpg) · [Budgets](captures/v2/budgets-mobile.jpg) · [Objectifs](captures/v2/objectifs-mobile.jpg) · [Présentation (ordinateur)](captures/v2/presentation-ordinateur.jpg) · [Présentation (mobile, clair et sombre)](captures/v2/presentation-mobile-clair-sombre.jpg)
 
 ### Fichiers modifiés
 
-- Apparence : `src/styles/global.css` (palette, mode sombre, formes, encadrés remplis), `src/styles/fonts.css` (une seule police), `public/favicon.svg`, `index.html` (titre « SoldeClair », couleur du navigateur).
-- Thème clair par défaut et migration : `src/lib/storage.ts`, `src/types.ts`, `src/lib/demo.ts`, `src/lib/setup.ts`.
-- Améliorations : `src/pages/Dashboard.tsx` et `src/lib/budget.ts` (7 prochains jours), `src/lib/dates.ts` (dates relatives), `src/pages/History.tsx` (filtres actifs), `src/pages/Goals.tsx` (progression, prochaine étape, dates sur deux lignes, bouton secondaire).
-- Tests : `src/__tests__/app.test.tsx`, `src/lib/__tests__/*.test.ts`, `src/test/fixtures.ts`, `e2e/interface.spec.ts`.
-- Outils : `package.json` (police à chasse fixe retirée), `tsconfig.json` (types Vite pour les tests).
-- Documentation : `README.md`, ce document, `docs/captures/v2/`.
+- Apparence : `src/styles/global.css` (palette, mode sombre, panneaux gris sans bordure, encadrés remplis), `src/styles/fonts.css`, `public/favicon.svg`, `index.html` (titre « SoldeClair »).
+- Présentation : `src/pages/Accueil.tsx`, `src/components/accueil/Illustrations.tsx`, `src/styles/accueil.css`, `src/App.tsx` (routes et chargement séparé), `src/pages/Onboarding.tsx` (logo vers la présentation, accès direct à la démonstration), `src/components/Layout.tsx` (lien vers la présentation).
+- Tableau de bord : `src/pages/Dashboard.tsx`, `src/lib/forecast.ts` (estimation), `src/lib/actions.ts` (À faire), `src/lib/budget.ts` (à venir), `src/lib/dates.ts` (dates relatives), `src/state/AppState.tsx` et `src/lib/storage.ts` (actions ignorées).
+- Budgets et historique : `src/pages/Budgets.tsx`, `src/pages/Expenses.tsx` (catégorie présélectionnée), `src/pages/History.tsx`, `src/pages/Goals.tsx`.
+- Thème clair par défaut : `src/lib/storage.ts`, `src/types.ts`, `src/lib/demo.ts`, `src/lib/setup.ts`.
+- Tests : `src/__tests__/app.test.tsx`, `src/lib/__tests__/*.test.ts` (dont `forecast-actions.test.ts`), `src/test/fixtures.ts`, `e2e/*.ts`.
+- Outils et documentation : `package.json`, `tsconfig.json`, `README.md`, ce document, `docs/captures/v2/`.
 
 ## 10. Sources consultées
 

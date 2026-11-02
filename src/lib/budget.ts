@@ -360,6 +360,14 @@ export function upcomingCharges(data: AppData, today: ISODate, horizonDays = 30)
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
+/** Revenus attendus et charges encore à venir, dans l'ordre des dates (aujourd'hui inclus pour les charges). */
+export function upcomingItems(data: AppData, today: ISODate, horizonDays = 30): Transaction[] {
+  const end = addDays(today, horizonDays);
+  return transactionsInRange(data, today, end, today)
+    .filter((t) => (t.type === 'charge' && t.status === 'a_venir') || (t.type === 'revenu' && t.date > today))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.label.localeCompare(b.label, 'fr'));
+}
+
 /** Charges encore à venir sur les `days` prochains jours, aujourd'hui inclus (7 = aujourd'hui + 6 jours). */
 export function upcomingSummary(data: AppData, today: ISODate, days = 7): { count: number; total: Cents } {
   const list = upcomingCharges(data, today, days - 1);

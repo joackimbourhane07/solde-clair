@@ -227,6 +227,9 @@ export function validateData(input: unknown): ValidationResult {
           appearanceVersion: APPEARANCE_VERSION,
           ...(isValidISODate(settingsIn.lastBackup) ? { lastBackup: settingsIn.lastBackup } : {}),
           ...(typeof settingsIn.hideAmounts === 'boolean' ? { hideAmounts: settingsIn.hideAmounts } : {}),
+          ...(Array.isArray(settingsIn.dismissedActions)
+            ? { dismissedActions: settingsIn.dismissedActions.filter((x): x is string => typeof x === 'string' && x.length <= 120).slice(-50) }
+            : {}),
         },
         categories,
         incomes,
