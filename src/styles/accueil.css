@@ -753,3 +753,244 @@
     backdrop-filter: none;
   }
 }
+
+/* Choix du profil (des profils existent déjà sur cet appareil) */
+.accueil-choix {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.accueil-choix.centre {
+  align-items: center;
+}
+
+.accueil-autres-profils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: var(--dp-typography-supporting);
+}
+
+
+/* ------------------- Captures de SoldeClair (cadres d'appareils) ------------------- */
+
+.appareil-tel {
+  position: relative;
+  z-index: 1;
+  width: min(280px, 70vw);
+  padding: 8px;
+  border-radius: 42px;
+  background: #1c1c1c;
+  box-shadow: 0 30px 60px -32px rgba(25, 25, 25, 0.5);
+}
+
+.appareil-tel img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 34px;
+  background: #ffffff;
+}
+
+.appareil-ordi {
+  position: relative;
+  z-index: 1;
+}
+
+.appareil-ordi .ecran {
+  padding: 10px 10px 12px;
+  border-radius: 18px 18px 6px 6px;
+  background: #1c1c1c;
+  box-shadow: 0 40px 80px -40px rgba(25, 25, 25, 0.45);
+}
+
+.appareil-ordi img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.appareil-ordi .socle {
+  height: 14px;
+  margin: 0 -5%;
+  border-radius: 0 0 16px 16px;
+  background: linear-gradient(#e2e2df, #c8c8c4);
+}
+
+/* Vitrine sous l'introduction : ordinateur + téléphone + objets du quotidien */
+.vitrine {
+  position: relative;
+  max-width: 980px;
+  margin: 8px auto 0;
+  padding: 28px 0 56px;
+}
+
+.vitrine-fond {
+  position: absolute;
+  inset: 12% 6% 0;
+  border-radius: 40px;
+  background: var(--fill-doux);
+}
+
+.vitrine .appareil-ordi {
+  width: 82%;
+  margin-left: 4%;
+}
+
+.vitrine-tel {
+  position: absolute;
+  right: 2%;
+  bottom: 18px;
+  width: min(220px, 27%);
+  padding: 6px;
+  border-radius: 30px;
+}
+
+.vitrine-tel img {
+  border-radius: 25px;
+}
+
+.vitrine-objet {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.objet-calendrier {
+  top: -6px;
+  left: -2%;
+  width: 104px;
+}
+
+.objet-pieces {
+  bottom: 6px;
+  left: 2%;
+  width: 96px;
+}
+
+.objet-cadenas {
+  top: 4%;
+  right: 0;
+  width: 84px;
+}
+
+@media (max-width: 700px) {
+  .vitrine {
+    padding: 20px 0 40px;
+  }
+
+  .vitrine .appareil-ordi {
+    width: 92%;
+    margin-left: 0;
+  }
+
+  .vitrine-tel {
+    width: 36%;
+    right: 0;
+    bottom: 0;
+  }
+
+  .objet-calendrier {
+    width: 64px;
+    top: -14px;
+  }
+
+  .objet-cadenas,
+  .objet-pieces {
+    display: none;
+  }
+}
+
+/* Colonnes visuelles des sections : téléphone + objet dessiné en coin */
+.visuel-tel,
+.visuel-avec-objet {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.visuel-tel::before {
+  content: '';
+  position: absolute;
+  inset: 12% 8%;
+  border-radius: 50%;
+  background: var(--fill-doux);
+}
+
+.objet-coin {
+  position: absolute;
+  z-index: 2;
+  width: 110px;
+  pointer-events: none;
+}
+
+.objet-coin.grand {
+  width: 150px;
+}
+
+.objet-coin-haut {
+  top: -26px;
+  right: -8px;
+}
+
+.objet-coin-bas {
+  bottom: 0;
+  left: 0;
+}
+
+/* Deux téléphones légèrement décalés */
+.duo-tel {
+  min-height: 420px;
+}
+
+.duo-tel .appareil-tel {
+  width: min(230px, 46%);
+}
+
+.duo-tel .tel-arriere {
+  transform: rotate(-5deg) translate(18%, 4%);
+  opacity: 0.96;
+}
+
+.duo-tel .tel-avant {
+  transform: rotate(3deg) translate(-12%, 10%);
+}
+
+/* Illustration dessinée au-dessus de l'appel final */
+.accueil-cta-illustration {
+  width: min(520px, 100%);
+}
+
+@media (max-width: 520px) {
+  .objet-coin {
+    width: 80px;
+  }
+
+  .objet-coin.grand {
+    width: 104px;
+  }
+}
+
+
+/* Petits écrans : un seul téléphone, droit, pour rester lisible */
+@media (max-width: 600px) {
+  .duo-tel {
+    min-height: 0;
+  }
+
+  .duo-tel .tel-arriere {
+    display: none;
+  }
+
+  .duo-tel .tel-avant {
+    width: min(260px, 70vw);
+    transform: none;
+  }
+}

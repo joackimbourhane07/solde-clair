@@ -48,7 +48,7 @@ Permettre à chacun de :
 
 | Page | Ce qu’elle permet |
 | --- | --- |
-| **Page d’accueil (présentation)** | Premier écran d’un nouveau visiteur : grand titre « Votre budget devient enfin clair. », boutons « Commencer » et « Découvrir SoldeClair », illustrations originales, sections sur le reste à vivre, les charges à venir, l’épargne, le simulateur, les profils et la confidentialité, appel à l’action et pied de page. Si des données existent déjà, le bouton devient « Accéder à mon tableau de bord ». Chargée séparément (≈ 9 Ko compressés) ; accessible à tout moment depuis le bas de l’application. |
+| **Page d’accueil (présentation)** | Premier écran d’un nouveau visiteur : grand titre « Votre budget devient enfin clair. », boutons « Commencer » et « Découvrir SoldeClair », illustrations originales, sections sur le reste à vivre, les charges à venir, l’épargne, le simulateur, les profils et la confidentialité, appel à l’action et pied de page. Vraies captures de SoldeClair (profil de démonstration, données fictives) dans des cadres d’ordinateur et de téléphone. Si des profils existent déjà sur l’appareil : « Continuer avec … », « Créer un nouveau profil » et les autres profils. Chargée séparément (≈ 10 Ko de code + 220 Ko d’images WebP chargées au fil du défilement) ; accessible à tout moment en cliquant sur le logo. |
 | **Configuration initiale** | Parcours en 6 étapes : prénom ou pseudonyme, situation (étudiant, alternant, salarié, indépendant, autre), devise (euro par défaut), revenu principal et revenus complémentaires, charges fixes, estimation des dépenses variables, objectif d’épargne mensuel, objectif à long terme, choix des catégories proposées selon le profil. Possibilité de charger une démonstration ou d’importer une sauvegarde. |
 | **Tableau de bord** | Dans l’ordre : **carte principale** (« Il vous reste X € pour terminer le mois, soit environ Y € par jour », jours restants, part des revenus dépensée, détail du calcul), **À venir** (« Dans les 7 prochains jours : … », charges et revenus attendus avec des dates relatives), **Ce mois-ci** (revenus, dépenses, dernières opérations), **Épargne du mois**, **À faire** (3 petites actions au maximum : limite dépassée, rythme trop rapide, prélèvement de demain, dépense inhabituelle, versement d’épargne, sauvegarde ; chacune peut être ignorée), **Estimation des 30 prochains jours** (disponible estimé à 7, 15 et 30 jours, point le plus bas, événements pris en compte), ajout rapide (sur ordinateur), **un seul graphique** ; le reste dans « Détail du mois ». Navigation de mois en mois. |
 | **Revenus** | Ajout, modification, suppression. Nom, montant, date, catégorie, récurrent ou exceptionnel, fréquence, date de fin facultative, note. |
@@ -61,6 +61,11 @@ Permettre à chacun de :
 | **Paramètres** | Sauvegarde en premier (export CSV, sauvegarde JSON avec la date de la dernière sauvegarde et un rappel au-delà de 30 jours, import JSON), profil, devise, objectif d’épargne, thème clair / sombre / automatique, catégories (ajouter, renommer, supprimer), données de démonstration, effacement total avec **double confirmation**. |
 
 **Partout dans l’application** :
+
+- **plusieurs profils** sur le même appareil, chacun avec ses propres données (le logo ramène à la page d’accueil pour changer de profil ou en créer un) ;
+- **report du reste d’un mois sur le suivant** (cumul, désactivable dans les paramètres) : une prime reçue fin octobre et non dépensée compte encore en novembre ;
+- **création d’une catégorie sans quitter un formulaire** (« + Nouvelle catégorie… »), utile si la liste est vide ;
+- un message précise **le mois concerné** quand une opération est datée d’un autre mois que celui affiché, avec un bouton pour y aller ;
 
 - **bouton « + » central** (barre du bas sur mobile, bouton « Ajouter une dépense » sur ordinateur) pour ajouter une dépense depuis n’importe quelle page ;
 - **catégories fréquentes** : les 4 catégories les plus utilisées ces 90 derniers jours sont proposées en un geste dans le formulaire de dépense ;
@@ -253,7 +258,8 @@ Les dates sont calculées par rapport au jour actuel, et les données sont ident
 
 ## Données locales et confidentialité
 
-- Les données sont enregistrées **uniquement dans le navigateur** (`localStorage`, clé `soldeclair:donnees:v1`), sur l’appareil utilisé.
+- Les données sont enregistrées **uniquement dans le navigateur** (`localStorage`), sur l’appareil utilisé : clé `soldeclair:donnees:v1` pour le premier profil, `soldeclair:donnees:v1:<identifiant>` pour les suivants, et la liste des profils dans `soldeclair:profils:v1`.
+- « Effacer toutes mes données » efface le **profil ouvert** ; les autres profils de l’appareil sont conservés.
 - **Aucun compte**, **aucune synchronisation bancaire**, **aucune coordonnée bancaire** demandée, **aucun paiement**.
 - **Aucune donnée financière n’est envoyée** à un serveur : l’application ne fait aucun appel réseau une fois chargée.
 - Aucun outil de suivi, de mesure d’audience ou de publicité ; aucune police ni bibliothèque chargée depuis un service externe.
@@ -275,7 +281,8 @@ Tous les calculs se font en centimes entiers ; la conversion en euros n’a lieu
 | Charges fixes du mois | Échéances du mois (payées **et** à venir, car elles seront prélevées). |
 | Dépenses variables | Dépenses datées du mois. |
 | Montant épargné | Versements d’épargne datés du mois. |
-| **Solde disponible** | Revenus − charges fixes − dépenses variables − épargne versée. |
+| **Report des mois précédents** | Cumul des soldes de tous les mois précédents (depuis la première saisie, 10 ans au plus) : un reste s’ajoute, un dépassement se retranche. Actif par défaut, désactivable dans les paramètres. |
+| **Solde disponible** | Report + revenus − charges fixes − dépenses variables − épargne versée. |
 | Jours restants | Jours jusqu’à la fin du mois, **aujourd’hui inclus** (0 pour un mois passé). |
 | **Reste à vivre quotidien** | Solde disponible ÷ jours restants, arrondi au centime **inférieur** (jamais surestimé). Dans la phrase d’accueil, le reste est arrondi à l’euro inférieur et un dépassement à l’euro supérieur. |
 | Budget consommé | (Charges fixes + dépenses variables) ÷ revenus. |

@@ -13,7 +13,8 @@ import type {
   SavingsGoal,
   ThemeChoice,
 } from '../types';
-import { clearData, emptyData, loadData, saveData } from '../lib/storage';
+import { clearData, emptyData, listProfiles, loadData, loadIndex, saveData, saveIndex, type ProfilResume } from '../lib/storage';
+import { newId } from '../lib/id';
 import { monthOf, todayISO } from '../lib/dates';
 import { formatMoney, formatMoneyShort } from '../lib/money';
 import { makeCategory } from '../lib/categories';
@@ -40,6 +41,7 @@ export type Action =
   | { type: 'setLastBackup'; date: ISODate }
   | { type: 'setHideAmounts'; hide: boolean }
   | { type: 'dismissAction'; id: string }
+  | { type: 'setCarryOver'; value: boolean }
   | { [K in CollectionName]: { type: 'upsert'; collection: K; item: Collections[K] } }[CollectionName]
   | { type: 'remove'; collection: Exclude<CollectionName, 'categories' | 'goals'>; id: string }
   | { type: 'removeGoal'; id: string }
@@ -66,6 +68,8 @@ export function reducer(state: AppData, action: Action): AppData {
       return { ...state, settings: { ...state.settings, lastBackup: action.date } };
     case 'setHideAmounts':
       return { ...state, settings: { ...state.settings, hideAmounts: action.hide } };
+    case 'setCarryOver':
+      return { ...state, settings: { ...state.settings, carryOver: action.value } };
     case 'dismissAction': {
       // On garde les 50 derniers identifiants : la liste ne grossit pas indéfiniment.
       const deja = state.settings.dismissedActions ?? [];
@@ -130,10 +134,16 @@ export function reducer(state: AppData, action: Action): AppData {
 /* Contexte React                                                              */
 /* -------------------------------------------------------------------------- */
 
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface Toast {
   id: number;
   message: string;
   kind: 'succes' | 'erreur' | 'info';
+  action?: ToastAction;
 }
 
 interface AppContextValue {
@@ -148,9 +158,16 @@ interface AppContextValue {
   /** Montant arrondi à l'euro (masqué si besoin). */
   fmtShort: (cents: number, mode?: 'arrondi' | 'prudent' | 'majore') => string;
   masque: boolean;
-  notify: (message: string, kind?: Toast['kind']) => void;
+  notify: (message: string, kind?: Toast['kind'], action?: ToastAction) => void;
   toasts: Toast[];
   dismissToast: (id: number) => void;
+  /** Profils enregistrés sur cet appareil (le profil ouvert compris s'il est configuré). */
+  profils: ProfilResume[];
+  profilActif: string;
+  /** Ouvre un autre profil. */
+  changerProfil: (id: string) => void;
+  /** Prépare un nouveau profil vide (il est enregistré à la fin de la configuration). */
+  nouveauProfil: () => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -165,7 +182,10 @@ export function AppProvider({
   /** Date imposée (tests). */
   today?: ISODate;
 }) {
-  const [data, dispatch] = useReducer(reducer, initialData, (init) => init ?? loadData());
+  // Profil ouvert : lu dans l'index des profils (le premier profil garde la clé historique).
+  const [profilActif, setProfilActif] = useState<string>(() => loadIndex().actif);
+  const [data, dispatch] = useReducer(reducer, initialData, (init) => init ?? loadData(loadIndex().actif));
+  const [profils, setProfils] = useState<ProfilResume[]>(() => listProfiles());
   const today = fixedToday ?? todayISO();
   const [month, setMonth] = useState<MonthKey>(monthOf(today));
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -173,34 +193,83 @@ export function AppProvider({
 
   const dismissToast = useCallback((id: number) => setToasts((t) => t.filter((x) => x.id !== id)), []);
   const notify = useCallback(
-    (message: string, kind: Toast['kind'] = 'succes') => {
+    (message: string, kind: Toast['kind'] = 'succes', action?: ToastAction) => {
       toastId.current += 1;
       const id = toastId.current;
       // Une seule notification à la fois : sur mobile, une pile masquait le contenu.
-      setToasts([{ id, message, kind }]);
-      setTimeout(() => dismissToast(id), kind === 'erreur' ? 7000 : 4000);
+      setToasts([{ id, message, kind, action }]);
+      // Un message avec une action reste plus longtemps, le temps de la lire et de choisir.
+      setTimeout(() => dismissToast(id), kind === 'erreur' || action ? 8000 : 4000);
     },
     [dismissToast],
   );
 
-  // Sauvegarde locale automatique à chaque modification.
+  // Sauvegarde locale automatique à chaque modification (dans les données du profil ouvert).
   const first = useRef(true);
+  const sauterSauvegarde = useRef(false);
   useEffect(() => {
     if (first.current) {
       first.current = false;
       return;
     }
+    if (sauterSauvegarde.current) {
+      // Changement de profil : les données viennent d'être lues, rien à réécrire.
+      sauterSauvegarde.current = false;
+      return;
+    }
+    const index = loadIndex();
     const isEmpty =
       !data.profile &&
       [data.categories, data.incomes, data.fixedCharges, data.expenses, data.goals, data.savings].every((l) => l.length === 0);
     if (isEmpty) {
-      clearData(); // après « Tout effacer », rien ne reste dans le navigateur
+      clearData(profilActif); // après « Tout effacer », rien ne reste dans le navigateur pour ce profil
+      saveIndex({ actif: profilActif, ids: index.ids.filter((id) => id !== profilActif) });
+      setProfils(listProfiles());
       return;
     }
-    if (!saveData(data)) {
+    if (!saveData(data, profilActif)) {
       notify('Impossible d’enregistrer dans ce navigateur (stockage plein ou désactivé).', 'erreur');
+      return;
     }
-  }, [data, notify]);
+    if (data.profile && (!index.ids.includes(profilActif) || index.actif !== profilActif)) {
+      saveIndex({ actif: profilActif, ids: index.ids.includes(profilActif) ? index.ids : [...index.ids, profilActif] });
+    }
+    setProfils(listProfiles());
+  }, [data, notify, profilActif]);
+
+  /** Avant de quitter le profil ouvert : ses données sont enregistrées et il figure dans l'index. */
+  const garderProfilOuvert = useCallback((): string[] => {
+    const ids = loadIndex().ids;
+    if (!data.profile) return ids;
+    saveData(data, profilActif);
+    return ids.includes(profilActif) ? ids : [...ids, profilActif];
+  }, [data, profilActif]);
+
+  const changerProfil = useCallback(
+    (id: string) => {
+      if (id === profilActif) return;
+      const ids = garderProfilOuvert();
+      saveIndex({ actif: id, ids });
+      sauterSauvegarde.current = true;
+      setProfilActif(id);
+      dispatch({ type: 'replace', data: loadData(id) });
+      setMonth(monthOf(today));
+      setProfils(listProfiles());
+    },
+    [profilActif, today, garderProfilOuvert],
+  );
+
+  const nouveauProfil = useCallback(() => {
+    const id = newId('profil').toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40);
+    const ids = garderProfilOuvert();
+    saveIndex({ actif: id, ids });
+    sauterSauvegarde.current = true;
+    setProfilActif(id);
+    // Nouveau profil vide ; le thème choisi est conservé.
+    dispatch({ type: 'replace', data: { ...emptyData(), settings: { ...emptyData().settings, theme: data.settings.theme } } });
+    setMonth(monthOf(today));
+    setProfils(listProfiles());
+  }, [data.settings.theme, today, garderProfilOuvert]);
 
   // Thème clair / sombre.
   useEffect(() => {
@@ -221,8 +290,25 @@ export function AppProvider({
   );
 
   const value = useMemo(
-    () => ({ data, dispatch, today, month, setMonth, currency, fmt, fmtShort, masque, notify, toasts, dismissToast }),
-    [data, today, month, currency, fmt, fmtShort, masque, notify, toasts, dismissToast],
+    () => ({
+      data,
+      dispatch,
+      today,
+      month,
+      setMonth,
+      currency,
+      fmt,
+      fmtShort,
+      masque,
+      notify,
+      toasts,
+      dismissToast,
+      profils,
+      profilActif,
+      changerProfil,
+      nouveauProfil,
+    }),
+    [data, today, month, currency, fmt, fmtShort, masque, notify, toasts, dismissToast, profils, profilActif, changerProfil, nouveauProfil],
   );
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

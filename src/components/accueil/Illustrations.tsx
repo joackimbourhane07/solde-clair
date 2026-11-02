@@ -271,3 +271,66 @@ export function IllustrationConfidentialite() {
     </Svg>
   );
 }
+
+/* -------------------------- Petits objets décoratifs -------------------------- */
+
+/** Page de calendrier avec la fin du mois entourée. */
+export function PetitCalendrier() {
+  return (
+    <Svg viewBox="0 0 150 160" className="illu-objet">
+      <g transform="rotate(-8 75 85)">
+        <rect x="10" y="20" width="132" height="132" rx="16" className="il-papier il-trait" />
+        <path d="M10 36a16 16 0 0 1 16-16h100a16 16 0 0 1 16 16v24H10z" className="il-bleu-clair il-trait" />
+        <path d="M45 10v20M107 10v20" className="il-trait il-epais" />
+        <text x="76" y="122" textAnchor="middle" className="il-texte il-texte-grand">
+          30
+        </text>
+        <ellipse cx="76" cy="109" rx="34" ry="27" className="il-trait-bleu" />
+      </g>
+    </Svg>
+  );
+}
+
+/** Ticket de caisse plié. */
+export function PetitTicket() {
+  return (
+    <Svg viewBox="0 0 140 180" className="illu-objet">
+      <g transform="rotate(7 70 90)">
+        <path d="M10 10h120v150l-12-8-12 8-12-8-12 8-12-8-12 8-12-8-12 8-12-8-12 8z" className="il-papier il-trait" />
+        <rect x="28" y="32" width="60" height="8" rx="4" className="il-gris-fonce" />
+        <rect x="28" y="56" width="84" height="7" rx="3.5" className="il-gris" />
+        <rect x="28" y="74" width="70" height="7" rx="3.5" className="il-gris" />
+        <rect x="28" y="92" width="78" height="7" rx="3.5" className="il-gris" />
+        <path d="M28 114h84" className="il-trait il-pointille" />
+        <rect x="28" y="126" width="40" height="9" rx="4.5" className="il-gris-fonce" />
+        <rect x="80" y="126" width="32" height="9" rx="4.5" className="il-bleu" />
+      </g>
+    </Svg>
+  );
+}
+
+/** Cadenas : les données restent sur l'appareil. */
+export function PetitCadenas() {
+  return (
+    <Svg viewBox="0 0 120 120" className="illu-objet">
+      <circle cx="60" cy="64" r="54" className="il-vert-clair" />
+      <path d="M40 58V40a20 20 0 0 1 40 0v18" className="il-trait il-epais" />
+      <rect x="26" y="56" width="68" height="52" rx="14" className="il-papier il-trait" />
+      <circle cx="60" cy="78" r="7" className="il-encre" />
+      <path d="M60 82v12" className="il-trait il-epais" />
+    </Svg>
+  );
+}
+
+/** Pièces empilées. */
+export function PetitesPieces() {
+  return (
+    <Svg viewBox="0 0 120 90" className="illu-objet">
+      <Piece x={40} y={60} r={22} />
+      <Piece x={40} y={46} r={22} />
+      <Piece x={40} y={32} r={22} />
+      <Piece x={86} y={66} r={20} />
+      <Piece x={86} y={52} r={20} />
+    </Svg>
+  );
+}

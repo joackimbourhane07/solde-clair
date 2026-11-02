@@ -64,7 +64,7 @@ function LineRow({
 }
 
 export function Onboarding() {
-  const { data: donnees, dispatch, today, notify } = useApp();
+  const { data: donnees, dispatch, today, notify, profils } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [step, setStep] = useState(0);
@@ -215,6 +215,14 @@ export function Onboarding() {
         </aside>
 
         <div className="onboarding-flow">
+          {profils.length > 0 && (
+            <p className="muted onboarding-retour">
+              Nouveau profil.{' '}
+              <Link to="/presentation" className="link">
+                Revenir à mes profils
+              </Link>
+            </p>
+          )}
           <ol className="stepper" aria-label="Étapes de la configuration">
             {STEPS.map((s, i) => (
               <li key={s} className={i === step ? 'step-current' : i < step ? 'step-done' : ''} aria-current={i === step ? 'step' : undefined}>

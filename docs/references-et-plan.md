@@ -245,7 +245,17 @@ Dessinées spécialement en SVG (vecteurs légers), style à plat avec un trait 
 - Tests : `src/__tests__/app.test.tsx`, `src/lib/__tests__/*.test.ts` (dont `forecast-actions.test.ts`), `src/test/fixtures.ts`, `e2e/*.ts`.
 - Outils et documentation : `package.json`, `tsconfig.json`, `README.md`, ce document, `docs/captures/v2/`.
 
-## 10. Sources consultées
+## 10. Retours de la propriétaire (2ᵉ série) et corrections
+
+| Retour | Correction |
+|---|---|
+| Champs de la configuration mal alignés quand un libellé passe sur deux lignes | Formulaires à deux colonnes alignés par lignes (libellé, champ, aide) : les champs voisins restent à la même hauteur |
+| Prime datée du 26 octobre absente des totaux de novembre, sans message | **Report du reste d'un mois sur le suivant** (cumul, désactivable) ; message « Revenu enregistré. Mois concerné : octobre 2026 » avec un bouton « Voir octobre 2026 » ; repère « Compté en octobre 2026 » dans la liste des revenus ; ligne « Report des mois précédents » dans le calcul |
+| Liste des catégories vide dans le formulaire d'une charge | « + Nouvelle catégorie… » dans les listes (revenu, charge, dépense) ; si la liste est vide, le champ de création apparaît directement |
+| Le logo doit mener à la page d'accueil, avec « continuer avec mon profil » ou « créer un nouveau profil » | Logo → page d'accueil ; **plusieurs profils** sur l'appareil (« Continuer avec … », « Créer un nouveau profil », autres profils) ; « Revenir à mes profils » pendant la configuration |
+| Plus d'images sur la page d'accueil | Vraies captures de SoldeClair (données fictives) dans des cadres d'ordinateur et de téléphone, objets dessinés autour, illustration dans l'appel final |
+
+## 11. Sources consultées
 
 - Notion : [teardown de la page d'accueil (uirip)](https://uirip.pages.dev/blog/teardowns/notion) · [analyse du design marketing](https://webtrends.pages.dev/posts/notion-marketing-design-analysis) · [étude de design (Blake Crosley)](https://blakecrosley.com/blog/design-study-notion) · [divulgation progressive (LogRocket)](https://blog.logrocket.com/ux-design/progressive-disclosure-ux-types-use-cases)
 - Stripe : [composant de paiements](https://docs.stripe.com/connect/supported-embedded-components/payments) · [tableau des comptes et statuts](https://docs.stripe.com/connect/dashboard/viewing-all-accounts)

@@ -21,15 +21,18 @@ export const NAV_ITEMS = [
 // Barre du bas (mobile) : Accueil, Dépenses, [+ Ajouter], Budgets, Plus.
 const MOBILE_MAIN = ['/', '/depenses', '/budgets'];
 
+/** Logo : ramène à la page d'accueil (continuer avec son profil ou en créer un autre). */
 function Logo() {
   return (
-    <span className="logo">
-      <svg viewBox="0 0 64 64" width="28" height="28" aria-hidden="true">
-        <rect width="64" height="64" rx="14" fill="currentColor" />
-        <path d="M18 40c3 4 8 6 14 6 8 0 13-4 13-10 0-12-25-7-25-17 0-4 4-7 11-7 5 0 9 2 11 5" fill="none" stroke="var(--logo-ink)" strokeWidth="6" strokeLinecap="round" />
-      </svg>
-      <span className="logo-text">SoldeClair</span>
-    </span>
+    <Link to="/presentation" className="logo-lien" aria-label="SoldeClair, page d’accueil et profils">
+      <span className="logo">
+        <svg viewBox="0 0 64 64" width="28" height="28" aria-hidden="true">
+          <rect width="64" height="64" rx="14" fill="currentColor" />
+          <path d="M18 40c3 4 8 6 14 6 8 0 13-4 13-10 0-12-25-7-25-17 0-4 4-7 11-7 5 0 9 2 11 5" fill="none" stroke="var(--logo-ink)" strokeWidth="6" strokeLinecap="round" />
+        </svg>
+        <span className="logo-text">SoldeClair</span>
+      </span>
+    </Link>
   );
 }
 

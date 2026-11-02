@@ -1,5 +1,5 @@
 import type { AppData, Cents, ISODate, Transaction } from '../types';
-import { monthTransactions, plannedVariable, transactionsInRange } from './budget';
+import { carryOverInto, monthTransactions, plannedVariable, transactionsInRange } from './budget';
 import { addDays, daysElapsedInMonth, daysInMonth, monthOf } from './dates';
 import { sum } from './money';
 
@@ -28,8 +28,10 @@ export interface ForecastEvent {
 }
 
 export interface BalanceForecast {
-  /** Disponible à la date du jour, d'après les mouvements du mois. */
+  /** Disponible à la date du jour : report des mois précédents + mouvements du mois. */
   start: Cents;
+  /** Part du disponible qui vient des mois précédents. */
+  carryOver: Cents;
   /** Dépenses courantes estimées par jour. */
   dailyVariable: Cents;
   basis: 'rythme' | 'plan';
@@ -45,7 +47,9 @@ const signed = (t: Transaction): Cents => (t.type === 'revenu' ? t.amount : -t.a
 export function balanceForecast(data: AppData, today: ISODate, horizons: number[] = [7, 15, 30]): BalanceForecast {
   const month = monthOf(today);
   const passes = monthTransactions(data, month, today).filter((t) => t.date <= today);
-  const start = sum(passes.map(signed));
+  // Disponible du jour : report des mois précédents (s'il est actif) + mouvements du mois jusqu'à aujourd'hui
+  const carryOver = carryOverInto(data, month, today);
+  const start = carryOver + sum(passes.map(signed));
 
   // Rythme des dépenses courantes (variables)
   const elapsed = daysElapsedInMonth(month, today) + 1; // aujourd'hui inclus
@@ -73,5 +77,5 @@ export function balanceForecast(data: AppData, today: ISODate, horizons: number[
     .filter((t) => t.type === 'revenu' || t.type === 'charge')
     .map((t) => ({ date: t.date, label: t.label, type: t.type, amount: signed(t) }));
 
-  return { start, dailyVariable, basis, points, lowest, events };
+  return { start, carryOver, dailyVariable, basis, points, lowest, events };
 }

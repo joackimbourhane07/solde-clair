@@ -114,6 +114,8 @@ export interface Settings {
   appearanceVersion?: number;
   /** Actions suggérées que la personne a choisi d'ignorer (tableau de bord). */
   dismissedActions?: string[];
+  /** Reporter le reste d'un mois sur le suivant (cumul). Actif si absent. */
+  carryOver?: boolean;
 }
 
 export interface AppData {

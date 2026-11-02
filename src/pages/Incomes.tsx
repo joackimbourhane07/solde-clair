@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react';
 import { useApp } from '../state/AppState';
 import type { Income } from '../types';
-import { categoryName, monthTransactions } from '../lib/budget';
-import { defaultDateFor, formatDate, ofMonth } from '../lib/dates';
+import { carryOverInto, categoryName, monthTransactions } from '../lib/budget';
+import { defaultDateFor, firstDay, formatDate, monthLabel, monthOf, ofMonth } from '../lib/dates';
 import { sum } from '../lib/money';
 import { FREQUENCY_LABELS } from '../lib/recurrence';
-import { Button, Card, CheckboxField, ConfirmDialog, EmptyState, IconButton, Modal, MonthSwitcher, PageHeader, Stat } from '../components/ui';
+import { Button, Card, CheckboxField, ConfirmDialog, EmptyState, IconButton, Modal, MonthSwitcher, Notice, PageHeader, Stat } from '../components/ui';
 import { IncomeForm } from '../components/forms';
 
 export function Incomes() {
-  const { data, month, today, fmt, dispatch, notify } = useApp();
+  const { data, month, setMonth, today, fmt, dispatch, notify } = useApp();
   const [editing, setEditing] = useState<Income | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<Income | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -21,6 +21,14 @@ export function Incomes() {
   const total = sum(occurrences.map((t) => t.amount));
   const idsThisMonth = new Set(occurrences.map((t) => t.sourceId));
   const list = (showAll ? data.incomes : data.incomes.filter((i) => idsThisMonth.has(i.id))).slice().sort((a, b) => b.amount - a.amount);
+  const report = useMemo(() => carryOverInto(data, month, today), [data, month, today]);
+  /** Pourquoi un revenu n'apparaît pas dans les totaux du mois affiché. */
+  const horsDuMois = (inc: Income): { texte: string; mois: string } | null => {
+    if (idsThisMonth.has(inc.id)) return null;
+    if (inc.recurring && inc.endDate && inc.endDate < firstDay(month)) return { texte: `Terminé le ${formatDate(inc.endDate)}`, mois: monthOf(inc.endDate) };
+    if (inc.recurring) return { texte: `À partir de ${monthLabel(monthOf(inc.date))}`, mois: monthOf(inc.date) };
+    return { texte: `Compté en ${monthLabel(monthOf(inc.date))}`, mois: monthOf(inc.date) };
+  };
   const recurringTotal = sum(occurrences.filter((t) => data.incomes.find((i) => i.id === t.sourceId)?.recurring).map((t) => t.amount));
 
   return (
@@ -40,6 +48,19 @@ export function Incomes() {
         <Stat label="Dont revenus récurrents" value={fmt(recurringTotal)} />
         <Stat label="Dont revenus exceptionnels" value={fmt(total - recurringTotal)} />
       </div>
+      {report !== 0 && (
+        <Notice>
+          {report > 0 ? (
+            <>
+              Le reste des mois précédents (<strong>+ {fmt(report)}</strong>) s’ajoute à ces revenus dans votre disponible du tableau de bord.
+            </>
+          ) : (
+            <>
+              Le dépassement des mois précédents (<strong>− {fmt(-report)}</strong>) est retiré de votre disponible du tableau de bord.
+            </>
+          )}
+        </Notice>
+      )}
       <Card>
         <CheckboxField label="Afficher tous les revenus enregistrés (tous les mois)" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
         {list.length === 0 ? (
@@ -57,6 +78,7 @@ export function Incomes() {
           <ul className="item-list">
             {list.map((inc) => {
               const occ = occurrences.filter((t) => t.sourceId === inc.id);
+              const hors = horsDuMois(inc);
               return (
                 <li key={inc.id} className="item">
                   <div className="item-main">
@@ -65,6 +87,7 @@ export function Incomes() {
                       <span className={`tag ${inc.recurring ? 'tag-recurrent' : ''}`}>
                         {inc.recurring ? FREQUENCY_LABELS[inc.frequency ?? 'mensuel'] : 'Exceptionnel'}
                       </span>
+                      {hors && <span className="tag tag-autre-mois">{hors.texte}</span>}
                     </p>
                     <p className="item-meta">
                       {categoryName(data, inc.categoryId)} ·{' '}
@@ -76,8 +99,13 @@ export function Incomes() {
                       {inc.endDate && ` · jusqu’au ${formatDate(inc.endDate)}`}
                     </p>
                     {inc.note && <p className="item-note">{inc.note}</p>}
+                    {hors && hors.mois !== month && (
+                      <button type="button" className="lien-bouton petit" onClick={() => setMonth(hors.mois)}>
+                        Voir {monthLabel(hors.mois)}
+                      </button>
+                    )}
                   </div>
-                  <span className="montant montant-plus">
+                  <span className={`montant ${hors ? 'montant-hors-mois' : 'montant-plus'}`}>
                     + {fmt(inc.amount)}
                     {occ.length > 1 && <span className="muted"> × {occ.length}</span>}
                   </span>

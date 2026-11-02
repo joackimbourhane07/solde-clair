@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  carryOverInto,
   budgetLevel,
   frequentCategories,
   categoryBudgets,
@@ -225,6 +226,38 @@ describe('charges des prochains jours', () => {
     expect(upcomingSummary(fixture(), '2026-11-15', 7)).toEqual({ count: 1, total: 1599 });
     // Vu du 30 novembre : le loyer du 5 décembre (le forfait du 20 est passé)
     expect(upcomingSummary(fixture(), '2026-11-30', 7)).toEqual({ count: 1, total: 60000 });
+  });
+});
+
+describe('report du reste d’un mois sur le suivant (cumul)', () => {
+  const avecReport = () => ({ ...fixture(), settings: { ...fixture().settings, carryOver: true } });
+  // mars : − 120,00 (assurance) ; août : − 45,00 (eau) ; septembre : + 884,01 ; octobre : + 1 034,01
+  const REPORT_NOVEMBRE = -12000 - 4500 + 88401 + 103401;
+
+  it('le reste des mois précédents s’ajoute au disponible du mois', () => {
+    expect(carryOverInto(avecReport(), '2026-11', TODAY)).toBe(REPORT_NOVEMBRE);
+    const s = monthSummary(avecReport(), '2026-11', TODAY);
+    expect(s.carryOver).toBe(REPORT_NOVEMBRE);
+    expect(s.available).toBe(REPORT_NOVEMBRE + 82151);
+    // Le mois suivant reçoit à son tour le reste de novembre
+    expect(carryOverInto(avecReport(), '2026-12', TODAY)).toBe(REPORT_NOVEMBRE + 82151);
+  });
+
+  it('une prime reçue fin octobre et non dépensée compte encore en novembre', () => {
+    const d = avecReport();
+    d.incomes = [...d.incomes, { id: 'prime', name: 'Prime', amount: 100000, date: '2026-10-26', categoryId: 'c-autre-rev', recurring: false, frequency: null, endDate: null, note: '' }];
+    expect(carryOverInto(d, '2026-11', TODAY)).toBe(REPORT_NOVEMBRE + 100000);
+  });
+
+  it('un dépassement est reporté aussi', () => {
+    const d = avecReport();
+    d.expenses = [...d.expenses, { id: 'gros', amount: 300000, categoryId: 'c-loisirs', date: '2026-10-28', description: 'Voyage', paymentMethod: '' }];
+    expect(carryOverInto(d, '2026-11', TODAY)).toBe(REPORT_NOVEMBRE - 300000);
+  });
+
+  it('désactivé : chaque mois est calculé à part', () => {
+    expect(carryOverInto(fixture(), '2026-11', TODAY)).toBe(0);
+    expect(monthSummary(fixture(), '2026-11', TODAY).available).toBe(82151);
   });
 });
 

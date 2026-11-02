@@ -1,14 +1,14 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import type { Expense, FixedCharge, Frequency, Income, ISODate, Priority, SavingsDeposit, SavingsGoal } from '../types';
+import type { CategoryKind, Expense, FixedCharge, Frequency, Income, ISODate, Priority, SavingsDeposit, SavingsGoal } from '../types';
 import { useApp } from '../state/AppState';
 import { centsToInput, parseAmount } from '../lib/money';
-import { isValidISODate } from '../lib/dates';
+import { isValidISODate, monthLabel, monthOf } from '../lib/dates';
 import { frequentCategories } from '../lib/budget';
 import { newId } from '../lib/id';
 import { FREQUENCY_LABELS } from '../lib/recurrence';
-import { PAYMENT_METHODS } from '../lib/categories';
+import { makeCategory, PAYMENT_METHODS } from '../lib/categories';
 import { GOAL_EXAMPLES, PRIORITY_LABELS } from '../lib/goals';
-import { Button, CategoryOptions, MoneyField, SelectField, TextAreaField, TextField } from './ui';
+import { Button, MoneyField, SelectField, TextAreaField, TextField } from './ui';
 
 /* -------------------------------------------------------------------------- */
 /* Validation                                                                  */
@@ -55,6 +55,90 @@ function FormActions({ onCancel, submitLabel }: { onCancel?: () => void; submitL
 const FREQUENCIES = Object.keys(FREQUENCY_LABELS) as Frequency[];
 
 /* -------------------------------------------------------------------------- */
+/* Message d'enregistrement                                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Confirme l'enregistrement et précise le mois où l'opération compte quand il diffère du mois affiché,
+ * avec un bouton pour aller voir ce mois-là (ex. : prime datée du 26 octobre ajoutée en novembre).
+ */
+function useConfirmation() {
+  const { data, month, setMonth, notify } = useApp();
+  return (texte: string, date: ISODate, recurrent = false) => {
+    const m = monthOf(date);
+    const autreMois = recurrent ? m > month : m !== month;
+    if (!autreMois) {
+      notify(texte);
+      return;
+    }
+    // Formulation neutre (revenu, dépense, charge) : « Mois concerné : … ».
+    const precision = recurrent
+      ? ` Première échéance en ${monthLabel(m)}.`
+      : m < month && data.settings.carryOver !== false
+        ? ` Mois concerné : ${monthLabel(m)}. Le reste de ce mois est reporté sur les suivants.`
+        : ` Mois concerné : ${monthLabel(m)} (pas ${monthLabel(month)}).`;
+    notify(texte + precision, 'info', { label: `Voir ${monthLabel(m)}`, onClick: () => setMonth(m) });
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Catégorie : choix dans la liste, ou création sur place                      */
+/* -------------------------------------------------------------------------- */
+
+const NOUVELLE = '__nouvelle__';
+
+/**
+ * Choix d'une catégorie avec création possible sans quitter le formulaire
+ * (utile quand la liste est vide ou que la bonne catégorie manque).
+ */
+function useChoixCategorie(kind: CategoryKind, initialId?: string | null) {
+  const { data, dispatch } = useApp();
+  const cats = data.categories.filter((c) => c.kind === kind);
+  const [categoryId, setCategoryId] = useState<string>(initialId ?? cats[0]?.id ?? NOUVELLE);
+  const [nouvelle, setNouvelle] = useState('');
+  const erreurs = (): Errors => ({
+    categoryId: categoryId === NOUVELLE || categoryId ? null : 'Choisissez une catégorie.',
+    nouvelleCategorie: categoryId === NOUVELLE && !nouvelle.trim() ? 'Indiquez le nom de la nouvelle catégorie.' : null,
+  });
+  /** Une fois le formulaire valide : crée la catégorie si besoin et renvoie son identifiant. */
+  const resoudre = (): string => {
+    if (categoryId !== NOUVELLE) return categoryId;
+    const nom = nouvelle.trim();
+    const existante = cats.find((c) => c.name.toLocaleLowerCase('fr') === nom.toLocaleLowerCase('fr'));
+    if (existante) return existante.id;
+    const cat = makeCategory(nom, kind, null);
+    dispatch({ type: 'upsert', collection: 'categories', item: cat });
+    return cat.id;
+  };
+  return { cats, categoryId, setCategoryId, nouvelle, setNouvelle, erreurs, resoudre };
+}
+
+function ChampCategorie({ choix, errors }: { choix: ReturnType<typeof useChoixCategorie>; errors: Errors }) {
+  return (
+    <>
+      <SelectField label="Catégorie" value={choix.categoryId} onChange={(e) => choix.setCategoryId(e.target.value)} error={errors.categoryId}>
+        {choix.cats.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+        <option value={NOUVELLE}>+ Nouvelle catégorie…</option>
+      </SelectField>
+      {choix.categoryId === NOUVELLE && (
+        <TextField
+          label="Nom de la nouvelle catégorie"
+          value={choix.nouvelle}
+          onChange={(e) => choix.setNouvelle(e.target.value)}
+          error={errors.nouvelleCategorie}
+          maxLength={60}
+          hint={choix.cats.length === 0 ? 'Aucune catégorie de ce type pour l’instant : créez-la ici.' : 'Elle sera ajoutée à vos catégories.'}
+        />
+      )}
+    </>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /* Dépense variable                                                            */
 /* -------------------------------------------------------------------------- */
 
@@ -71,12 +155,14 @@ export function ExpenseForm({
   onCancel?: () => void;
   quick?: boolean;
 }) {
-  const { data, dispatch, notify, fmt, today } = useApp();
+  const { data, dispatch, fmt, today } = useApp();
+  const confirmer = useConfirmation();
   const variableCats = data.categories.filter((c) => c.kind === 'variable');
   // Raccourcis : catégories les plus utilisées ces 90 derniers jours
   const frequentes = useMemo(() => frequentCategories(data, today, 4), [data, today]);
   const [amount, setAmount] = useState(centsToInput(initial?.amount));
-  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? frequentes[0]?.id ?? variableCats[0]?.id ?? '');
+  const choix = useChoixCategorie('variable', initial?.categoryId ?? frequentes[0]?.id ?? variableCats[0]?.id);
+  const { categoryId, setCategoryId } = choix;
   const [date, setDate] = useState(initial?.date ?? defaultDate);
   const [description, setDescription] = useState(initial?.description ?? '');
   const [paymentMethod, setPaymentMethod] = useState(initial?.paymentMethod ?? '');
@@ -87,7 +173,7 @@ export function ExpenseForm({
     const [cents, amountError] = checkAmount(amount);
     const errs: Errors = {
       amount: amountError,
-      categoryId: categoryId ? null : 'Choisissez une catégorie.',
+      ...choix.erreurs(),
       date: checkDate(date),
     };
     setErrors(errs);
@@ -98,13 +184,13 @@ export function ExpenseForm({
       item: {
         id: initial?.id ?? newId('dep'),
         amount: cents,
-        categoryId,
+        categoryId: choix.resoudre(),
         date,
         description: description.trim(),
         paymentMethod,
       },
     });
-    notify(initial ? 'Dépense modifiée.' : `Dépense de ${fmt(cents)} ajoutée.`);
+    confirmer(initial ? 'Dépense modifiée et enregistrée.' : `Dépense de ${fmt(cents)} enregistrée.`, date);
     if (!initial) {
       setAmount('');
       setDescription('');
@@ -112,17 +198,11 @@ export function ExpenseForm({
     onDone?.();
   };
 
-  if (variableCats.length === 0) {
-    return <p>Créez d’abord une catégorie de dépenses dans les paramètres.</p>;
-  }
-
   return (
     <form onSubmit={submit} noValidate className={quick ? 'form-quick' : 'form'} aria-label={quick ? 'Ajout rapide d’une dépense' : undefined}>
       <div className={quick ? 'form-row' : 'form-grid'}>
         <MoneyField label="Montant" value={amount} onChange={(e) => setAmount(e.target.value)} error={errors.amount} required />
-        <SelectField label="Catégorie" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} error={errors.categoryId}>
-          <CategoryOptions categories={data.categories} kind="variable" />
-        </SelectField>
+        <ChampCategorie choix={choix} errors={errors} />
         {frequentes.length > 1 && (
           <div className="chips chips-frequentes" role="group" aria-label="Catégories fréquentes">
             <span className="chips-titre" aria-hidden="true">
@@ -189,12 +269,12 @@ export function IncomeForm({
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const { data, dispatch, notify } = useApp();
-  const cats = data.categories.filter((c) => c.kind === 'income');
+  const { dispatch } = useApp();
+  const confirmer = useConfirmation();
+  const choix = useChoixCategorie('income', initial?.categoryId);
   const [name, setName] = useState(initial?.name ?? '');
   const [amount, setAmount] = useState(centsToInput(initial?.amount));
   const [date, setDate] = useState(initial?.date ?? defaultDate);
-  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? cats[0]?.id ?? '');
   const [recurring, setRecurring] = useState(initial?.recurring ?? true);
   const [frequency, setFrequency] = useState<Frequency>(initial?.frequency ?? 'mensuel');
   const [endDate, setEndDate] = useState(initial?.endDate ?? '');
@@ -208,7 +288,7 @@ export function IncomeForm({
       name: name.trim() ? null : 'Donnez un nom à ce revenu (ex. : salaire).',
       amount: amountError,
       date: checkDate(date),
-      categoryId: categoryId ? null : 'Choisissez une catégorie.',
+      ...choix.erreurs(),
       endDate: recurring ? checkDate(endDate, false) ?? (endDate && endDate < date ? 'La date de fin doit être après la date de début.' : null) : null,
     };
     setErrors(errs);
@@ -221,14 +301,14 @@ export function IncomeForm({
         name: name.trim(),
         amount: cents,
         date,
-        categoryId,
+        categoryId: choix.resoudre(),
         recurring,
         frequency: recurring ? frequency : null,
         endDate: recurring && endDate ? endDate : null,
         note: note.trim(),
       },
     });
-    notify(initial ? 'Revenu modifié.' : 'Revenu ajouté.');
+    confirmer(initial ? 'Revenu modifié et enregistré.' : 'Revenu enregistré.', date, recurring);
     onDone();
   };
 
@@ -237,9 +317,7 @@ export function IncomeForm({
       <div className="form-grid">
         <TextField label="Nom" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} maxLength={80} placeholder="Ex. : salaire" />
         <MoneyField label="Montant" value={amount} onChange={(e) => setAmount(e.target.value)} error={errors.amount} />
-        <SelectField label="Catégorie" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} error={errors.categoryId}>
-          <CategoryOptions categories={data.categories} kind="income" />
-        </SelectField>
+        <ChampCategorie choix={choix} errors={errors} />
         <TextField
           label={recurring ? 'Date du premier versement' : 'Date'}
           type="date"
@@ -305,12 +383,12 @@ export function ChargeForm({
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const { data, dispatch, notify } = useApp();
-  const cats = data.categories.filter((c) => c.kind === 'fixed');
+  const { dispatch } = useApp();
+  const confirmer = useConfirmation();
+  const choix = useChoixCategorie('fixed', initial?.categoryId);
   const [name, setName] = useState(initial?.name ?? '');
   const [amount, setAmount] = useState(centsToInput(initial?.amount));
   const [date, setDate] = useState(initial?.date ?? defaultDate);
-  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? cats[0]?.id ?? '');
   const [frequency, setFrequency] = useState<Frequency>(initial?.frequency ?? 'mensuel');
   const [endDate, setEndDate] = useState(initial?.endDate ?? '');
   const [note, setNote] = useState(initial?.note ?? '');
@@ -323,7 +401,7 @@ export function ChargeForm({
       name: name.trim() ? null : 'Donnez un nom à cette charge (ex. : loyer).',
       amount: amountError,
       date: checkDate(date),
-      categoryId: categoryId ? null : 'Choisissez une catégorie.',
+      ...choix.erreurs(),
       endDate: checkDate(endDate, false) ?? (endDate && endDate < date ? 'La date de fin doit être après la première échéance.' : null),
     };
     setErrors(errs);
@@ -336,14 +414,14 @@ export function ChargeForm({
         name: name.trim(),
         amount: cents,
         date,
-        categoryId,
+        categoryId: choix.resoudre(),
         frequency,
         endDate: endDate || null,
         note: note.trim(),
         status: initial?.status ?? {},
       },
     });
-    notify(initial ? 'Charge fixe modifiée.' : 'Charge fixe ajoutée.');
+    confirmer(initial ? 'Charge fixe modifiée et enregistrée.' : 'Charge fixe enregistrée.', date, true);
     onDone();
   };
 
@@ -352,9 +430,7 @@ export function ChargeForm({
       <div className="form-grid">
         <TextField label="Nom" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} maxLength={80} placeholder="Ex. : loyer" />
         <MoneyField label="Montant" value={amount} onChange={(e) => setAmount(e.target.value)} error={errors.amount} />
-        <SelectField label="Catégorie" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} error={errors.categoryId}>
-          <CategoryOptions categories={data.categories} kind="fixed" />
-        </SelectField>
+        <ChampCategorie choix={choix} errors={errors} />
         <TextField
           label="Date de prélèvement prévue"
           type="date"

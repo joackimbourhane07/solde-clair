@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { AppProvider } from '../state/AppState';
 import { AppRoutes } from '../App';
 import type { AppData } from '../types';
-import { STORAGE_KEY, emptyData, exportJSON, parseBackup } from '../lib/storage';
+import { PROFILES_KEY, STORAGE_KEY, emptyData, exportJSON, parseBackup } from '../lib/storage';
 import { fixture, TODAY } from '../test/fixtures';
 import pageHtml from '../../index.html?raw';
 
@@ -101,7 +101,7 @@ describe('tableau de bord', () => {
     await user.type(within(form).getByLabelText(/Description/), 'Pharmacie');
     await user.click(within(form).getByRole('button', { name: 'Ajouter la dépense' }));
 
-    expect(await screen.findByText('Dépense de 21,51 € ajoutée.', { normalizer: norm })).toBeInTheDocument();
+    expect(await screen.findByText('Dépense de 21,51 € enregistrée.', { normalizer: norm })).toBeInTheDocument();
     expect(norm(screen.getByText('Solde disponible').parentElement!.textContent)).toContain('800,00 €');
     expect(norm(screen.getByText(/Il vous reste/).textContent)).toContain('environ 42 € par jour');
     await waitFor(() => expect(stored().expenses.some((e) => e.description === 'Pharmacie' && e.amount === 2151)).toBe(true));
@@ -277,16 +277,116 @@ describe('page d’accueil (présentation)', () => {
     expect(screen.getByRole('heading', { name: 'Bonjour Test' })).toBeInTheDocument();
     cleanup();
     const user = renderApp(fixture(), '/presentation');
-    const boutons = await screen.findAllByRole('button', { name: 'Accéder à mon tableau de bord' });
+    const boutons = await screen.findAllByRole('button', { name: 'Continuer avec Test' });
     expect(boutons).toHaveLength(2); // introduction et appel final
+    expect(screen.getAllByRole('button', { name: 'Créer un nouveau profil' }).length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: 'Essayer avec un profil de démonstration' })).not.toBeInTheDocument();
     await user.click(boutons[0]);
     expect(await screen.findByRole('heading', { name: 'Bonjour Test' })).toBeInTheDocument();
   });
 
+  it('plusieurs profils : la présentation les propose et permet de changer de profil', async () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(fixture()));
+    localStorage.setItem(`${STORAGE_KEY}:p2`, JSON.stringify({ ...fixture(), profile: { ...fixture().profile!, name: 'Léo' } }));
+    localStorage.setItem(PROFILES_KEY, JSON.stringify({ actif: 'principal', ids: ['principal', 'p2'] }));
+    const user = renderApp(fixture(), '/presentation');
+    expect((await screen.findAllByRole('button', { name: 'Continuer avec Test' })).length).toBe(2);
+    const autres = screen.getAllByRole('group', { name: 'Autres profils' })[0];
+    await user.click(within(autres).getByRole('button', { name: 'Léo' }));
+    expect(await screen.findByRole('heading', { name: 'Bonjour Léo' })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem(PROFILES_KEY)!).actif).toBe('p2');
+  });
+
+  it('créer un nouveau profil garde l’ancien ; « Revenir à mes profils » permet d’y retourner', async () => {
+    const user = renderApp(fixture(), '/presentation');
+    await user.click((await screen.findAllByRole('button', { name: 'Créer un nouveau profil' }))[0]);
+    expect(await screen.findByRole('heading', { name: 'Bienvenue sur SoldeClair' })).toBeInTheDocument();
+    // Les données du premier profil sont intactes
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).profile.name).toBe('Test');
+    await user.click(screen.getByRole('link', { name: 'Revenir à mes profils' }));
+    await user.click((await screen.findAllByRole('button', { name: 'Continuer avec Test' }))[0]);
+    expect(await screen.findByRole('heading', { name: 'Bonjour Test' })).toBeInTheDocument();
+  });
+
+  it('le logo mène à la page d’accueil', () => {
+    renderApp();
+    expect(screen.getAllByRole('link', { name: 'SoldeClair, page d’accueil et profils' })[0]).toHaveAttribute('href', '/presentation');
+  });
+
   it('l’application propose un lien vers la présentation', () => {
     renderApp();
     expect(screen.getByRole('link', { name: 'Voir la présentation de SoldeClair' })).toHaveAttribute('href', '/presentation');
+  });
+});
+
+describe('retours de la propriétaire : report, catégories, messages', () => {
+  const avecReport = (): AppData => ({ ...fixture(), settings: { ...fixture().settings, carryOver: true } });
+
+  it('revenu daté d’un autre mois : message clair et bouton pour voir ce mois', async () => {
+    const user = renderApp(avecReport(), '/revenus');
+    await user.click(screen.getByRole('button', { name: 'Ajouter un revenu' }));
+    const dialog = screen.getByRole('dialog');
+    await user.type(within(dialog).getByLabelText('Nom'), 'Prime');
+    await user.type(within(dialog).getByLabelText('Montant'), '1000');
+    await user.click(within(dialog).getByLabelText(/Exceptionnel/));
+    const date = within(dialog).getByLabelText('Date');
+    await user.clear(date);
+    await user.type(date, '2026-10-26');
+    await user.click(within(dialog).getByRole('button', { name: 'Ajouter le revenu' }));
+    expect(
+      await screen.findByText('Revenu enregistré. Mois concerné : octobre 2026. Le reste de ce mois est reporté sur les suivants.', { normalizer: norm }),
+    ).toBeInTheDocument();
+    // Le report apparaît sur la page des revenus de novembre
+    expect(screen.getByText(/Le reste des mois précédents/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Voir octobre 2026' }));
+    expect(screen.getByText('Octobre 2026')).toBeInTheDocument();
+  });
+
+  it('revenus : un revenu d’un autre mois est signalé dans la liste complète', async () => {
+    const user = renderApp(fixture(), '/revenus');
+    await user.click(screen.getByLabelText('Afficher tous les revenus enregistrés (tous les mois)'));
+    const ligne = screen.getByText('Remboursement').closest('li')! as HTMLElement;
+    expect(within(ligne).getByText('Compté en octobre 2026')).toBeInTheDocument();
+    expect(within(ligne).getByRole('button', { name: 'Voir octobre 2026' })).toBeInTheDocument();
+  });
+
+  it('tableau de bord : le report figure dans le calcul et dans « Ce mois-ci »', async () => {
+    const user = renderApp(avecReport());
+    expect(screen.getByText(/Report des mois précédents : \+ 1 753,02 €, compté dans votre disponible/, { normalizer: norm })).toBeInTheDocument();
+    await user.click(screen.getByText('Comment est-ce calculé ?'));
+    const calcul = screen.getByText('= Solde disponible du mois').closest('dl')!;
+    expect(norm(calcul.textContent)).toContain('+ Report des mois précédents1 753,02 €');
+    expect(norm(calcul.textContent)).toContain('= Solde disponible du mois2 574,53 €');
+  });
+
+  it('paramètres : le report se désactive', async () => {
+    const user = renderApp(avecReport(), '/parametres');
+    const caseReport = screen.getByLabelText(/Reporter le reste d’un mois sur le suivant/);
+    expect(caseReport).toBeChecked();
+    await user.click(caseReport);
+    await waitFor(() => expect(stored().settings.carryOver).toBe(false));
+  });
+
+  it('charge fixe : liste de catégories vide → création sur place', async () => {
+    const d = fixture();
+    d.categories = d.categories.filter((c) => c.kind !== 'fixed');
+    d.fixedCharges = [];
+    const user = renderApp(d, '/charges');
+    await user.click(screen.getAllByRole('button', { name: 'Ajouter une charge' })[0]);
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByLabelText('Catégorie')).toHaveValue('__nouvelle__');
+    expect(within(dialog).getByText('Aucune catégorie de ce type pour l’instant : créez-la ici.')).toBeInTheDocument();
+    await user.type(within(dialog).getByLabelText('Nom'), 'Loyer');
+    await user.type(within(dialog).getByLabelText('Montant'), '221');
+    await user.click(within(dialog).getByRole('button', { name: 'Ajouter la charge' }));
+    expect(within(dialog).getByText('Indiquez le nom de la nouvelle catégorie.')).toBeInTheDocument();
+    await user.type(within(dialog).getByLabelText('Nom de la nouvelle catégorie'), 'Logement');
+    await user.click(within(dialog).getByRole('button', { name: 'Ajouter la charge' }));
+    await waitFor(() => {
+      const cat = stored().categories.find((c) => c.kind === 'fixed' && c.name === 'Logement');
+      expect(cat).toBeDefined();
+      expect(stored().fixedCharges[0].categoryId).toBe(cat!.id);
+    });
   });
 });
 
