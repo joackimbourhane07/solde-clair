@@ -228,15 +228,20 @@ export function IncomeForm({
         />
       </div>
       <fieldset className="fieldset">
-        <legend>Type de revenu</legend>
+        <legend>Ce revenu revient-il régulièrement ?</legend>
         <div className="radio-row">
           <label className="radio">
-            <input type="radio" name="recurrent" checked={recurring} onChange={() => setRecurring(true)} /> Récurrent
+            <input type="radio" name="recurrent" checked={recurring} onChange={() => setRecurring(true)} /> Récurrent (salaire, bourse…)
           </label>
           <label className="radio">
-            <input type="radio" name="recurrent" checked={!recurring} onChange={() => setRecurring(false)} /> Exceptionnel
+            <input type="radio" name="recurrent" checked={!recurring} onChange={() => setRecurring(false)} /> Exceptionnel (prime, vente…)
           </label>
         </div>
+        <p className="field-hint">
+          {recurring
+            ? 'Il sera compté automatiquement chaque mois (ou selon la fréquence choisie).'
+            : 'Il ne sera compté qu’une seule fois, à la date indiquée.'}
+        </p>
       </fieldset>
       {recurring && (
         <div className="form-grid">

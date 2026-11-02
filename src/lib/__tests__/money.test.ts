@@ -44,6 +44,12 @@ describe('affichage', () => {
     expect(norm(formatMoneyShort(4292))).toBe('43 €');
   });
 
+  it('séparateur des milliers lisible avec toutes les polices (espace insécable U+00A0, pas U+202F)', () => {
+    expect(formatMoney(120000)).toBe('1\u00a0200,00\u00a0€');
+    expect(formatMoney(123456789)).not.toMatch(/\u202f/);
+    expect(formatMoneyShort(120000)).toBe('1\u00a0200\u00a0€');
+  });
+
   it('convertit des centimes en valeur éditable', () => {
     expect(centsToInput(1250)).toBe('12,50');
     expect(centsToInput(5)).toBe('0,05');

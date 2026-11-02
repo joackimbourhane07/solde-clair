@@ -35,6 +35,11 @@ describe('modifications des données', () => {
     expect(d.fixedCharges.find((c) => c.id === 'f-tel')?.status['2026-11-20']).toBe('paye');
   });
 
+  it('mémorise la date de la dernière sauvegarde complète', () => {
+    const d = reducer(fixture(), { type: 'setLastBackup', date: '2026-11-12' });
+    expect(d.settings.lastBackup).toBe('2026-11-12');
+  });
+
   it('réinitialisation complète (conserve seulement le thème)', () => {
     const d = reducer({ ...fixture(), settings: { theme: 'dark' } }, { type: 'reset' });
     expect(d.profile).toBeNull();

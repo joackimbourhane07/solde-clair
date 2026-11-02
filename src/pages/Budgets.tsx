@@ -109,7 +109,7 @@ export function Budgets() {
                     max={l.budget}
                     level={l.level}
                     label={`Budget ${l.category.name}`}
-                    valueText={`${l.pct} % utilisé, ${fmt(l.spent)} sur ${fmt(l.budget)}`}
+                    valueText={`${l.pct}\u00a0% utilisé, ${fmt(l.spent)} sur ${fmt(l.budget)}`}
                   />
                   <dl className="budget-figures">
                     <div>
@@ -126,7 +126,7 @@ export function Budgets() {
                     </div>
                     <div>
                       <dt>Utilisé</dt>
-                      <dd>{l.pct} %</dd>
+                      <dd>{l.pct}{'\u00a0'}%</dd>
                     </div>
                   </dl>
                 </>

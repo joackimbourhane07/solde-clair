@@ -63,6 +63,8 @@ function Transactions() {
     <>
       <Card>
         <div className="filters">
+          {/* La recherche d'abord : c'est l'action la plus courante, visible sans défiler sur mobile. */}
+          <TextField label="Rechercher" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Libellé, catégorie, note…" />
           <SelectField label="Période" value={mode} onChange={(e) => setMode(e.target.value as typeof mode)}>
             <option value="mois">Un mois</option>
             <option value="plage">Entre deux dates</option>
@@ -96,7 +98,6 @@ function Transactions() {
               </optgroup>
             ))}
           </SelectField>
-          <TextField label="Rechercher" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Libellé, note…" />
         </div>
         {mode === 'mois' && <MonthSwitcher />}
         <p className="history-totals" aria-live="polite">
@@ -229,7 +230,7 @@ function Report() {
                     <Icon name="stop" size={16} /> {l.category.name}
                   </span>
                   <strong>
-                    +{fmt(-(l.remaining ?? 0))} ({l.pct} %)
+                    +{fmt(-(l.remaining ?? 0))} ({l.pct}{'\u00a0'}%)
                   </strong>
                 </li>
               ))}

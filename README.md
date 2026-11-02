@@ -59,6 +59,8 @@ Permettre à chacun de :
 **Graphiques** (lisibles sur smartphone, avec une vue « tableau » accessible pour chacun) :
 répartition des dépenses par catégorie, revenus et dépenses sur 6 mois, évolution du solde au cours du mois, évolution de l’épargne, progression des objectifs.
 
+**Apparence « Financial »** : fond bleu nuit presque noir, panneaux opaques séparés par des filets fins, actions en orange chaud, montants importants en or pâle et en police à chasse fixe. Le thème sombre est utilisé par défaut ; le mode clair (couleurs ajustées pour le contraste) et le mode automatique restent disponibles dans les paramètres. Les animations sont supprimées si l’appareil demande de réduire les mouvements.
+
 **Accessibilité** : libellés sur tous les champs, messages d’erreur explicites reliés aux champs, navigation complète au clavier (lien d’évitement, fenêtres qui gardent le focus et se ferment avec Échap, graphiques parcourables avec les flèches), contrastes renforcés, zones tactiles d’au moins 44 px, montants signés « + / − », états des budgets indiqués par texte + icône + hachures, respect de « réduire les animations ».
 
 ## Technologie utilisée
@@ -69,6 +71,7 @@ répartition des dépenses par catégorie, revenus et dépenses sur 6 mois, évo
 - **Vitest + Testing Library** pour les tests rapides (calculs et interface).
 - **Playwright + axe-core** pour les tests dans un vrai navigateur (parcours, affichage, accessibilité).
 - Graphiques en **SVG faits maison** (aucune bibliothèque de graphiques).
+- Polices **IBM Plex Sans et IBM Plex Mono** (licence libre), installées avec `@fontsource` et **hébergées avec l’application** : aucune requête vers un service externe.
 
 **Pourquoi ce choix ?**
 
@@ -76,7 +79,7 @@ répartition des dépenses par catégorie, revenus et dépenses sur 6 mois, évo
 - **Gratuit et stable** : uniquement des outils open source très répandus, sans service payant.
 - **Facile à maintenir** : TypeScript détecte les erreurs avant l’exécution ; les calculs sont des fonctions pures, séparées de l’interface et testées.
 - **Fiable pour l’argent** : tous les montants sont stockés **en centimes (nombres entiers)** pour éviter les erreurs d’arrondi (0,1 + 0,2 ≠ 0,3 en informatique).
-- **Léger** : peu de dépendances, environ 120 Ko compressés.
+- **Léger** : peu de dépendances, environ 125 Ko de code compressé et 100 Ko de polices.
 
 ## Prérequis
 
@@ -134,7 +137,7 @@ Vérification des types TypeScript :
 npm run typecheck
 ```
 
-**132 tests** couvrent notamment :
+**149 tests** couvrent notamment :
 
 - la saisie et l’arrondi des montants (virgule, espaces, deux décimales, 0,1 + 0,2) ;
 - les dates (années bissextiles, fins de mois, passage d’année, jours restants) ;
@@ -169,7 +172,8 @@ Ils vérifient :
 - un parcours complet de nouvel utilisateur : configuration, tableau de bord, dépense, changement de mois, budget dépassé, simulateur sans effet sur les données, export JSON, effacement et réimport ;
 - toutes les pages aux formats petit mobile (320 px), mobile, tablette et ordinateur, en mode clair et sombre : aucune erreur dans la console, aucun débordement ni texte coupé ;
 - l’accessibilité WCAG 2.1 AA avec axe-core (contrastes, libellés, rôles…) ;
-- la navigation au clavier (lien d’évitement, contour de focus, fenêtres) et les trois thèmes.
+- la navigation au clavier (lien d’évitement, contour de focus, fenêtres) et les trois thèmes ;
+- le chargement local des polices (aucune requête externe) et l’absence de transitions en mouvement réduit.
 
 ## Organisation des fichiers
 
@@ -182,6 +186,7 @@ solde-clair/
 ├── tsconfig.json              Configuration TypeScript (application)
 ├── tsconfig.node.json         Configuration TypeScript (tests navigateur)
 ├── e2e/                       Tests dans un vrai navigateur (Playwright)
+├── docs/                      Rapport de recherche, d’audit et de refonte (avec captures)
 ├── public/favicon.svg         Icône
 └── src/
     ├── main.tsx               Démarrage de l’application
@@ -198,6 +203,7 @@ solde-clair/
     │   ├── setup.ts           Création des données après la configuration
     │   ├── demo.ts            Trois profils de démonstration fictifs
     │   ├── storage.ts         Sauvegarde locale, validation, exports CSV / JSON
+    │   ├── chartScale.ts      Graduations et libellés des graphiques
     │   ├── id.ts              Identifiants uniques
     │   └── __tests__/         Tests des calculs
     ├── state/AppState.tsx     État global, sauvegarde automatique, thème
@@ -208,7 +214,8 @@ solde-clair/
     │   ├── Icon.tsx           Icônes
     │   └── charts/Charts.tsx  Graphiques SVG
     ├── pages/                 Une page par écran
-    ├── styles/global.css      Styles, modes clair et sombre, responsive
+    ├── styles/global.css      Identité « Financial » (jetons --dp-*), thèmes, responsive
+    ├── styles/fonts.css       Polices IBM Plex hébergées localement
     ├── test/                  Configuration et jeu de données des tests
     └── __tests__/             Tests de l’interface
 ```

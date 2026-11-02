@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useApp } from '../../state/AppState';
 import { formatMoneyShort } from '../../lib/money';
+import { niceTicks, visibleTickIndexes } from '../../lib/chartScale';
 
 /* -------------------------------------------------------------------------- */
 /* Outils communs                                                              */
@@ -21,21 +22,6 @@ function useWidth<T extends HTMLElement>(fallback = 600) {
     return () => obs.disconnect();
   }, [fallback]);
   return { ref, width };
-}
-
-/** Graduations « rondes » pour l'axe vertical. */
-function niceTicks(min: number, max: number, count = 4): number[] {
-  if (min === max) {
-    max = min + 100;
-  }
-  const span = max - min;
-  const raw = span / count;
-  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
-  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= count) ?? 10 * mag;
-  const start = Math.floor(min / step) * step;
-  const ticks: number[] = [];
-  for (let v = start; v <= max + step / 2; v += step) ticks.push(Math.round(v));
-  return ticks;
 }
 
 export interface TableRow {
@@ -151,7 +137,7 @@ export function CategoryBarsChart({
       title={title}
       table={{
         headers: ['Catégorie', 'Montant', 'Part'],
-        rows: items.map((i) => ({ label: i.name, values: [fmt(i.amount), `${total ? Math.round((i.amount * 100) / total) : 0} %`] })),
+        rows: items.map((i) => ({ label: i.name, values: [fmt(i.amount), `${total ? Math.round((i.amount * 100) / total) : 0}\u00a0%`] })),
       }}
     >
       {rows.length === 0 ? (
@@ -163,7 +149,7 @@ export function CategoryBarsChart({
               <div className="hbar-text">
                 <span className="hbar-name">{r.name}</span>
                 <span className="hbar-value">
-                  {fmt(r.amount)} <span className="muted">· {total ? Math.round((r.amount * 100) / total) : 0} %</span>
+                  {fmt(r.amount)} <span className="muted">· {total ? Math.round((r.amount * 100) / total) : 0}{'\u00a0'}%</span>
                 </span>
               </div>
               <div className="hbar-track" aria-hidden="true">
@@ -274,12 +260,15 @@ export function LineChart({
   points,
   valueLabel,
   area = false,
+  emptyText = 'Pas encore de données pour ce graphique.',
 }: {
   title: string;
   description?: string;
   points: { label: string; tick?: string; value: number; detail?: string }[];
   valueLabel: string;
   area?: boolean;
+  /** Message affiché quand toutes les valeurs sont nulles. */
+  emptyText?: string;
 }) {
   const { fmt, currency } = useApp();
   const { ref, width } = useWidth<HTMLDivElement>();
@@ -296,7 +285,9 @@ export function LineChart({
   const y = (v: number) => m.top + innerH - ((v - lo) / (hi - lo)) * innerH;
   const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
   const areaPath = points.length > 0 ? `${path} L${x(points.length - 1)},${y(Math.max(lo, 0))} L${x(0)},${y(Math.max(lo, 0))} Z` : '';
-  const tickEvery = Math.max(1, Math.ceil(points.length / Math.max(2, Math.floor(innerW / 64))));
+  // Libellés de l’axe horizontal espacés d’au moins 68 px (jamais superposés).
+  const tickIndexes = new Set(visibleTickIndexes(points.map((_, i) => x(i)), 68));
+  const vide = points.length === 0 || points.every((p) => p.value === 0);
 
   const onMove = (e: React.PointerEvent<SVGSVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -312,8 +303,8 @@ export function LineChart({
       description={description}
       table={{ headers: ['Date', valueLabel], rows: points.map((p) => ({ label: p.label, values: [fmt(p.value)] })) }}
     >
-      {points.length === 0 ? (
-        <p className="chart-empty">Pas encore de données.</p>
+      {vide ? (
+        <p className="chart-empty">{emptyText}</p>
       ) : (
         <div className="chart-plot" ref={ref}>
           <svg
@@ -336,7 +327,7 @@ export function LineChart({
               </g>
             ))}
             {points.map((p, i) =>
-              i % tickEvery === 0 || i === points.length - 1 ? (
+              tickIndexes.has(i) ? (
                 <text key={p.label} x={x(i)} y={height - 8} className="tick" textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}>
                   {p.tick ?? p.label}
                 </text>

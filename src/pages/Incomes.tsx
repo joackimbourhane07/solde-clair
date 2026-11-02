@@ -43,7 +43,16 @@ export function Incomes() {
       <Card>
         <CheckboxField label="Afficher tous les revenus enregistrés (tous les mois)" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
         {list.length === 0 ? (
-          <EmptyState title="Aucun revenu pour ce mois">Ajoutez votre salaire, votre bourse ou vos aides.</EmptyState>
+          <EmptyState
+            title="Aucun revenu pour ce mois"
+            action={
+              <Button variant="primaire" icon="plus" onClick={() => setEditing('new')}>
+                Ajouter un revenu
+              </Button>
+            }
+          >
+            Ajoutez votre salaire, votre bourse ou vos aides.
+          </EmptyState>
         ) : (
           <ul className="item-list">
             {list.map((inc) => {

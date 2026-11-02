@@ -57,7 +57,16 @@ export function Expenses() {
           </SelectField>
         </div>
         {filtered.length === 0 ? (
-          <EmptyState title={monthExpenses.length === 0 ? 'Aucune dépense ce mois-ci' : 'Aucun résultat'}>
+          <EmptyState
+            title={monthExpenses.length === 0 ? 'Aucune dépense ce mois-ci' : 'Aucun résultat'}
+            action={
+              monthExpenses.length === 0 ? (
+                <Button variant="primaire" icon="plus" onClick={() => setEditing('new')}>
+                  Ajouter ma première dépense
+                </Button>
+              ) : undefined
+            }
+          >
             {monthExpenses.length === 0 ? 'Ajoutez votre première dépense en quelques secondes.' : 'Modifiez la recherche ou le filtre.'}
           </EmptyState>
         ) : (

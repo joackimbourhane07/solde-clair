@@ -60,10 +60,17 @@ function formatter(currency: string): Intl.NumberFormat {
   return f;
 }
 
+/**
+ * Intl sépare les milliers par une espace fine insécable (U+202F), presque
+ * invisible avec certaines polices (« 1200,00 € »). On utilise l'espace
+ * insécable classique (U+00A0), lisible partout : « 1 200,00 € ».
+ */
+const lisible = (s: string) => s.replace(/\u202f/g, '\u00a0');
+
 /** Affiche un montant en centimes au format français : « 1 234,56 € ». */
 export function formatMoney(cents: Cents, currency = 'EUR'): string {
   // Division par 100 uniquement pour l'affichage final : aucun calcul ensuite.
-  return formatter(currency).format(cents / 100);
+  return lisible(formatter(currency).format(cents / 100));
 }
 
 /**
@@ -85,7 +92,7 @@ export function formatMoneyShort(cents: Cents, currency = 'EUR', mode: 'arrondi'
       currency,
       maximumFractionDigits: 0,
       minimumFractionDigits: 0,
-    }).format(units);
+    }).format(units).replace(/\u202f/g, '\u00a0');
   } catch {
     return formatMoney(cents, currency);
   }

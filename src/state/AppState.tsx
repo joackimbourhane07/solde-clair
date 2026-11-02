@@ -37,6 +37,7 @@ export type Action =
   | { type: 'reset' }
   | { type: 'setProfile'; profile: Profile }
   | { type: 'setTheme'; theme: ThemeChoice }
+  | { type: 'setLastBackup'; date: ISODate }
   | { [K in CollectionName]: { type: 'upsert'; collection: K; item: Collections[K] } }[CollectionName]
   | { type: 'remove'; collection: Exclude<CollectionName, 'categories' | 'goals'>; id: string }
   | { type: 'removeGoal'; id: string }
@@ -59,6 +60,8 @@ export function reducer(state: AppData, action: Action): AppData {
       return { ...state, profile: action.profile };
     case 'setTheme':
       return { ...state, settings: { ...state.settings, theme: action.theme } };
+    case 'setLastBackup':
+      return { ...state, settings: { ...state.settings, lastBackup: action.date } };
     case 'upsert': {
       const list = state[action.collection] as { id: string }[];
       const exists = list.some((x) => x.id === action.item.id);
@@ -159,7 +162,8 @@ export function AppProvider({
     (message: string, kind: Toast['kind'] = 'succes') => {
       toastId.current += 1;
       const id = toastId.current;
-      setToasts((t) => [...t.slice(-2), { id, message, kind }]);
+      // Une seule notification à la fois : sur mobile, une pile masquait le contenu.
+      setToasts([{ id, message, kind }]);
       setTimeout(() => dismissToast(id), kind === 'erreur' ? 7000 : 4000);
     },
     [dismissToast],

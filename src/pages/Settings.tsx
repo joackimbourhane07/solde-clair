@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { AppData, Category, CategoryKind, ProfileType, ThemeChoice } from '../types';
 import { CURRENCIES, centsToInput } from '../lib/money';
+import { dayDiff, formatDate } from '../lib/dates';
 import { isDuplicateName, KIND_LABELS, makeCategory, PROFILE_LABELS } from '../lib/categories';
 import { buildDemoData, DEMO_PROFILES, type DemoProfile } from '../lib/demo';
 import { clearData, downloadFile, exportCSV, exportJSON, parseBackup } from '../lib/storage';
@@ -202,7 +203,15 @@ function readFileText(file: File): Promise<string> {
   });
 }
 
-export function DataSection({ compact = false }: { compact?: boolean }) {
+type PartieDonnees = 'export' | 'import' | 'demo' | 'reset';
+
+export function DataSection({
+  compact = false,
+  parts = compact ? ['import', 'demo'] : ['export', 'import', 'demo', 'reset'],
+}: {
+  compact?: boolean;
+  parts?: PartieDonnees[];
+}) {
   const { data, dispatch, notify, today } = useApp();
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -257,9 +266,18 @@ export function DataSection({ compact = false }: { compact?: boolean }) {
 
   return (
     <>
-      {!compact && (
-        <Card title="Exporter mes données">
+      {parts.includes('export') && (
+        <Card title="Sauvegarder mes données">
           <p className="muted">Les fichiers sont créés sur votre appareil : rien n’est envoyé sur Internet.</p>
+          <p className="backup-status">
+            Dernière sauvegarde complète :{' '}
+            <strong>{data.settings.lastBackup ? `le ${formatDate(data.settings.lastBackup)}` : 'aucune pour l’instant'}</strong>
+          </p>
+          {(!data.settings.lastBackup || dayDiff(data.settings.lastBackup, today) > 30) && (
+            <Notice tone="attention">
+              Pensez à télécharger une sauvegarde complète : si les données du navigateur sont effacées, elle permet de tout retrouver.
+            </Notice>
+          )}
           <div className="button-row">
             <Button
               icon="download"
@@ -273,7 +291,10 @@ export function DataSection({ compact = false }: { compact?: boolean }) {
             <Button
               icon="download"
               onClick={() => {
-                downloadFile(`soldeclair-sauvegarde-${today}.json`, exportJSON(data, today), 'application/json');
+                // La sauvegarde porte sa propre date : une restauration retrouve exactement l'état sauvegardé.
+                const aSauvegarder = { ...data, settings: { ...data.settings, lastBackup: today } };
+                downloadFile(`soldeclair-sauvegarde-${today}.json`, exportJSON(aSauvegarder, today), 'application/json');
+                dispatch({ type: 'setLastBackup', date: today });
                 notify('Sauvegarde complète téléchargée.');
               }}
             >
@@ -283,41 +304,45 @@ export function DataSection({ compact = false }: { compact?: boolean }) {
         </Card>
       )}
 
-      <Card title="Importer une sauvegarde" headingLevel={compact ? 3 : 2}>
-        <p className="muted">Choisissez un fichier JSON exporté depuis SoldeClair.{hasData && ' Il remplacera les données actuelles.'}</p>
-        <label className="btn btn-secondaire file-button">
-          <Icon name="upload" size={18} />
-          <span>Choisir un fichier JSON</span>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="application/json,.json"
-            className="sr-only"
-            onChange={(e) => void onFile(e.target.files?.[0])}
-          />
-        </label>
-      </Card>
+      {parts.includes('import') && (
+        <Card title="Importer une sauvegarde" headingLevel={compact ? 3 : 2}>
+          <p className="muted">Choisissez un fichier JSON exporté depuis SoldeClair.{hasData && ' Il remplacera les données actuelles.'}</p>
+          <label className="btn btn-secondaire file-button">
+            <Icon name="upload" size={18} />
+            <span>Choisir un fichier JSON</span>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="application/json,.json"
+              className="sr-only"
+              onChange={(e) => void onFile(e.target.files?.[0])}
+            />
+          </label>
+        </Card>
+      )}
 
-      <Card title="Données de démonstration" headingLevel={compact ? 3 : 2}>
-        <p className="muted">Profils entièrement fictifs avec plusieurs mois d’historique, pour découvrir l’application.</p>
-        <div className="form-row">
-          <SelectField label="Profil de démonstration" value={demo} onChange={(e) => setDemo(e.target.value as DemoProfile)}>
-            {DEMO_PROFILES.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.label}
-              </option>
-            ))}
-          </SelectField>
-          <div className="form-actions">
-            <Button variant={compact ? 'primaire' : 'secondaire'} icon="chart" onClick={() => (hasData ? setConfirmDemo(true) : loadDemo())}>
-              Charger la démonstration
-            </Button>
+      {parts.includes('demo') && (
+        <Card title="Données de démonstration" headingLevel={compact ? 3 : 2}>
+          <p className="muted">Profils entièrement fictifs avec plusieurs mois d’historique, pour découvrir l’application.</p>
+          <div className="form-row">
+            <SelectField label="Profil de démonstration" value={demo} onChange={(e) => setDemo(e.target.value as DemoProfile)}>
+              {DEMO_PROFILES.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.label}
+                </option>
+              ))}
+            </SelectField>
+            <div className="form-actions">
+              <Button variant={compact ? 'primaire' : 'secondaire'} icon="chart" onClick={() => (hasData ? setConfirmDemo(true) : loadDemo())}>
+                Charger la démonstration
+              </Button>
+            </div>
           </div>
-        </div>
-        <p className="field-hint">{DEMO_PROFILES.find((d) => d.id === demo)?.description}</p>
-      </Card>
+          <p className="field-hint">{DEMO_PROFILES.find((d) => d.id === demo)?.description}</p>
+        </Card>
+      )}
 
-      {!compact && (
+      {parts.includes('reset') && (
         <Card title="Effacer toutes les données" className="danger-zone">
           <p>Supprime définitivement votre profil, vos transactions, budgets et objectifs de ce navigateur.</p>
           <Button variant="danger" icon="trash" onClick={() => setResetStep(1)}>
@@ -384,16 +409,18 @@ export function DataSection({ compact = false }: { compact?: boolean }) {
 export function SettingsPage() {
   return (
     <div className="page">
-      <PageHeader title="Paramètres" description="Profil, apparence, catégories et gestion de vos données." />
+      <PageHeader title="Paramètres" description="Sauvegarde, profil, apparence et catégories." />
       <Notice>
         <strong>Confidentialité :</strong> SoldeClair fonctionne sans compte et sans serveur. Vos données sont enregistrées uniquement
         dans ce navigateur, sur cet appareil. Aucune coordonnée bancaire n’est demandée. Pensez à exporter une sauvegarde régulièrement :
         vider les données du navigateur efface aussi celles de SoldeClair.
       </Notice>
+      {/* La sauvegarde d'abord : avec un stockage local, c'est la protection principale des données. */}
+      <DataSection parts={['export', 'import']} />
       <ProfileSection />
       <ThemeSection />
       <CategoriesSection />
-      <DataSection />
+      <DataSection parts={['demo', 'reset']} />
     </div>
   );
 }

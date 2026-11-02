@@ -140,10 +140,19 @@ describe('budgets par catégorie', () => {
     expect(sante).toMatchObject({ budget: null, spent: 0, remaining: null, level: 'sans' });
   });
 
+  it('alertes formulées avec une piste d’action (montant restant, objectif par jour)', () => {
+    const d = fixture();
+    d.expenses.push({ id: 'gros', amount: 30000, categoryId: 'c-sante', date: '2026-11-12', description: '', paymentMethod: '' });
+    const alerts = monthAlerts(d, '2026-11', TODAY, fmt);
+    const prevision = alerts.find((a) => a.message.includes('même rythme'));
+    expect(prevision?.message).toMatch(/il pourrait manquer environ .* Pour finir le mois à l’équilibre, visez environ .* par jour\./);
+    expect(alerts.find((a) => a.message.includes('Loisirs'))?.message).toMatch(/il reste 20\.00 €/);
+  });
+
   it('alertes générées pour les budgets', () => {
     const alerts = monthAlerts(fixture(), '2026-11', TODAY, fmt);
     expect(alerts.some((a) => a.level === 'danger' && a.message.includes('Alimentation'))).toBe(true);
-    expect(alerts.some((a) => a.level === 'info' && a.message.includes('Loisirs') && a.message.includes('75 %'))).toBe(true);
+    expect(alerts.some((a) => a.level === 'info' && a.message.includes('Loisirs') && /75\s%/.test(a.message))).toBe(true);
   });
 });
 

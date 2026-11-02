@@ -106,6 +106,8 @@ export interface SavingsDeposit {
 
 export interface Settings {
   theme: ThemeChoice;
+  /** Date de la dernière sauvegarde complète (export JSON), pour le rappel. */
+  lastBackup?: ISODate | null;
 }
 
 export interface AppData {

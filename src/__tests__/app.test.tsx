@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { AppProvider } from '../state/AppState';
 import { AppRoutes } from '../App';
 import type { AppData } from '../types';
-import { STORAGE_KEY, emptyData, exportJSON } from '../lib/storage';
+import { STORAGE_KEY, emptyData, exportJSON, parseBackup } from '../lib/storage';
 import { fixture, TODAY } from '../test/fixtures';
 
 const norm = (s: string | null | undefined) => (s ?? '').replace(/[  ]/g, ' ');
@@ -166,6 +166,82 @@ describe('textes et accessibilité (corrections du test navigateur)', () => {
   });
 });
 
+describe('améliorations de simplicité (recherche et audit)', () => {
+  it('tableau de bord : « Comment est-ce calculé ? » détaille le calcul avec les vrais chiffres', async () => {
+    const user = renderApp();
+    await user.click(screen.getByText('Comment est-ce calculé ?'));
+    const calcul = screen.getByText('= Solde disponible du mois').closest('dl')!;
+    expect(norm(calcul.textContent)).toContain('+ Revenus du mois1 700,50 €');
+    expect(norm(calcul.textContent)).toContain('= Solde disponible du mois821,51 €');
+    expect(norm(screen.getByText(/Divisé par 19 jours restants/).textContent)).toContain('environ 43,23 € par jour');
+    // Panneau chiffré : valeur réelle du jour, unité séparée
+    expect(norm(document.querySelector('.hero-figure')?.textContent)).toBe('43,23 €');
+    expect(screen.getByText(/46 % des revenus déjà dépensés/)).toBeInTheDocument();
+  });
+
+  it('paramètres : la sauvegarde est en tête et affiche la date de la dernière sauvegarde', async () => {
+    const user = renderApp(fixture(), '/parametres');
+    const titres = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
+    expect(titres.indexOf('Sauvegarder mes données')).toBeLessThan(titres.indexOf('Mon profil'));
+    expect(screen.getByText('aucune pour l’instant')).toBeInTheDocument();
+    expect(screen.getByText(/Pensez à télécharger une sauvegarde complète/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Sauvegarde complète (JSON)' }));
+    expect(screen.getByText('le 12 nov. 2026')).toBeInTheDocument();
+    expect(screen.queryByText(/Pensez à télécharger une sauvegarde complète/)).not.toBeInTheDocument();
+    await waitFor(() => expect(stored().settings.lastBackup).toBe(TODAY));
+  });
+
+  it('la sauvegarde JSON contient sa propre date : la restauration retrouve l’état exact', () => {
+    const d = { ...fixture(), settings: { theme: 'dark' as const, lastBackup: TODAY } };
+    const r = parseBackup(exportJSON(d, TODAY));
+    expect(r.ok && r.data).toEqual(d);
+  });
+
+  it('historique : la recherche est le premier filtre', () => {
+    renderApp(fixture(), '/historique');
+    const champs = Array.from(document.querySelectorAll('.filters label')).map((l) => l.textContent);
+    expect(champs[0]).toBe('Rechercher');
+  });
+
+  it('revenu : libellés explicites et conséquence du choix expliquée', async () => {
+    const user = renderApp(fixture(), '/revenus');
+    await user.click(screen.getByRole('button', { name: 'Ajouter un revenu' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Il sera compté automatiquement chaque mois (ou selon la fréquence choisie).')).toBeInTheDocument();
+    await user.click(within(dialog).getByLabelText(/Exceptionnel \(prime, vente…\)/));
+    expect(within(dialog).getByText('Il ne sera compté qu’une seule fois, à la date indiquée.')).toBeInTheDocument();
+  });
+
+  it('état vide avec bouton d’action (dépenses)', async () => {
+    const d = fixture();
+    d.expenses = [];
+    const user = renderApp(d, '/depenses');
+    await user.click(screen.getByRole('button', { name: 'Ajouter ma première dépense' }));
+    expect(screen.getByRole('dialog', { name: 'Nouvelle dépense' })).toBeInTheDocument();
+  });
+
+  it('une seule notification visible à la fois', async () => {
+    const user = renderApp();
+    const form = screen.getByRole('form', { name: 'Ajout rapide d’une dépense' });
+    for (const v of ['1', '2', '3']) {
+      await user.type(within(form).getByLabelText('Montant'), v);
+      await user.click(within(form).getByRole('button', { name: 'Ajouter la dépense' }));
+    }
+    expect(document.querySelectorAll('.toast')).toHaveLength(1);
+    expect(norm(document.querySelector('.toast')?.textContent)).toContain('3,00 €');
+  });
+
+  it('configuration : lien direct vers le profil de démonstration', async () => {
+    const user = renderApp(emptyData());
+    await user.click(screen.getByRole('button', { name: 'Essayer avec un profil de démonstration' }));
+    expect(document.activeElement).toHaveTextContent('Ou bien…');
+  });
+
+  it('nouveau profil : thème sombre « Financial » par défaut', () => {
+    expect(emptyData().settings.theme).toBe('dark');
+  });
+});
+
 describe('modification et suppression', () => {
   it('modifie puis supprime une dépense avec confirmation', async () => {
     const user = renderApp(fixture(), '/depenses');
@@ -194,7 +270,7 @@ describe('modification et suppression', () => {
     const dialog = screen.getByRole('dialog', { name: 'Nouveau revenu' });
     await user.type(within(dialog).getByLabelText('Nom'), 'Prime');
     await user.type(within(dialog).getByLabelText('Montant'), '150');
-    await user.click(within(dialog).getByLabelText('Exceptionnel'));
+    await user.click(within(dialog).getByLabelText(/Exceptionnel/));
     await user.click(within(dialog).getByRole('button', { name: 'Ajouter le revenu' }));
     await waitFor(() => expect(stored().incomes.find((i) => i.name === 'Prime')).toMatchObject({ amount: 15000, recurring: false, date: TODAY }));
     expect(norm(screen.getByText('Revenus de novembre 2026').parentElement!.textContent)).toContain('1 850,50 €');

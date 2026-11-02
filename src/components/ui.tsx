@@ -263,6 +263,29 @@ export function Card({
   );
 }
 
+/** Sépare « 1 234,56 € » en chiffres et unité, pour afficher l'unité plus discrètement. */
+function decouperMontant(texte: string): [string, string] | null {
+  const m = /^(.*\d)([\u00a0\u202f ][^\d\s]+)$/.exec(texte);
+  return m ? [m[1], m[2]] : null;
+}
+
+/** Valeur chiffrée : l’unité monétaire est affichée plus discrètement que les chiffres. */
+export function Valeur({ texte }: { texte: string }) {
+  const parties = decouperMontant(texte);
+  if (!parties) return <>{texte}</>;
+  return (
+    <>
+      <span>{parties[0]}</span>
+      <span className="unite">{parties[1]}</span>
+    </>
+  );
+}
+
+export function Montant({ cents }: { cents: number }) {
+  const { fmt } = useApp();
+  return <Valeur texte={fmt(cents)} />;
+}
+
 export function Stat({
   label,
   value,
@@ -277,7 +300,7 @@ export function Stat({
   return (
     <div className={`stat ${tone ? `stat-${tone}` : ''}`}>
       <p className="stat-label">{label}</p>
-      <p className="stat-value">{value}</p>
+      <p className="stat-value">{typeof value === 'string' ? <Valeur texte={value} /> : value}</p>
       {detail && <p className="stat-detail">{detail}</p>}
     </div>
   );

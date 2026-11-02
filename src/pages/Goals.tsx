@@ -73,9 +73,9 @@ export function Goals() {
                 </p>
                 {g.description && <p className="muted">{g.description}</p>}
                 <p className="goal-amounts">
-                  <strong>{fmt(p.current)}</strong> sur {fmt(g.target)} · {p.pct} %
+                  <strong>{fmt(p.current)}</strong> sur {fmt(g.target)} · {p.pct}{'\u00a0'}%
                 </p>
-                <ProgressBar value={p.current} max={g.target} level="objectif" label={`Progression de ${g.name}`} valueText={`${p.pct} %`} />
+                <ProgressBar value={p.current} max={g.target} level="objectif" label={`Progression de ${g.name}`} valueText={`${p.pct}\u00a0%`} />
                 <dl className="goal-figures">
                   <div>
                     <dt>Reste à épargner</dt>
@@ -183,6 +183,7 @@ export function Goals() {
           title="Évolution de l’épargne totale"
           description="Montant total mis de côté à la fin de chaque mois (6 derniers mois)."
           valueLabel="Épargne totale"
+          emptyText="Aucune épargne enregistrée pour l’instant. Ajoutez un versement pour suivre son évolution."
           area
           points={evolution.map((e) => ({
             label: monthLabel(e.month),

@@ -24,7 +24,8 @@ export function emptyData(): AppData {
   return {
     version: 1,
     profile: null,
-    settings: { theme: 'system' },
+    // Identité « Financial » : thème sombre par défaut (clair et automatique restent disponibles).
+    settings: { theme: 'dark' },
     categories: [],
     incomes: [],
     fixedCharges: [],
@@ -117,7 +118,7 @@ export function validateData(input: unknown): ValidationResult {
     const settingsIn = isObj(root.settings) ? root.settings : {};
     const theme = ['system', 'light', 'dark'].includes(settingsIn.theme as string)
       ? (settingsIn.theme as AppData['settings']['theme'])
-      : 'system';
+      : 'dark';
 
     const categories: Category[] = checkArray(root.categories, 'catégories').map((c, i) => {
       if (!isObj(c) || !isStr(c.name) || !['income', 'fixed', 'variable'].includes(c.kind as string))
@@ -210,7 +211,17 @@ export function validateData(input: unknown): ValidationResult {
 
     return {
       ok: true,
-      data: { version: 1, profile, settings: { theme }, categories, incomes, fixedCharges, expenses, goals, savings },
+      data: {
+        version: 1,
+        profile,
+        settings: { theme, ...(isValidISODate(settingsIn.lastBackup) ? { lastBackup: settingsIn.lastBackup } : {}) },
+        categories,
+        incomes,
+        fixedCharges,
+        expenses,
+        goals,
+        savings,
+      },
     };
   } catch (e) {
     if (e instanceof ImportError) return { ok: false, error: e.message };

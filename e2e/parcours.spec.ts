@@ -91,6 +91,9 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   // Chemin sans caractère spécial : l'envoi de fichier de Playwright échoue sans message avec « ’ » dans le chemin.
   const fichier = path.join(os.tmpdir(), `soldeclair-e2e-${Date.now()}.json`);
   await telechargement.saveAs(fichier);
+  // État exact au moment de la sauvegarde (la date de dernière sauvegarde vient d'être enregistrée)
+  const sauvegarde = await page.evaluate(() => localStorage.getItem('soldeclair:donnees:v1'));
+  expect(JSON.parse(fs.readFileSync(fichier, 'utf8')).donnees).toEqual(JSON.parse(sauvegarde!));
   expect(JSON.parse(fs.readFileSync(fichier, 'utf8')).donnees.profile.name).toBe('Léo Test');
 
   await page.getByRole('button', { name: 'Effacer toutes mes données' }).click();
@@ -102,7 +105,7 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
 
   await page.setInputFiles('input[type=file]', fichier);
   await expect(page.getByRole('heading', { name: 'Bonjour Léo Test' })).toBeVisible();
-  expect(JSON.parse((await page.evaluate(() => localStorage.getItem('soldeclair:donnees:v1')))!)).toEqual(JSON.parse(avant!));
+  expect(JSON.parse((await page.evaluate(() => localStorage.getItem('soldeclair:donnees:v1')))!)).toEqual(JSON.parse(sauvegarde!));
 
   expect(erreurs).toEqual([]);
 });

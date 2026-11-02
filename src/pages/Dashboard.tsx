@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import {
@@ -12,7 +12,7 @@ import {
 import { defaultDateFor, formatDate, monthOf, ofMonth, parseISO } from '../lib/dates';
 import { formatMoneyShort } from '../lib/money';
 import { PROFILE_LABELS } from '../lib/categories';
-import { Card, MonthSwitcher, Notice, ProgressBar, SignedAmount, Stat } from '../components/ui';
+import { Card, Montant, MonthSwitcher, Notice, ProgressBar, SignedAmount, Stat } from '../components/ui';
 import { ExpenseForm } from '../components/forms';
 import { CategoryBarsChart, LineChart } from '../components/charts/Charts';
 import { Icon } from '../components/Icon';
@@ -37,15 +37,27 @@ export function Dashboard() {
   const short = (c: number) => formatMoneyShort(c, currency, 'prudent');
   const over = (c: number) => formatMoneyShort(c, currency, 'majore');
 
-  let headline: string;
+  // Les montants de la phrase principale sont mis en valeur (couleur « valeur »).
+  const V = ({ children }: { children: ReactNode }) => <span className="valeur">{children}</span>;
+  let headline: ReactNode;
   let subline: string | null = null;
   if (s.period === 'passe') {
     headline =
-      s.available >= 0
-        ? `Mois terminé : il vous est resté ${fmt(s.available)}.`
-        : `Mois terminé avec un dépassement de ${fmt(-s.available)}.`;
+      s.available >= 0 ? (
+        <>
+          Mois terminé : il vous est resté <V>{fmt(s.available)}</V>.
+        </>
+      ) : (
+        <>
+          Mois terminé avec un dépassement de <V>{fmt(-s.available)}</V>.
+        </>
+      );
   } else if (s.available >= 0) {
-    headline = `Il vous reste ${short(s.available)} pour terminer le mois, soit environ ${short(s.dailyRemaining ?? 0)} par jour.`;
+    headline = (
+      <>
+        Il vous reste <V>{short(s.available)}</V> pour terminer le mois, soit environ <V>{short(s.dailyRemaining ?? 0)}</V> par jour.
+      </>
+    );
     if (s.savingsRemaining > 0) {
       subline =
         (s.dailyAfterSavings ?? 0) >= 0
@@ -53,7 +65,11 @@ export function Dashboard() {
           : `Pour atteindre votre objectif d’épargne (${over(s.savingsRemaining)} restants), il faudrait réduire vos dépenses.`;
     }
   } else {
-    headline = `Vos dépenses dépassent vos revenus de ${over(-s.available)} ce mois-ci.`;
+    headline = (
+      <>
+        Vos dépenses dépassent vos revenus de <V>{over(-s.available)}</V> ce mois-ci.
+      </>
+    );
     subline = 'Essayez de limiter les dépenses non essentielles jusqu’à la fin du mois.';
   }
 
@@ -68,31 +84,102 @@ export function Dashboard() {
       </header>
 
       <section className={`hero ${s.available < 0 ? 'hero-negatif' : ''}`} aria-labelledby="hero-titre">
-        <h2 id="hero-titre" className="sr-only">
-          Reste à vivre {ofMonth(month)}
-        </h2>
-        <p className="hero-text">{headline}</p>
-        {subline && <p className="hero-sub">{subline}</p>}
-        <div className="hero-meta">
-          <span>
-            <Icon name="calendar" size={16} />{' '}
-            {s.period === 'courant'
-              ? `${s.daysRemaining} jour${s.daysRemaining > 1 ? 's' : ''} restant${s.daysRemaining > 1 ? 's' : ''} (aujourd’hui inclus)`
-              : s.period === 'futur'
-                ? `Mois à venir : ${s.daysInMonth} jours`
-                : 'Mois terminé'}
-          </span>
-          <span>
-            <Icon name="gauge" size={16} /> Budget consommé : {s.budgetUsedPct === null ? '—' : `${s.budgetUsedPct} %`}
-          </span>
+        <div className="hero-statement">
+          <h2 id="hero-titre" className="sr-only">
+            Reste à vivre {ofMonth(month)}
+          </h2>
+          <p className="hero-text">{headline}</p>
+          {subline && <p className="hero-sub">{subline}</p>}
+          {/* Aide contextuelle : le calcul avec les chiffres réels du mois */}
+          <details className="disclosure">
+            <summary>Comment est-ce calculé ?</summary>
+            <div className="disclosure-body">
+              <dl className="calcul">
+                <div>
+                  <dt>+ Revenus du mois</dt>
+                  <dd>{fmt(s.income)}</dd>
+                </div>
+                <div>
+                  <dt>− Charges fixes (payées et à venir)</dt>
+                  <dd>{fmt(s.fixed)}</dd>
+                </div>
+                <div>
+                  <dt>− Dépenses variables</dt>
+                  <dd>{fmt(s.variable)}</dd>
+                </div>
+                <div>
+                  <dt>− Épargne déjà versée</dt>
+                  <dd>{fmt(s.saved)}</dd>
+                </div>
+                <div className="calcul-total">
+                  <dt>= Solde disponible du mois</dt>
+                  <dd>{fmt(s.available)}</dd>
+                </div>
+              </dl>
+              {s.dailyRemaining !== null && (
+                <p>
+                  Divisé par {s.daysRemaining} jour{s.daysRemaining > 1 ? 's' : ''} restant{s.daysRemaining > 1 ? 's' : ''} (aujourd’hui
+                  inclus), cela fait environ {fmt(s.dailyRemaining)} par jour. Les revenus et charges prévus plus tard dans le mois sont déjà
+                  comptés.
+                </p>
+              )}
+            </div>
+          </details>
         </div>
-        <ProgressBar
-          value={s.totalExpenses}
-          max={s.income}
-          label="Part des revenus déjà dépensée"
-          valueText={s.budgetUsedPct === null ? 'Aucun revenu' : `${s.budgetUsedPct} % des revenus dépensés`}
-          level={s.budgetUsedPct === null ? 'sans' : s.budgetUsedPct > 100 ? 'depasse' : s.budgetUsedPct >= 90 ? 'alerte' : s.budgetUsedPct >= 75 ? 'attention' : 'ok'}
-        />
+
+        <div className="hero-frame">
+          <div className="hero-panel">
+            <p className="hero-panel-label">{s.period === 'passe' ? 'Solde final du mois' : 'Par jour jusqu’à la fin du mois'}</p>
+            <p className="hero-figure">
+              <Montant cents={s.period === 'passe' ? s.available : (s.dailyRemaining ?? 0)} />
+            </p>
+            <dl className="hero-facts">
+              {s.period === 'passe' ? (
+                <>
+                  <div>
+                    <dt>Revenus du mois</dt>
+                    <dd>{fmt(s.income)}</dd>
+                  </div>
+                  <div>
+                    <dt>Dépenses du mois</dt>
+                    <dd>{fmt(s.totalExpenses)}</dd>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <dt>Disponible ce mois</dt>
+                    <dd>{fmt(s.available)}</dd>
+                  </div>
+                  <div>
+                    <dt>{s.period === 'courant' ? 'Jours restants' : 'Jours du mois'}</dt>
+                    <dd>{s.daysRemaining}</dd>
+                  </div>
+                </>
+              )}
+            </dl>
+            <div className="hero-meta">
+              <span>
+                <Icon name="calendar" size={16} />{' '}
+                {s.period === 'courant'
+                  ? `${s.daysRemaining} jour${s.daysRemaining > 1 ? 's' : ''} restant${s.daysRemaining > 1 ? 's' : ''} (aujourd’hui inclus)`
+                  : s.period === 'futur'
+                    ? `Mois à venir : ${s.daysInMonth} jours`
+                    : 'Mois terminé'}
+              </span>
+              <span>
+                <Icon name="gauge" size={16} /> {s.budgetUsedPct === null ? 'Aucun revenu ce mois-ci' : `${s.budgetUsedPct}\u00a0% des revenus déjà dépensés`}
+              </span>
+            </div>
+            <ProgressBar
+              value={s.totalExpenses}
+              max={s.income}
+              label="Part des revenus déjà dépensée"
+              valueText={s.budgetUsedPct === null ? 'Aucun revenu' : `${s.budgetUsedPct}\u00a0% des revenus dépensés`}
+              level={s.budgetUsedPct === null ? 'sans' : s.budgetUsedPct > 100 ? 'depasse' : s.budgetUsedPct >= 90 ? 'alerte' : s.budgetUsedPct >= 75 ? 'attention' : 'ok'}
+            />
+          </div>
+        </div>
       </section>
 
       <div className="dashboard-grid">
@@ -215,6 +302,7 @@ export function Dashboard() {
         <Card>
           <LineChart
             title="Évolution du solde au cours du mois"
+            emptyText="Aucun mouvement enregistré pour ce mois."
             description={
               monthOf(today) === month
                 ? 'Revenus moins dépenses, charges et épargne, jour après jour jusqu’à aujourd’hui.'

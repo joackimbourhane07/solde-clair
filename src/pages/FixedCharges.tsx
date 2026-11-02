@@ -40,7 +40,16 @@ export function FixedCharges() {
 
       <Card title={`Échéances ${ofMonth(month)}`}>
         {occurrences.length === 0 ? (
-          <EmptyState title="Aucune charge fixe ce mois-ci">Ajoutez votre loyer, votre forfait téléphone, vos assurances…</EmptyState>
+          <EmptyState
+            title="Aucune charge fixe ce mois-ci"
+            action={
+              <Button variant="primaire" icon="plus" onClick={() => setEditing('new')}>
+                Ajouter une charge
+              </Button>
+            }
+          >
+            Ajoutez votre loyer, votre forfait téléphone, vos assurances…
+          </EmptyState>
         ) : (
           <ul className="item-list">
             {occurrences.map((o) => {

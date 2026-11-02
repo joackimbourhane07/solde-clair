@@ -119,19 +119,51 @@ test('clavier : lien d’évitement en premier, contour de focus visible, fenêt
   await expect(page.locator(':focus')).toHaveText('Ajouter une dépense');
 });
 
-test('thèmes : automatique, clair et sombre', async ({ page }) => {
-  await page.emulateMedia({ colorScheme: 'dark' });
+test('thèmes : sombre par défaut, automatique, clair', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
   await preparer(page);
   await chargerDemo(page);
   const fond = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  expect(await fond()).toBe('rgb(14, 20, 18)');
-  await page.emulateMedia({ colorScheme: 'light' });
-  expect(await fond()).toBe('rgb(245, 247, 246)');
+  const SOMBRE = 'rgb(7, 9, 14)';
+  const CLAIR = 'rgb(243, 244, 247)';
+  // Identité « Financial » : sombre par défaut, même si l'appareil est en clair
+  expect(await fond()).toBe(SOMBRE);
   await aller(page, 'parametres');
-  await page.getByLabel('Mode sombre').check();
-  expect(await fond()).toBe('rgb(14, 20, 18)');
-  await page.reload();
-  expect(await fond()).toBe('rgb(14, 20, 18)');
+  await page.getByLabel('Comme mon appareil').check();
+  expect(await fond()).toBe(CLAIR);
+  await page.emulateMedia({ colorScheme: 'dark' });
+  expect(await fond()).toBe(SOMBRE);
   await page.getByLabel('Mode clair').check();
-  expect(await fond()).toBe('rgb(245, 247, 246)');
+  expect(await fond()).toBe(CLAIR);
+  await page.reload();
+  expect(await fond()).toBe(CLAIR);
+  await page.getByLabel('Mode sombre').check();
+  expect(await fond()).toBe(SOMBRE);
+});
+
+test('polices IBM Plex chargées localement, aucune requête externe', async ({ page }) => {
+  const externes: string[] = [];
+  page.on('request', (r) => {
+    if (!r.url().startsWith('http://localhost:4173')) externes.push(r.url());
+  });
+  await preparer(page);
+  await chargerDemo(page);
+  await page.evaluate(() => document.fonts.ready);
+  const polices = await page.evaluate(() => [
+    document.fonts.check('500 16px "Financial Plex Sans"'),
+    document.fonts.check('500 16px "Financial Plex Mono"'),
+  ]);
+  expect(polices).toEqual([true, true]);
+  expect(await page.locator('.stat-value').first().evaluate((el) => getComputedStyle(el).fontFamily)).toContain('Financial Plex Mono');
+  expect(externes).toEqual([]);
+});
+
+test('mouvement réduit : aucune transition', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await preparer(page);
+  await chargerDemo(page);
+  const durees = await page.evaluate(() =>
+    ['.btn', '.nav-link', '.input'].map((sel) => getComputedStyle(document.querySelector(sel)!).transitionDuration),
+  );
+  expect(durees.every((d) => d.split(',').every((x) => parseFloat(x) === 0))).toBe(true);
 });

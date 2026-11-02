@@ -44,12 +44,19 @@ describe('export / import JSON', () => {
     if (!r.ok) expect(r.error).toContain(expected);
   });
 
+  it('date de dernière sauvegarde : conservée si valide, ignorée sinon', () => {
+    const ok = validateData({ ...fixture(), settings: { theme: 'light', lastBackup: '2026-10-01' } });
+    expect(ok.ok && ok.data.settings).toEqual({ theme: 'light', lastBackup: '2026-10-01' });
+    const ko = validateData({ ...fixture(), settings: { theme: 'light', lastBackup: 'hier' } });
+    expect(ko.ok && ko.data.settings).toEqual({ theme: 'light' });
+  });
+
   it('nettoie les valeurs inconnues', () => {
     const d = { ...fixture(), settings: { theme: 'fluo' }, profile: { ...fixture().profile, type: 'astronaute', currency: 'xx' } };
     const r = validateData(d);
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.data.settings.theme).toBe('system');
+      expect(r.data.settings.theme).toBe('dark');
       expect(r.data.profile?.type).toBe('autre');
       expect(r.data.profile?.currency).toBe('EUR');
     }

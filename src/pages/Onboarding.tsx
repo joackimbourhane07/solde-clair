@@ -64,7 +64,7 @@ function LineRow({
 }
 
 export function Onboarding() {
-  const { dispatch, today, notify } = useApp();
+  const { data: donnees, dispatch, today, notify } = useApp();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -147,7 +147,7 @@ export function Onboarding() {
           ? { name: goalName, target: amountOf(goalTarget), initial: amountOf(goalInitial), targetDate: goalDate || null }
           : null,
         categories: { income: pick('income'), fixed: pick('fixed'), variable: pick('variable') },
-        theme: 'system',
+        theme: donnees.settings.theme,
       },
       today,
     );
@@ -185,257 +185,291 @@ export function Onboarding() {
       </header>
 
       <main className="onboarding-main" id="contenu">
-        <ol className="stepper" aria-label="Étapes de la configuration">
-          {STEPS.map((s, i) => (
-            <li key={s} className={i === step ? 'step-current' : i < step ? 'step-done' : ''} aria-current={i === step ? 'step' : undefined}>
-              <span className="step-num">{i < step ? '✓' : i + 1}</span>
-              <span className="step-label">{s}</span>
+        {/* Grand écran : énoncé à gauche, parcours encadré à droite (contenus existants uniquement). */}
+        <aside className="onboarding-intro" aria-label="À propos de SoldeClair">
+          <p className="eyebrow">Budget personnel</p>
+          <p className="onboarding-statement">Gérez votre budget personnel, simplement.</p>
+          <ul className="onboarding-facts">
+            <li>
+              <Icon name="lock" size={18} />
+              <span>Sans compte et sans banque : aucune coordonnée bancaire n’est demandée.</span>
             </li>
-          ))}
-        </ol>
+            <li>
+              <Icon name="home" size={18} />
+              <span>Vos données restent enregistrées dans ce navigateur, sur cet appareil.</span>
+            </li>
+            <li>
+              <Icon name="calendar" size={18} />
+              <span>Quelques questions pour préparer votre budget : comptez environ deux minutes.</span>
+            </li>
+          </ul>
+        </aside>
 
-        <Card>
-          <h1 ref={headingRef} tabIndex={-1} className="onboarding-title">
-            {step === 0 && 'Bienvenue sur SoldeClair'}
-            {step === 1 && 'Vos revenus mensuels'}
-            {step === 2 && 'Vos charges fixes'}
-            {step === 3 && 'Vos dépenses et votre épargne'}
-            {step === 4 && 'Vos catégories'}
-            {step === 5 && 'Tout est prêt !'}
-          </h1>
-          <p className="muted">
-            Étape {step + 1} sur {STEPS.length}
-            {step > 0 && step < 5 && ' · Vous pourrez tout modifier plus tard.'}
-          </p>
+        <div className="onboarding-flow">
+          <ol className="stepper" aria-label="Étapes de la configuration">
+            {STEPS.map((s, i) => (
+              <li key={s} className={i === step ? 'step-current' : i < step ? 'step-done' : ''} aria-current={i === step ? 'step' : undefined}>
+                <span className="step-num">{i < step ? '✓' : i + 1}</span>
+                <span className="step-label">{s}</span>
+              </li>
+            ))}
+          </ol>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              next();
-            }}
-            noValidate
-            className="form"
-          >
-            {step === 0 && (
-              <>
-                <p>Quelques questions pour préparer votre budget. Comptez environ deux minutes.</p>
-                <div className="form-grid">
-                  <TextField label="Prénom ou pseudonyme" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} maxLength={40} autoComplete="nickname" />
-                  <SelectField label="Devise" value={currency} onChange={(e) => setCurrency(e.target.value)}>
-                    {CURRENCIES.map((c) => (
-                      <option key={c.code} value={c.code}>
-                        {c.label}
-                      </option>
-                    ))}
-                  </SelectField>
-                </div>
-                <fieldset className="fieldset">
-                  <legend>Quelle est votre situation ?</legend>
-                  <div className="choice-grid">
-                    {(Object.keys(PROFILE_LABELS) as ProfileType[]).map((t) => (
-                      <label key={t} className={`choice ${type === t ? 'choice-on' : ''}`}>
-                        <input type="radio" name="profil" value={t} checked={type === t} onChange={() => setType(t)} />
-                        <span>{PROFILE_LABELS[t]}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <p className="field-hint">Nous vous proposerons des catégories adaptées à votre situation.</p>
-                </fieldset>
-              </>
-            )}
+          <div className="hero-frame">
+            <Card>
+              <h1 ref={headingRef} tabIndex={-1} className="onboarding-title">
+                {step === 0 && 'Bienvenue sur SoldeClair'}
+                {step === 1 && 'Vos revenus mensuels'}
+                {step === 2 && 'Vos charges fixes'}
+                {step === 3 && 'Vos dépenses et votre épargne'}
+                {step === 4 && 'Vos catégories'}
+                {step === 5 && 'Tout est prêt !'}
+              </h1>
+              <p className="muted">
+                Étape {step + 1} sur {STEPS.length}
+                {step > 0 && step < 5 && ' · Vous pourrez tout modifier plus tard.'}
+              </p>
 
-            {step === 1 && (
-              <>
-                <h2 className="subhead">Revenu principal</h2>
-                <LineRow line={mainIncome} onChange={setMainIncome} kind="income" error={errors.main} options={cats.income} />
-                <h2 className="subhead">Revenus complémentaires</h2>
-                {extras.length === 0 && <p className="muted">Aides, job, aide familiale… Ajoutez-en si besoin.</p>}
-                {extras.map((l) => (
-                  <LineRow
-                    key={l.key}
-                    line={l}
-                    kind="income"
-                    error={errors[`extra-${l.key}`]}
-                    options={cats.income}
-                    onChange={(n) => setExtras(extras.map((x) => (x.key === l.key ? n : x)))}
-                    onRemove={() => setExtras(extras.filter((x) => x.key !== l.key))}
-                  />
-                ))}
-                <Button icon="plus" onClick={() => setExtras([...extras, newLine('', cats.income[1] ?? cats.income[0])])}>
-                  Ajouter un revenu complémentaire
-                </Button>
-              </>
-            )}
-
-            {step === 2 && (
-              <>
-                <p className="muted">Laissez le montant vide pour ignorer une ligne.</p>
-                {charges.map((l) => (
-                  <LineRow
-                    key={l.key}
-                    line={l}
-                    kind="fixed"
-                    error={errors[`charge-${l.key}`]}
-                    options={cats.fixed}
-                    onChange={(n) => setCharges(charges.map((x) => (x.key === l.key ? n : x)))}
-                    onRemove={() => setCharges(charges.filter((x) => x.key !== l.key))}
-                  />
-                ))}
-                <Button icon="plus" onClick={() => setCharges([...charges, newLine('', cats.fixed[0])])}>
-                  Ajouter une charge fixe
-                </Button>
-              </>
-            )}
-
-            {step === 3 && (
-              <>
-                <div className="form-grid">
-                  <MoneyField
-                    label="Estimation de vos dépenses variables par mois"
-                    value={variableEstimate}
-                    onChange={(e) => setVariableEstimate(e.target.value)}
-                    error={errors.variable}
-                    hint="Courses, sorties, carburant… Une estimation suffit."
-                  />
-                  <MoneyField
-                    label="Objectif d’épargne mensuel"
-                    value={savingsTarget}
-                    onChange={(e) => setSavingsTarget(e.target.value)}
-                    error={errors.savings}
-                    hint="Ce que vous aimeriez mettre de côté chaque mois."
-                  />
-                </div>
-                <CheckboxField
-                  label="Répartir automatiquement mon estimation en limites par catégorie"
-                  hint="Vous pourrez ajuster chaque limite dans « Budgets »."
-                  checked={splitEstimate}
-                  onChange={(e) => setSplitEstimate(e.target.checked)}
-                />
-                <h2 className="subhead">Objectif d’épargne à long terme (facultatif)</h2>
-                <div className="form-grid">
-                  <TextField label="Nom de l’objectif" optional value={goalName} onChange={(e) => setGoalName(e.target.value)} placeholder="Ex. : fonds d’urgence" maxLength={60} />
-                  <MoneyField label="Montant visé" value={goalTarget} onChange={(e) => setGoalTarget(e.target.value)} error={errors.goalTarget} disabled={!goalName.trim()} />
-                  <MoneyField label="Déjà mis de côté" value={goalInitial} onChange={(e) => setGoalInitial(e.target.value)} error={errors.goalInitial} disabled={!goalName.trim()} />
-                  <TextField label="Date souhaitée" optional type="date" value={goalDate} onChange={(e) => setGoalDate(e.target.value)} disabled={!goalName.trim()} />
-                </div>
-              </>
-            )}
-
-            {step === 4 && (
-              <>
-                <p>
-                  Catégories proposées pour un profil <strong>{PROFILE_LABELS[type].toLowerCase()}</strong>. Décochez celles qui ne vous concernent pas.
-                </p>
-                {kinds.map((k) => (
-                  <fieldset key={k} className="fieldset">
-                    <legend>{kindLabel[k]}</legend>
-                    <div className="chips">
-                      {cats[k].map((n) => {
-                        const id = `${k}:${n}`;
-                        const on = selected.has(id);
-                        return (
-                          <label key={id} className={`chip ${on ? 'chip-on' : ''}`}>
-                            <input
-                              type="checkbox"
-                              className="sr-only"
-                              checked={on}
-                              onChange={() => {
-                                const s = new Set(selected);
-                                if (on) s.delete(id);
-                                else s.add(id);
-                                setSelected(s);
-                              }}
-                            />
-                            {on && <Icon name="check" size={14} />} {n}
-                          </label>
-                        );
-                      })}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  next();
+                }}
+                noValidate
+                className="form"
+              >
+                {step === 0 && (
+                  <>
+                    <p>Quelques questions pour préparer votre budget. Comptez environ deux minutes.</p>
+                    <p className="muted">
+                      Vous préférez d’abord découvrir ?{' '}
+                      <button
+                        type="button"
+                        className="lien-bouton"
+                        onClick={() => document.getElementById('alt-titre')?.focus()}
+                      >
+                        Essayer avec un profil de démonstration
+                      </button>
+                    </p>
+                    <div className="form-grid">
+                      <TextField label="Prénom ou pseudonyme" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} maxLength={40} autoComplete="nickname" />
+                      <SelectField label="Devise" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+                        {CURRENCIES.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.label}
+                          </option>
+                        ))}
+                      </SelectField>
                     </div>
-                  </fieldset>
-                ))}
-                <div className="form-row">
-                  <SelectField label="Type" value={custom.kind} onChange={(e) => setCustom({ ...custom, kind: e.target.value as typeof custom.kind })}>
-                    {kinds.map((k) => (
-                      <option key={k} value={k}>
-                        {kindLabel[k]}
-                      </option>
-                    ))}
-                  </SelectField>
-                  <TextField label="Nouvelle catégorie" value={custom.name} onChange={(e) => setCustom({ ...custom, name: e.target.value })} maxLength={60} />
-                  <div className="form-actions">
-                    <Button
-                      icon="plus"
-                      onClick={() => {
-                        const n = custom.name.trim();
-                        if (!n || cats[custom.kind].some((c) => c.toLocaleLowerCase('fr') === n.toLocaleLowerCase('fr'))) return;
-                        setCats({ ...cats, [custom.kind]: [...cats[custom.kind], n] });
-                        setSelected(new Set([...selected, `${custom.kind}:${n}`]));
-                        setCustom({ ...custom, name: '' });
-                      }}
-                    >
-                      Ajouter
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {step === 5 && (
-              <>
-                <dl className="recap">
-                  <div>
-                    <dt>Revenus mensuels</dt>
-                    <dd>{fmt(totalIncome)}</dd>
-                  </div>
-                  <div>
-                    <dt>Charges fixes</dt>
-                    <dd>− {fmt(totalCharges)}</dd>
-                  </div>
-                  <div>
-                    <dt>Dépenses variables estimées</dt>
-                    <dd>− {fmt(amountOf(variableEstimate))}</dd>
-                  </div>
-                  <div>
-                    <dt>Épargne prévue</dt>
-                    <dd>− {fmt(amountOf(savingsTarget))}</dd>
-                  </div>
-                  <div className="recap-total">
-                    <dt>Marge estimée</dt>
-                    <dd>{fmt(margin)}</dd>
-                  </div>
-                </dl>
-                {margin < 0 ? (
-                  <Notice tone="attention">
-                    Votre estimation dépasse vos revenus de {fmt(-margin)}. Pas d’inquiétude : SoldeClair vous aidera à repérer où ajuster.
-                  </Notice>
-                ) : (
-                  <Notice tone="succes">Votre budget prévisionnel est équilibré.</Notice>
+                    <fieldset className="fieldset">
+                      <legend>Quelle est votre situation ?</legend>
+                      <div className="choice-grid">
+                        {(Object.keys(PROFILE_LABELS) as ProfileType[]).map((t) => (
+                          <label key={t} className={`choice ${type === t ? 'choice-on' : ''}`}>
+                            <input type="radio" name="profil" value={t} checked={type === t} onChange={() => setType(t)} />
+                            <span>{PROFILE_LABELS[t]}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <p className="field-hint">Nous vous proposerons des catégories adaptées à votre situation.</p>
+                    </fieldset>
+                  </>
                 )}
-              </>
-            )}
 
-            <div className="form-actions onboarding-actions">
-              {step > 0 && (
-                <Button icon="left" onClick={() => setStep(step - 1)}>
-                  Retour
-                </Button>
-              )}
-              <button type="submit" className="btn btn-primaire">
-                <span>{step === STEPS.length - 1 ? 'Commencer' : 'Continuer'}</span>
-                <Icon name="right" size={18} />
-              </button>
-            </div>
-          </form>
-        </Card>
+                {step === 1 && (
+                  <>
+                    <h2 className="subhead">Revenu principal</h2>
+                    <LineRow line={mainIncome} onChange={setMainIncome} kind="income" error={errors.main} options={cats.income} />
+                    <h2 className="subhead">Revenus complémentaires</h2>
+                    {extras.length === 0 && <p className="muted">Aides, job, aide familiale… Ajoutez-en si besoin.</p>}
+                    {extras.map((l) => (
+                      <LineRow
+                        key={l.key}
+                        line={l}
+                        kind="income"
+                        error={errors[`extra-${l.key}`]}
+                        options={cats.income}
+                        onChange={(n) => setExtras(extras.map((x) => (x.key === l.key ? n : x)))}
+                        onRemove={() => setExtras(extras.filter((x) => x.key !== l.key))}
+                      />
+                    ))}
+                    <Button icon="plus" onClick={() => setExtras([...extras, newLine('', cats.income[1] ?? cats.income[0])])}>
+                      Ajouter un revenu complémentaire
+                    </Button>
+                  </>
+                )}
 
-        {step === 0 && (
-          <section className="onboarding-alt" aria-labelledby="alt-titre">
-            <h2 id="alt-titre" className="section-title">
-              Ou bien…
-            </h2>
-            <DataSection compact />
-          </section>
-        )}
+                {step === 2 && (
+                  <>
+                    <p className="muted">Laissez le montant vide pour ignorer une ligne.</p>
+                    {charges.map((l) => (
+                      <LineRow
+                        key={l.key}
+                        line={l}
+                        kind="fixed"
+                        error={errors[`charge-${l.key}`]}
+                        options={cats.fixed}
+                        onChange={(n) => setCharges(charges.map((x) => (x.key === l.key ? n : x)))}
+                        onRemove={() => setCharges(charges.filter((x) => x.key !== l.key))}
+                      />
+                    ))}
+                    <Button icon="plus" onClick={() => setCharges([...charges, newLine('', cats.fixed[0])])}>
+                      Ajouter une charge fixe
+                    </Button>
+                  </>
+                )}
+
+                {step === 3 && (
+                  <>
+                    <div className="form-grid">
+                      <MoneyField
+                        label="Estimation de vos dépenses variables par mois"
+                        value={variableEstimate}
+                        onChange={(e) => setVariableEstimate(e.target.value)}
+                        error={errors.variable}
+                        hint="Courses, sorties, carburant… Une estimation suffit."
+                      />
+                      <MoneyField
+                        label="Objectif d’épargne mensuel"
+                        value={savingsTarget}
+                        onChange={(e) => setSavingsTarget(e.target.value)}
+                        error={errors.savings}
+                        hint="Ce que vous aimeriez mettre de côté chaque mois."
+                      />
+                    </div>
+                    <CheckboxField
+                      label="Répartir automatiquement mon estimation en limites par catégorie"
+                      hint="Vous pourrez ajuster chaque limite dans « Budgets »."
+                      checked={splitEstimate}
+                      onChange={(e) => setSplitEstimate(e.target.checked)}
+                    />
+                    <h2 className="subhead">Objectif d’épargne à long terme (facultatif)</h2>
+                    <div className="form-grid">
+                      <TextField label="Nom de l’objectif" optional value={goalName} onChange={(e) => setGoalName(e.target.value)} placeholder="Ex. : fonds d’urgence" maxLength={60} />
+                      <MoneyField label="Montant visé" value={goalTarget} onChange={(e) => setGoalTarget(e.target.value)} error={errors.goalTarget} disabled={!goalName.trim()} />
+                      <MoneyField label="Déjà mis de côté" value={goalInitial} onChange={(e) => setGoalInitial(e.target.value)} error={errors.goalInitial} disabled={!goalName.trim()} />
+                      <TextField label="Date souhaitée" optional type="date" value={goalDate} onChange={(e) => setGoalDate(e.target.value)} disabled={!goalName.trim()} />
+                    </div>
+                  </>
+                )}
+
+                {step === 4 && (
+                  <>
+                    <p>
+                      Catégories proposées pour un profil <strong>{PROFILE_LABELS[type].toLowerCase()}</strong>. Décochez celles qui ne vous concernent pas.
+                    </p>
+                    {kinds.map((k) => (
+                      <fieldset key={k} className="fieldset">
+                        <legend>{kindLabel[k]}</legend>
+                        <div className="chips">
+                          {cats[k].map((n) => {
+                            const id = `${k}:${n}`;
+                            const on = selected.has(id);
+                            return (
+                              <label key={id} className={`chip ${on ? 'chip-on' : ''}`}>
+                                <input
+                                  type="checkbox"
+                                  className="sr-only"
+                                  checked={on}
+                                  onChange={() => {
+                                    const s = new Set(selected);
+                                    if (on) s.delete(id);
+                                    else s.add(id);
+                                    setSelected(s);
+                                  }}
+                                />
+                                {on && <Icon name="check" size={14} />} {n}
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </fieldset>
+                    ))}
+                    <div className="form-row">
+                      <SelectField label="Type" value={custom.kind} onChange={(e) => setCustom({ ...custom, kind: e.target.value as typeof custom.kind })}>
+                        {kinds.map((k) => (
+                          <option key={k} value={k}>
+                            {kindLabel[k]}
+                          </option>
+                        ))}
+                      </SelectField>
+                      <TextField label="Nouvelle catégorie" value={custom.name} onChange={(e) => setCustom({ ...custom, name: e.target.value })} maxLength={60} />
+                      <div className="form-actions">
+                        <Button
+                          icon="plus"
+                          onClick={() => {
+                            const n = custom.name.trim();
+                            if (!n || cats[custom.kind].some((c) => c.toLocaleLowerCase('fr') === n.toLocaleLowerCase('fr'))) return;
+                            setCats({ ...cats, [custom.kind]: [...cats[custom.kind], n] });
+                            setSelected(new Set([...selected, `${custom.kind}:${n}`]));
+                            setCustom({ ...custom, name: '' });
+                          }}
+                        >
+                          Ajouter
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {step === 5 && (
+                  <>
+                    <dl className="recap">
+                      <div>
+                        <dt>Revenus mensuels</dt>
+                        <dd>{fmt(totalIncome)}</dd>
+                      </div>
+                      <div>
+                        <dt>Charges fixes</dt>
+                        <dd>− {fmt(totalCharges)}</dd>
+                      </div>
+                      <div>
+                        <dt>Dépenses variables estimées</dt>
+                        <dd>− {fmt(amountOf(variableEstimate))}</dd>
+                      </div>
+                      <div>
+                        <dt>Épargne prévue</dt>
+                        <dd>− {fmt(amountOf(savingsTarget))}</dd>
+                      </div>
+                      <div className="recap-total">
+                        <dt>Marge estimée</dt>
+                        <dd>{fmt(margin)}</dd>
+                      </div>
+                    </dl>
+                    {margin < 0 ? (
+                      <Notice tone="attention">
+                        Votre estimation dépasse vos revenus de {fmt(-margin)}. Pas d’inquiétude : SoldeClair vous aidera à repérer où ajuster.
+                      </Notice>
+                    ) : (
+                      <Notice tone="succes">Votre budget prévisionnel est équilibré.</Notice>
+                    )}
+                  </>
+                )}
+
+                <div className="form-actions onboarding-actions">
+                  {step > 0 && (
+                    <Button icon="left" onClick={() => setStep(step - 1)}>
+                      Retour
+                    </Button>
+                  )}
+                  <button type="submit" className="btn btn-primaire">
+                    <span>{step === STEPS.length - 1 ? 'Commencer' : 'Continuer'}</span>
+                    <Icon name="right" size={18} />
+                  </button>
+                </div>
+              </form>
+            </Card>
+          </div>
+
+          {step === 0 && (
+            <section className="onboarding-alt" aria-labelledby="alt-titre">
+              <h2 id="alt-titre" className="section-title" tabIndex={-1}>
+                Ou bien…
+              </h2>
+              <DataSection compact />
+            </section>
+          )}
+        </div>
       </main>
     </div>
   );

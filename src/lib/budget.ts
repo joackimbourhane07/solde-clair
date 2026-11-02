@@ -401,27 +401,30 @@ export function monthAlerts(
       message: `Vos dépenses dépassent vos revenus de ${fmt(-s.available)} ce mois-ci.`,
     });
   } else if (s.period !== 'passe' && s.forecastEndBalance < 0) {
+    // Formulation qui propose une action plutôt qu'un simple constat.
+    const piste =
+      s.dailyRemaining !== null && s.dailyRemaining > 0 ? ` Pour finir le mois à l’équilibre, visez environ ${fmt(s.dailyRemaining)} par jour.` : '';
     alerts.push({
       level: 'attention',
-      message: `${s.forecastBasis === 'rythme' ? 'Au rythme actuel' : 'D’après vos budgets'}, le mois pourrait se terminer avec ${fmt(-s.forecastEndBalance)} de dépassement.`,
+      message: `${s.forecastBasis === 'rythme' ? 'Si vos dépenses gardent le même rythme' : 'D’après vos budgets'}, il pourrait manquer environ ${fmt(-s.forecastEndBalance)} à la fin du mois.${piste}`,
     });
   }
   if (s.period !== 'passe' && s.savingsRemaining > 0 && s.available < s.savingsRemaining) {
     alerts.push({
       level: 'attention',
-      message: `Votre objectif d’épargne du mois (${fmt(s.savingsTarget)}) risque de ne pas être atteint.`,
+      message: `Votre objectif d’épargne du mois (${fmt(s.savingsTarget)}) risque de ne pas être atteint : il reste ${fmt(s.savingsRemaining)} à mettre de côté.`,
     });
   }
   for (const line of categoryBudgets(data, month)) {
     if (line.level === 'depasse') {
       alerts.push({
         level: 'danger',
-        message: `Budget « ${line.category.name} » dépassé de ${fmt(-(line.remaining ?? 0))}.`,
+        message: `Budget « ${line.category.name} » dépassé de ${fmt(-(line.remaining ?? 0))}. Vous pouvez ajuster la limite si elle était trop basse.`,
       });
     } else if (line.level === 'alerte') {
-      alerts.push({ level: 'attention', message: `Budget « ${line.category.name} » utilisé à ${line.pct} %.` });
+      alerts.push({ level: 'attention', message: `Budget « ${line.category.name} » utilisé à ${line.pct}\u00a0% : il reste ${fmt(line.remaining ?? 0)}.` });
     } else if (line.level === 'attention') {
-      alerts.push({ level: 'info', message: `Budget « ${line.category.name} » utilisé à ${line.pct} %.` });
+      alerts.push({ level: 'info', message: `Budget « ${line.category.name} » utilisé à ${line.pct}\u00a0% : il reste ${fmt(line.remaining ?? 0)}.` });
     }
   }
   const order: Record<AlertLevel, number> = { danger: 0, attention: 1, info: 2 };
