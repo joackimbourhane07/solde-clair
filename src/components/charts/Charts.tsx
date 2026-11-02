@@ -191,8 +191,8 @@ export function IncomeExpenseChart({
     <ChartFrame
       title={title}
       legend={[
-        { label: 'Revenus', className: 'serie-1' },
-        { label: 'Dépenses (charges + variables)', className: 'serie-2' },
+        { label: 'Revenus', className: 'serie-entree' },
+        { label: 'Dépenses (charges + variables)', className: 'serie-sortie' },
       ]}
       table={{
         headers: ['Mois', 'Revenus', 'Dépenses', 'Différence'],
@@ -224,8 +224,8 @@ export function IncomeExpenseChart({
               <g key={p.label} onPointerEnter={() => setActive(i)}>
                 <rect x={m.left + band * i} y={m.top} width={band} height={innerH} className="hit" />
                 {active === i && <rect x={m.left + band * i + 2} y={m.top} width={band - 4} height={innerH} className="hover-band" />}
-                <rect x={cx - barW - 1} y={y(p.income)} width={barW} height={Math.max(0, y(0) - y(p.income))} rx={3} className="bar serie-1" />
-                <rect x={cx + 1} y={y(p.expenses)} width={barW} height={Math.max(0, y(0) - y(p.expenses))} rx={3} className="bar serie-2" />
+                <rect x={cx - barW - 1} y={y(p.income)} width={barW} height={Math.max(0, y(0) - y(p.income))} rx={3} className="bar serie-entree" />
+                <rect x={cx + 1} y={y(p.expenses)} width={barW} height={Math.max(0, y(0) - y(p.expenses))} rx={3} className="bar serie-sortie" />
                 <text x={cx} y={height - 8} className="tick" textAnchor="middle">
                   {p.label}
                 </text>
@@ -237,10 +237,10 @@ export function IncomeExpenseChart({
           <div className="chart-tooltip" style={{ left: Math.min(width - 170, Math.max(0, m.left + band * active + band / 2 - 85)) }}>
             <strong>{points[active].label}</strong>
             <span>
-              <span className="legend-swatch serie-1" aria-hidden="true" /> Revenus : {fmt(points[active].income)}
+              <span className="legend-swatch serie-entree" aria-hidden="true" /> Revenus : {fmt(points[active].income)}
             </span>
             <span>
-              <span className="legend-swatch serie-2" aria-hidden="true" /> Dépenses : {fmt(points[active].expenses)}
+              <span className="legend-swatch serie-sortie" aria-hidden="true" /> Dépenses : {fmt(points[active].expenses)}
             </span>
           </div>
         )}

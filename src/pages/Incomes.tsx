@@ -48,16 +48,16 @@ export function Incomes() {
       />
       <MonthSwitcher />
       <div className="stats-grid stats-compact">
-        <Stat label={`Revenus ${ofMonth(month)}`} value={fmt(total)} detail={avecCarte ? 'Toutes les sources' : undefined} />
+        <Stat label={`Revenus ${ofMonth(month)}`} value={fmt(total)} tone="entree" detail={avecCarte ? 'Toutes les sources' : undefined} />
         {avecCarte ? (
           <>
-            <Stat label="Sur le compte bancaire" value={fmt(total - surCarte)} />
-            <Stat label="Sur la carte restaurant" value={fmt(surCarte)} />
+            <Stat label="Sur le compte bancaire" value={fmt(total - surCarte)} tone="entree" />
+            <Stat label="Sur la carte restaurant" value={fmt(surCarte)} tone="entree" />
           </>
         ) : (
           <>
-            <Stat label="Dont revenus récurrents" value={fmt(recurringTotal)} />
-            <Stat label="Dont revenus exceptionnels" value={fmt(total - recurringTotal)} />
+            <Stat label="Dont revenus récurrents" value={fmt(recurringTotal)} tone="entree" />
+            <Stat label="Dont revenus exceptionnels" value={fmt(total - recurringTotal)} tone="entree" />
           </>
         )}
       </div>

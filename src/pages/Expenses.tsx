@@ -50,7 +50,7 @@ export function Expenses() {
       <MonthSwitcher />
 
       <div className="stats-grid stats-compact">
-        <Stat label={`Total ${ofMonth(month)}`} value={fmt(total)} />
+        <Stat label={`Total ${ofMonth(month)}`} value={fmt(total)} tone="sortie" />
         <Stat label="Nombre de dépenses" value={String(monthExpenses.length)} />
       </div>
 
@@ -92,7 +92,7 @@ export function Expenses() {
                       {e.paymentMethod && ` – ${e.paymentMethod}`}
                     </p>
                   </div>
-                  <span className="montant">{fmt(e.amount)}</span>
+                  <span className="montant montant-moins">− {fmt(e.amount)}</span>
                   <div className="item-actions">
                     <IconButton icon="edit" label={`Modifier la dépense ${e.description || ''} du ${formatDate(e.date)}`} onClick={() => setEditing(e)} />
                     <IconButton icon="trash" label={`Supprimer la dépense ${e.description || ''} du ${formatDate(e.date)}`} onClick={() => setToDelete(e)} />

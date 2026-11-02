@@ -33,9 +33,9 @@ export function FixedCharges() {
       />
       <MonthSwitcher />
       <div className="stats-grid stats-compact">
-        <Stat label={`Charges ${ofMonth(month)}`} value={fmt(s.fixed)} />
-        <Stat label="Déjà payées" value={fmt(s.fixedPaid)} />
-        <Stat label="À venir" value={fmt(s.fixedUpcoming)} />
+        <Stat label={`Charges ${ofMonth(month)}`} value={fmt(s.fixed)} tone="sortie" />
+        <Stat label="Déjà payées" value={fmt(s.fixedPaid)} tone="sortie" />
+        <Stat label="À venir" value={fmt(s.fixedUpcoming)} tone="sortie" />
       </div>
 
       <Card title={`Échéances ${ofMonth(month)}`}>
@@ -66,7 +66,7 @@ export function FixedCharges() {
                     </p>
                     {charge.note && <p className="item-note">{charge.note}</p>}
                   </div>
-                  <span className="montant">{fmt(o.amount)}</span>
+                  <span className="montant montant-moins">− {fmt(o.amount)}</span>
                   <div className="item-actions">
                     <button
                       type="button"
@@ -109,7 +109,7 @@ export function FixedCharges() {
                     {c.endDate && ` – jusqu’au ${formatDate(c.endDate)}`}
                   </p>
                 </div>
-                <span className="montant">{fmt(c.amount)}</span>
+                <span className="montant montant-moins">− {fmt(c.amount)}</span>
                 <div className="item-actions">
                   <IconButton icon="edit" label={`Modifier la charge ${c.name}`} onClick={() => setEditing(c)} />
                   <IconButton icon="trash" label={`Supprimer la charge ${c.name}`} onClick={() => setToDelete(c)} />
