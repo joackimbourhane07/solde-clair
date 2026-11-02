@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Icon } from './Icon';
-import { Toasts } from './ui';
+import { Modal, Toasts } from './ui';
+import { ExpenseForm } from './forms';
+import { defaultDateFor } from '../lib/dates';
 import { useApp } from '../state/AppState';
 
 export const NAV_ITEMS = [
@@ -16,7 +18,8 @@ export const NAV_ITEMS = [
   { to: '/parametres', label: 'Paramètres', short: 'Paramètres', icon: 'settings' },
 ];
 
-const MOBILE_MAIN = ['/', '/depenses', '/budgets', '/objectifs'];
+// Barre du bas (mobile) : Accueil, Dépenses, [+ Ajouter], Budgets, Plus.
+const MOBILE_MAIN = ['/', '/depenses', '/budgets'];
 
 function Logo() {
   return (
@@ -30,9 +33,30 @@ function Logo() {
   );
 }
 
+/** Bouton « masquer / afficher les montants » (utilisation en public). */
+function MasquerMontants({ compact = false }: { compact?: boolean }) {
+  const { masque, dispatch } = useApp();
+  const libelle = masque ? 'Afficher les montants' : 'Masquer les montants';
+  return (
+    <button
+      type="button"
+      className={`btn btn-discret ${compact ? 'btn-icon' : 'btn-small masquer-montants'}`}
+      aria-pressed={masque}
+      aria-label={compact ? libelle : undefined}
+      title={libelle}
+      onClick={() => dispatch({ type: 'setHideAmounts', hide: !masque })}
+    >
+      <Icon name={masque ? 'eye-off' : 'eye'} size={18} />
+      {!compact && <span>{libelle}</span>}
+    </button>
+  );
+}
+
 export function Layout({ children }: { children: ReactNode }) {
-  const { data } = useApp();
+  const { data, month, today } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
+  // Ajout rapide d'une dépense depuis n'importe quelle page
+  const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const location = useLocation();
   const firstRender = useRef(true);
 
@@ -62,6 +86,10 @@ export function Layout({ children }: { children: ReactNode }) {
       </a>
       <aside className="sidebar" aria-label="Navigation principale">
         <Logo />
+        <button type="button" className="btn btn-primaire sidebar-add" onClick={() => setAjoutOuvert(true)}>
+          <Icon name="plus" size={18} />
+          <span>Ajouter une dépense</span>
+        </button>
         <nav>
           <ul>
             {NAV_ITEMS.map((item) => (
@@ -74,30 +102,59 @@ export function Layout({ children }: { children: ReactNode }) {
             ))}
           </ul>
         </nav>
-        <p className="sidebar-privacy">
-          <Icon name="lock" size={16} /> Vos données restent sur cet appareil.
-        </p>
+        <div className="sidebar-foot">
+          <MasquerMontants />
+          <p className="sidebar-privacy">
+            <Icon name="lock" size={16} /> Vos données restent sur cet appareil.
+          </p>
+        </div>
       </aside>
 
       <header className="topbar">
         <Logo />
-        {data.profile && <span className="topbar-user">{data.profile.name}</span>}
+        <div className="topbar-right">
+          {data.profile && <span className="topbar-user">{data.profile.name}</span>}
+          <MasquerMontants compact />
+        </div>
       </header>
 
       <main id="contenu" className="main" tabIndex={-1}>
         {children}
+        <footer className="app-footer">
+          <Icon name="lock" size={16} />
+          <p>
+            Vos données restent dans ce navigateur, sur cet appareil : elles ne sont ni envoyées sur Internet ni partagées avec d’autres
+            personnes. Pensez à faire une sauvegarde dans les paramètres.
+          </p>
+        </footer>
       </main>
 
       <nav className="bottom-nav" aria-label="Navigation principale (mobile)">
         <ul>
-          {NAV_ITEMS.filter((i) => MOBILE_MAIN.includes(i.to)).map((item) => (
-            <li key={item.to}>
-              <NavLink to={item.to} end={item.to === '/'} className="bottom-link">
-                <Icon name={item.icon} size={22} />
-                <span>{item.short}</span>
-              </NavLink>
-            </li>
-          ))}
+          {NAV_ITEMS.filter((i) => MOBILE_MAIN.includes(i.to))
+            .flatMap((item) => [
+              item,
+              ...(item.to === '/depenses' ? [null] : []), // emplacement central du bouton « + »
+            ])
+            .map((item) =>
+              item ? (
+                <li key={item.to}>
+                  <NavLink to={item.to} end={item.to === '/'} className="bottom-link">
+                    <Icon name={item.icon} size={22} />
+                    <span>{item.short}</span>
+                  </NavLink>
+                </li>
+              ) : (
+                <li key="ajouter">
+                  <button type="button" className="bottom-link bottom-add" aria-label="Ajouter une dépense" onClick={() => setAjoutOuvert(true)}>
+                    <span className="bottom-add-cercle" aria-hidden="true">
+                      <Icon name="plus" size={24} />
+                    </span>
+                    <span>Ajouter</span>
+                  </button>
+                </li>
+              ),
+            )}
           <li>
             <button
               type="button"
@@ -127,6 +184,11 @@ export function Layout({ children }: { children: ReactNode }) {
             </ul>
           </div>
         </div>
+      )}
+      {ajoutOuvert && (
+        <Modal title="Nouvelle dépense" onClose={() => setAjoutOuvert(false)}>
+          <ExpenseForm defaultDate={defaultDateFor(month, today)} onDone={() => setAjoutOuvert(false)} onCancel={() => setAjoutOuvert(false)} />
+        </Modal>
       )}
       <Toasts />
     </div>

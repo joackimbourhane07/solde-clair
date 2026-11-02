@@ -15,7 +15,7 @@ import type {
 } from '../types';
 import { clearData, emptyData, loadData, saveData } from '../lib/storage';
 import { monthOf, todayISO } from '../lib/dates';
-import { formatMoney } from '../lib/money';
+import { formatMoney, formatMoneyShort } from '../lib/money';
 import { makeCategory } from '../lib/categories';
 
 /* -------------------------------------------------------------------------- */
@@ -38,6 +38,7 @@ export type Action =
   | { type: 'setProfile'; profile: Profile }
   | { type: 'setTheme'; theme: ThemeChoice }
   | { type: 'setLastBackup'; date: ISODate }
+  | { type: 'setHideAmounts'; hide: boolean }
   | { [K in CollectionName]: { type: 'upsert'; collection: K; item: Collections[K] } }[CollectionName]
   | { type: 'remove'; collection: Exclude<CollectionName, 'categories' | 'goals'>; id: string }
   | { type: 'removeGoal'; id: string }
@@ -62,6 +63,8 @@ export function reducer(state: AppData, action: Action): AppData {
       return { ...state, settings: { ...state.settings, theme: action.theme } };
     case 'setLastBackup':
       return { ...state, settings: { ...state.settings, lastBackup: action.date } };
+    case 'setHideAmounts':
+      return { ...state, settings: { ...state.settings, hideAmounts: action.hide } };
     case 'upsert': {
       const list = state[action.collection] as { id: string }[];
       const exists = list.some((x) => x.id === action.item.id);
@@ -133,7 +136,11 @@ interface AppContextValue {
   month: MonthKey;
   setMonth: (m: MonthKey) => void;
   currency: string;
+  /** Montant formaté (masqué si l'option « masquer les montants » est active). */
   fmt: (cents: number) => string;
+  /** Montant arrondi à l'euro (masqué si besoin). */
+  fmtShort: (cents: number, mode?: 'arrondi' | 'prudent' | 'majore') => string;
+  masque: boolean;
   notify: (message: string, kind?: Toast['kind']) => void;
   toasts: Toast[];
   dismissToast: (id: number) => void;
@@ -196,11 +203,19 @@ export function AppProvider({
   }, [data.settings.theme]);
 
   const currency = data.profile?.currency ?? 'EUR';
-  const fmt = useCallback((cents: number) => formatMoney(cents, currency), [currency]);
+  const masque = data.settings.hideAmounts === true;
+  // En mode masqué, chaque montant devient « ••• € » (symbole de la devise conservé).
+  const montantMasque = useMemo(() => `•••\u00a0${formatMoney(0, currency).replace(/[\d,.\s\u00a0-]/g, '')}`, [currency]);
+  const fmt = useCallback((cents: number) => (masque ? montantMasque : formatMoney(cents, currency)), [currency, masque, montantMasque]);
+  const fmtShort = useCallback(
+    (cents: number, mode: 'arrondi' | 'prudent' | 'majore' = 'arrondi') =>
+      masque ? montantMasque : formatMoneyShort(cents, currency, mode),
+    [currency, masque, montantMasque],
+  );
 
   const value = useMemo(
-    () => ({ data, dispatch, today, month, setMonth, currency, fmt, notify, toasts, dismissToast }),
-    [data, today, month, currency, fmt, notify, toasts, dismissToast],
+    () => ({ data, dispatch, today, month, setMonth, currency, fmt, fmtShort, masque, notify, toasts, dismissToast }),
+    [data, today, month, currency, fmt, fmtShort, masque, notify, toasts, dismissToast],
   );
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

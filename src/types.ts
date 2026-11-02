@@ -108,6 +108,8 @@ export interface Settings {
   theme: ThemeChoice;
   /** Date de la dernière sauvegarde complète (export JSON), pour le rappel. */
   lastBackup?: ISODate | null;
+  /** Masquer les montants à l'écran (utilisation en public). */
+  hideAmounts?: boolean;
 }
 
 export interface AppData {

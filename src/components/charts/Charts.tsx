@@ -1,6 +1,5 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useApp } from '../../state/AppState';
-import { formatMoneyShort } from '../../lib/money';
 import { niceTicks, visibleTickIndexes } from '../../lib/chartScale';
 
 /* -------------------------------------------------------------------------- */
@@ -174,7 +173,7 @@ export function IncomeExpenseChart({
   title: string;
   points: { label: string; income: number; expenses: number }[];
 }) {
-  const { fmt, currency } = useApp();
+  const { fmt, fmtShort } = useApp();
   const { ref, width } = useWidth<HTMLDivElement>();
   const { active, setActive, onKeyDown } = useKeyboardIndex(points.length);
   const height = 220;
@@ -215,7 +214,7 @@ export function IncomeExpenseChart({
             <g key={t}>
               <line x1={m.left} x2={width - m.right} y1={y(t)} y2={y(t)} className={t === 0 ? 'axis' : 'grid'} />
               <text x={m.left - 6} y={y(t) + 4} className="tick" textAnchor="end">
-                {formatMoneyShort(t, currency)}
+                {fmtShort(t)}
               </text>
             </g>
           ))}
@@ -270,7 +269,7 @@ export function LineChart({
   /** Message affiché quand toutes les valeurs sont nulles. */
   emptyText?: string;
 }) {
-  const { fmt, currency } = useApp();
+  const { fmt, fmtShort } = useApp();
   const { ref, width } = useWidth<HTMLDivElement>();
   const { active, setActive, onKeyDown } = useKeyboardIndex(points.length);
   const height = 200;
@@ -322,7 +321,7 @@ export function LineChart({
               <g key={t}>
                 <line x1={m.left} x2={width - m.right} y1={y(t)} y2={y(t)} className={t === 0 ? 'axis' : 'grid'} />
                 <text x={m.left - 6} y={y(t) + 4} className="tick" textAnchor="end">
-                  {formatMoneyShort(t, currency)}
+                  {fmtShort(t)}
                 </text>
               </g>
             ))}

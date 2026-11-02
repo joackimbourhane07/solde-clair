@@ -2,11 +2,13 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// base './' : l'application peut être servie depuis n'importe quel dossier
-// (GitHub Pages, Netlify, simple serveur de fichiers…).
+// Chemin de base :
+// - GitHub Pages : « /solde-clair/ » (variable BASE_PATH définie par le workflow de déploiement) ;
+// - partout ailleurs : « ./ » (chemins relatifs, l'application fonctionne depuis n'importe quel dossier).
+// Les routes utilisent le « # » (HashRouter) : actualiser une page ne provoque jamais d'erreur 404.
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  base: process.env.BASE_PATH || './',
   test: {
     environment: 'jsdom',
     globals: true,

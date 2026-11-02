@@ -35,6 +35,13 @@ describe('modifications des données', () => {
     expect(d.fixedCharges.find((c) => c.id === 'f-tel')?.status['2026-11-20']).toBe('paye');
   });
 
+  it('active puis désactive le masquage des montants', () => {
+    let d = reducer(fixture(), { type: 'setHideAmounts', hide: true });
+    expect(d.settings.hideAmounts).toBe(true);
+    d = reducer(d, { type: 'setHideAmounts', hide: false });
+    expect(d.settings.hideAmounts).toBe(false);
+  });
+
   it('mémorise la date de la dernière sauvegarde complète', () => {
     const d = reducer(fixture(), { type: 'setLastBackup', date: '2026-11-12' });
     expect(d.settings.lastBackup).toBe('2026-11-12');

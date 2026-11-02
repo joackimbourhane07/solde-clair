@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   budgetLevel,
+  frequentCategories,
   categoryBudgets,
   dailyBalanceSeries,
   monthAlerts,
@@ -153,6 +154,27 @@ describe('budgets par catégorie', () => {
     const alerts = monthAlerts(fixture(), '2026-11', TODAY, fmt);
     expect(alerts.some((a) => a.level === 'danger' && a.message.includes('Alimentation'))).toBe(true);
     expect(alerts.some((a) => a.level === 'info' && a.message.includes('Loisirs') && /75\s%/.test(a.message))).toBe(true);
+  });
+});
+
+describe('catégories fréquentes', () => {
+  it('classées par nombre de dépenses sur 90 jours, puis complétées', () => {
+    const d = fixture();
+    // Une dépense ancienne (plus de 90 jours) ne compte pas
+    d.expenses.push({ id: 'vieux', amount: 100, categoryId: 'c-sante', date: '2026-07-01', description: '', paymentMethod: '' });
+    expect(frequentCategories(d, TODAY, 4).map((c) => c.name)).toEqual(['Alimentation', 'Loisirs', 'Santé']);
+    d.expenses.push(
+      { id: 'l1', amount: 100, categoryId: 'c-loisirs', date: '2026-11-03', description: '', paymentMethod: '' },
+      { id: 'l2', amount: 100, categoryId: 'c-loisirs', date: '2026-11-04', description: '', paymentMethod: '' },
+      { id: 'l3', amount: 100, categoryId: 'c-loisirs', date: '2026-11-05', description: '', paymentMethod: '' },
+    );
+    expect(frequentCategories(d, TODAY, 2).map((c) => c.name)).toEqual(['Loisirs', 'Alimentation']);
+  });
+
+  it('nouvel utilisateur : premières catégories de la liste', () => {
+    const d = fixture();
+    d.expenses = [];
+    expect(frequentCategories(d, TODAY, 4).map((c) => c.name)).toEqual(['Alimentation', 'Loisirs', 'Santé']);
   });
 });
 

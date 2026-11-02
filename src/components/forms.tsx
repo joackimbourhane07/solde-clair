@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import type { Expense, FixedCharge, Frequency, Income, ISODate, Priority, SavingsDeposit, SavingsGoal } from '../types';
 import { useApp } from '../state/AppState';
 import { centsToInput, parseAmount } from '../lib/money';
 import { isValidISODate } from '../lib/dates';
+import { frequentCategories } from '../lib/budget';
 import { newId } from '../lib/id';
 import { FREQUENCY_LABELS } from '../lib/recurrence';
 import { PAYMENT_METHODS } from '../lib/categories';
@@ -70,10 +71,12 @@ export function ExpenseForm({
   onCancel?: () => void;
   quick?: boolean;
 }) {
-  const { data, dispatch, notify, fmt } = useApp();
+  const { data, dispatch, notify, fmt, today } = useApp();
   const variableCats = data.categories.filter((c) => c.kind === 'variable');
+  // Raccourcis : catégories les plus utilisées ces 90 derniers jours
+  const frequentes = useMemo(() => frequentCategories(data, today, 4), [data, today]);
   const [amount, setAmount] = useState(centsToInput(initial?.amount));
-  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? variableCats[0]?.id ?? '');
+  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? frequentes[0]?.id ?? variableCats[0]?.id ?? '');
   const [date, setDate] = useState(initial?.date ?? defaultDate);
   const [description, setDescription] = useState(initial?.description ?? '');
   const [paymentMethod, setPaymentMethod] = useState(initial?.paymentMethod ?? '');
@@ -120,6 +123,24 @@ export function ExpenseForm({
         <SelectField label="Catégorie" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} error={errors.categoryId}>
           <CategoryOptions categories={data.categories} kind="variable" />
         </SelectField>
+        {frequentes.length > 1 && (
+          <div className="chips chips-frequentes" role="group" aria-label="Catégories fréquentes">
+            <span className="chips-titre" aria-hidden="true">
+              Fréquentes :
+            </span>
+            {frequentes.map((c) => (
+              <button
+                type="button"
+                key={c.id}
+                className={`chip chip-petit ${categoryId === c.id ? 'chip-on' : ''}`}
+                aria-pressed={categoryId === c.id}
+                onClick={() => setCategoryId(c.id)}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        )}
         <TextField
           label="Description"
           optional

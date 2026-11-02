@@ -499,3 +499,34 @@ export function savingsBalanceByMonth(
 export function dayOfMonth(date: ISODate): number {
   return parseISO(date).day;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Catégories fréquentes (raccourcis de saisie)                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Catégories de dépenses les plus utilisées sur les 90 derniers jours
+ * (nombre de dépenses, puis dépense la plus récente). Complétée par les
+ * premières catégories de la liste pour un nouvel utilisateur.
+ */
+export function frequentCategories(data: AppData, today: ISODate, count = 4): Category[] {
+  const variables = data.categories.filter((c) => c.kind === 'variable');
+  const debut = addDays(today, -90);
+  const stats = new Map<string, { n: number; derniere: ISODate }>();
+  for (const e of data.expenses) {
+    if (e.date < debut || e.date > today) continue;
+    const s = stats.get(e.categoryId) ?? { n: 0, derniere: e.date };
+    s.n += 1;
+    if (e.date > s.derniere) s.derniere = e.date;
+    stats.set(e.categoryId, s);
+  }
+  const utilisees = variables
+    .filter((c) => stats.has(c.id))
+    .sort((a, b) => {
+      const sa = stats.get(a.id)!;
+      const sb = stats.get(b.id)!;
+      return sb.n - sa.n || sb.derniere.localeCompare(sa.derniere) || a.name.localeCompare(b.name, 'fr');
+    });
+  const complement = variables.filter((c) => !stats.has(c.id));
+  return [...utilisees, ...complement].slice(0, count);
+}

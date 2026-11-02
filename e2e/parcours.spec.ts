@@ -43,13 +43,32 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   await expect(page.getByRole('heading', { name: 'Bonjour Léo Test' })).toBeVisible();
   expect(norm(await page.locator('.hero-text').innerText())).toBe('Il vous reste 270 € pour terminer le mois, soit environ 14 € par jour.');
   expect(await stat(page, 'Solde disponible')).toBe('270,51 €');
+  expect(norm(await page.locator('.hero-figure').innerText())).toBe('14,23 €');
+  // Les chiffres secondaires sont dans « Détail du mois »
+  await page.getByText('Détail du mois').click();
   expect(await stat(page, 'Reste à vivre par jour')).toBe('14,23 €');
+
+  // --- Bouton « + » central (mobile) depuis une autre page ---
+  await aller(page, 'budgets');
+  await page.locator('.bottom-nav').getByRole('button', { name: 'Ajouter une dépense' }).click();
+  const fenetre = page.getByRole('dialog', { name: 'Nouvelle dépense' });
+  await fenetre.getByRole('group', { name: 'Catégories fréquentes' }).getByRole('button').first().click();
+  await fenetre.getByLabel('Montant', { exact: true }).fill('1');
+  await fenetre.getByRole('button', { name: 'Ajouter la dépense' }).click();
+  await expect(fenetre).toHaveCount(0);
+  await aller(page, '');
+  expect(await stat(page, 'Solde disponible')).toBe('269,51 €');
+
+  // --- Masquer les montants ---
+  await page.locator('.topbar').getByRole('button', { name: 'Masquer les montants' }).click();
+  expect(await stat(page, 'Solde disponible')).toBe('••• €');
+  await page.locator('.topbar').getByRole('button', { name: 'Afficher les montants' }).click();
 
   // --- Dépense rapide ---
   const rapide = page.getByRole('form', { name: 'Ajout rapide d’une dépense' });
   await rapide.getByLabel('Montant', { exact: true }).fill('7,89');
   await rapide.getByRole('button', { name: 'Ajouter la dépense' }).click();
-  expect(await stat(page, 'Solde disponible')).toBe('262,62 €');
+  expect(await stat(page, 'Solde disponible')).toBe('261,62 €');
 
   // --- Libellés avec élision au changement de mois ---
   await aller(page, 'charges');
@@ -66,9 +85,9 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   await page.getByRole('button', { name: 'Enregistrer' }).click();
   for (const [valeur, badge] of [['90', '90 % atteint'], ['10,01', 'Budget dépassé']]) {
     await aller(page, 'depenses');
-    await page.getByRole('button', { name: 'Ajouter une dépense' }).click();
+    await page.locator('main').getByRole('button', { name: 'Ajouter une dépense' }).click();
     await page.getByRole('dialog').getByLabel('Montant', { exact: true }).fill(valeur);
-    await page.getByRole('dialog').getByLabel('Catégorie').selectOption({ label: 'Sorties' });
+    await page.getByRole('dialog').getByLabel('Catégorie', { exact: true }).selectOption({ label: 'Sorties' });
     await page.getByRole('dialog').getByRole('button', { name: 'Ajouter la dépense' }).click();
     await aller(page, 'budgets');
     const carte = page.locator('.budget-card').filter({ has: page.getByRole('heading', { name: 'Sorties', exact: true }) });

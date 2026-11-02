@@ -242,6 +242,83 @@ describe('améliorations de simplicité (recherche et audit)', () => {
   });
 });
 
+describe('améliorations validées : ajout rapide, raccourcis, discrétion, simplicité', () => {
+  it('bouton « + » : ajoute une dépense depuis n’importe quelle page', async () => {
+    const user = renderApp(fixture(), '/budgets');
+    const boutons = screen.getAllByRole('button', { name: 'Ajouter une dépense' });
+    // barre latérale (ordinateur) et bouton central (mobile)
+    expect(boutons.length).toBe(2);
+    await user.click(boutons[1]);
+    const dialog = screen.getByRole('dialog', { name: 'Nouvelle dépense' });
+    await user.type(within(dialog).getByLabelText('Montant'), '6,50');
+    await user.click(within(dialog).getByRole('button', { name: 'Ajouter la dépense' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => expect(stored().expenses.some((e) => e.amount === 650 && e.date === TODAY)).toBe(true));
+    // On reste sur la page en cours
+    expect(screen.getByRole('heading', { name: 'Budgets par catégorie' })).toBeInTheDocument();
+  });
+
+  it('catégories fréquentes : la plus utilisée est présélectionnée, un clic change la catégorie', async () => {
+    const user = renderApp();
+    const form = screen.getByRole('form', { name: 'Ajout rapide d’une dépense' });
+    const groupe = within(form).getByRole('group', { name: 'Catégories fréquentes' });
+    const puces = within(groupe).getAllByRole('button');
+    expect(puces.map((b) => b.textContent)).toEqual(['Alimentation', 'Loisirs', 'Santé']);
+    expect(puces[0]).toHaveAttribute('aria-pressed', 'true');
+    await user.click(puces[1]);
+    expect(within(form).getByLabelText('Catégorie')).toHaveValue('c-loisirs');
+    expect(puces[1]).toHaveAttribute('aria-pressed', 'true');
+    await user.type(within(form).getByLabelText('Montant'), '12');
+    await user.click(within(form).getByRole('button', { name: 'Ajouter la dépense' }));
+    await waitFor(() => expect(stored().expenses.some((e) => e.amount === 1200 && e.categoryId === 'c-loisirs')).toBe(true));
+  });
+
+  it('masquer les montants : tous les montants sont remplacés, la préférence est conservée', async () => {
+    const user = renderApp();
+    const [bouton] = screen.getAllByRole('button', { name: 'Masquer les montants' });
+    await user.click(bouton);
+    expect(norm(screen.getByText(/Il vous reste/).textContent)).toBe('Il vous reste ••• € pour terminer le mois, soit environ ••• € par jour.');
+    expect(norm(screen.getByText('Solde disponible').parentElement!.textContent)).toContain('••• €');
+    expect(document.body.textContent).not.toMatch(/821,51/);
+    expect(screen.getAllByRole('button', { name: 'Afficher les montants' })[0]).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => expect(stored().settings.hideAmounts).toBe(true));
+    await user.click(screen.getAllByRole('button', { name: 'Afficher les montants' })[0]);
+    expect(norm(screen.getByText('Solde disponible').parentElement!.textContent)).toContain('821,51 €');
+  });
+
+  it('tableau de bord : quatre chiffres visibles, le reste dans « Détail du mois »', () => {
+    renderApp();
+    const essentiels = document.querySelector('.stats-grid')!;
+    expect(Array.from(essentiels.querySelectorAll('.stat-label')).map((e) => e.textContent)).toEqual([
+      'Revenus',
+      'Total des dépenses',
+      'Solde disponible',
+      'Épargné ce mois',
+    ]);
+    const detail = screen.getByText('Détail du mois').closest('details')!;
+    expect(detail).not.toHaveAttribute('open');
+    expect(Array.from(detail.querySelectorAll('.stat-label')).map((e) => e.textContent)).toEqual([
+      'Charges fixes',
+      'Dépenses variables',
+      'Reste à vivre par jour',
+      'Prévision fin de mois',
+    ]);
+  });
+
+  it('budgets : les catégories sans limite sont regroupées en une liste compacte', async () => {
+    const user = renderApp(fixture(), '/budgets');
+    const liste = screen.getByRole('heading', { name: 'Catégories sans limite (1)' }).closest('section')!;
+    expect(within(liste).getByText('Santé')).toBeInTheDocument();
+    expect(document.querySelectorAll('.budget-card')).toHaveLength(2); // Alimentation et Loisirs
+    await user.click(within(liste).getByRole('button', { name: 'Fixer une limite pour Santé' }));
+    const dialog = screen.getByRole('dialog');
+    await user.type(within(dialog).getByLabelText('Limite mensuelle'), '30');
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer' }));
+    expect(document.querySelectorAll('.budget-card')).toHaveLength(3);
+    expect(screen.queryByRole('heading', { name: /Catégories sans limite/ })).not.toBeInTheDocument();
+  });
+});
+
 describe('modification et suppression', () => {
   it('modifie puis supprime une dépense avec confirmation', async () => {
     const user = renderApp(fixture(), '/depenses');

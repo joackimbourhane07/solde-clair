@@ -51,6 +51,15 @@ describe('export / import JSON', () => {
     expect(ko.ok && ko.data.settings).toEqual({ theme: 'light' });
   });
 
+  it('préférence « masquer les montants » conservée à l’import', () => {
+    const r = validateData({ ...fixture(), settings: { theme: 'dark', hideAmounts: true } });
+    expect(r.ok && r.data.settings.hideAmounts).toBe(true);
+    const r2 = validateData({ ...fixture(), settings: { theme: 'dark', hideAmounts: 'oui' } });
+    expect(r2.ok && r2.data.settings.hideAmounts).toBeUndefined();
+    const r3 = validateData({ ...fixture(), settings: { theme: 'dark', hideAmounts: false } });
+    expect(r3.ok && r3.data.settings.hideAmounts).toBe(false);
+  });
+
   it('nettoie les valeurs inconnues', () => {
     const d = { ...fixture(), settings: { theme: 'fluo' }, profile: { ...fixture().profile, type: 'astronaute', currency: 'xx' } };
     const r = validateData(d);

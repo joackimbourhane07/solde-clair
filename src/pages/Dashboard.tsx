@@ -10,7 +10,6 @@ import {
   upcomingCharges,
 } from '../lib/budget';
 import { defaultDateFor, formatDate, monthOf, ofMonth, parseISO } from '../lib/dates';
-import { formatMoneyShort } from '../lib/money';
 import { PROFILE_LABELS } from '../lib/categories';
 import { Card, Montant, MonthSwitcher, Notice, ProgressBar, SignedAmount, Stat } from '../components/ui';
 import { ExpenseForm } from '../components/forms';
@@ -18,7 +17,7 @@ import { CategoryBarsChart, LineChart } from '../components/charts/Charts';
 import { Icon } from '../components/Icon';
 
 export function Dashboard() {
-  const { data, month, today, fmt, currency } = useApp();
+  const { data, month, today, fmt, fmtShort } = useApp();
   const s = useMemo(() => monthSummary(data, month, today), [data, month, today]);
   const alerts = useMemo(() => monthAlerts(data, month, today, fmt), [data, month, today, fmt]);
   const recent = useMemo(
@@ -34,8 +33,8 @@ export function Dashboard() {
   const series = useMemo(() => dailyBalanceSeries(data, month, today), [data, month, today]);
   const profile = data.profile!;
   // Reste disponible arrondi à l'euro inférieur, dépassement à l'euro supérieur.
-  const short = (c: number) => formatMoneyShort(c, currency, 'prudent');
-  const over = (c: number) => formatMoneyShort(c, currency, 'majore');
+  const short = (c: number) => fmtShort(c, 'prudent');
+  const over = (c: number) => fmtShort(c, 'majore');
 
   // Les montants de la phrase principale sont mis en valeur (couleur « valeur »).
   const V = ({ children }: { children: ReactNode }) => <span className="valeur">{children}</span>;
@@ -211,46 +210,54 @@ export function Dashboard() {
         <h2 id="chiffres-titre" className="section-title">
           Les chiffres {ofMonth(month)}
         </h2>
+        {/* L'essentiel en quatre chiffres ; le reste se déplie dans « Détail du mois ». */}
         <div className="stats-grid">
           <Stat label="Revenus" value={fmt(s.income)} />
-          <Stat label="Charges fixes" value={fmt(s.fixed)} detail={`${fmt(s.fixedUpcoming)} encore à venir`} />
-          <Stat label="Dépenses variables" value={fmt(s.variable)} />
-          <Stat label="Total des dépenses" value={fmt(s.totalExpenses)} />
+          <Stat label="Total des dépenses" value={fmt(s.totalExpenses)} detail="Charges fixes + dépenses variables" />
           <Stat label="Solde disponible" value={fmt(s.available)} tone={s.available < 0 ? 'negatif' : 'positif'} detail="Revenus − dépenses − épargne" />
           <Stat
             label="Épargné ce mois"
             value={fmt(s.saved)}
             detail={s.savingsTarget > 0 ? `Objectif du mois : ${fmt(s.savingsTarget)}` : 'Pas d’objectif mensuel'}
           />
-          <Stat label="Reste à vivre par jour" value={s.dailyRemaining === null ? '—' : fmt(s.dailyRemaining)} detail={`${s.daysRemaining} jour(s) restant(s)`} />
-          <Stat
-            label="Prévision fin de mois"
-            value={fmt(s.forecastEndBalance)}
-            tone={s.forecastEndBalance < 0 ? 'negatif' : undefined}
-            detail={
-              s.forecastBasis === 'rythme'
-                ? 'Si vous gardez le même rythme de dépenses'
-                : s.forecastBasis === 'plan'
-                  ? 'D’après vos budgets prévus'
-                  : 'Montant réel'
-            }
-          />
         </div>
-        {s.savingsTarget > 0 && (
-          <div className="savings-target">
-            <p>
-              Épargne du mois : <strong>{fmt(s.saved)}</strong> sur {fmt(s.savingsTarget)}
-              {s.saved >= s.savingsTarget ? ' — objectif atteint' : ''}
-            </p>
-            <ProgressBar
-              value={s.saved}
-              max={s.savingsTarget}
-              level="objectif"
-              label="Progression de l’épargne du mois"
-              valueText={`${fmt(s.saved)} épargnés sur ${fmt(s.savingsTarget)}`}
-            />
+        <details className="disclosure detail-mois">
+          <summary>Détail du mois</summary>
+          <div className="disclosure-body">
+            <div className="stats-grid">
+              <Stat label="Charges fixes" value={fmt(s.fixed)} detail={`${fmt(s.fixedUpcoming)} encore à venir`} />
+              <Stat label="Dépenses variables" value={fmt(s.variable)} />
+              <Stat label="Reste à vivre par jour" value={s.dailyRemaining === null ? '—' : fmt(s.dailyRemaining)} detail={`${s.daysRemaining} jour(s) restant(s)`} />
+              <Stat
+                label="Prévision fin de mois"
+                value={fmt(s.forecastEndBalance)}
+                tone={s.forecastEndBalance < 0 ? 'negatif' : undefined}
+                detail={
+                  s.forecastBasis === 'rythme'
+                    ? 'Si vous gardez le même rythme de dépenses'
+                    : s.forecastBasis === 'plan'
+                      ? 'D’après vos budgets prévus'
+                      : 'Montant réel'
+                }
+              />
+            </div>
+            {s.savingsTarget > 0 && (
+              <div className="savings-target">
+                <p>
+                  Épargne du mois : <strong>{fmt(s.saved)}</strong> sur {fmt(s.savingsTarget)}
+                  {s.saved >= s.savingsTarget ? ' — objectif atteint' : ''}
+                </p>
+                <ProgressBar
+                  value={s.saved}
+                  max={s.savingsTarget}
+                  level="objectif"
+                  label="Progression de l’épargne du mois"
+                  valueText={`${fmt(s.saved)} épargnés sur ${fmt(s.savingsTarget)}`}
+                />
+              </div>
+            )}
           </div>
-        )}
+        </details>
       </section>
 
       <div className="dashboard-grid">

@@ -303,7 +303,7 @@ strong {
 .topbar-user {
   color: var(--muted);
   font-size: var(--dp-typography-supporting);
-  max-width: 50%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2650,4 +2650,150 @@ ol.rank-list li > span {
 
 .stepper li:last-child {
   flex: 0 0 auto;
+}
+
+/* ---------------- Ajout rapide, catégories fréquentes, montants masqués ---------------- */
+
+/* Raccourcis de catégories : sur toute la largeur, sous la liste déroulante */
+.chips-frequentes {
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 6px;
+}
+
+.chips-titre {
+  font-size: var(--dp-typography-metadata);
+  color: var(--muted);
+  margin-right: 2px;
+}
+
+.chip-petit {
+  min-height: 36px;
+  padding: 4px 12px;
+  font-size: var(--dp-typography-supporting);
+}
+
+/* Bouton « + » central de la barre mobile */
+.bottom-add {
+  color: var(--text-2);
+}
+
+.bottom-add-cercle {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-top: -16px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--primary-ink);
+  border: 3px solid var(--surface);
+  box-shadow: 0 6px 18px -6px var(--glow);
+  transition: background-color var(--transition);
+}
+
+.bottom-add:hover .bottom-add-cercle {
+  background: var(--primary-hover);
+}
+
+.bottom-add:focus-visible {
+  outline: none;
+}
+
+.bottom-add:focus-visible .bottom-add-cercle {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Barre latérale (ordinateur) : ajout et masquage */
+.sidebar-add {
+  margin: 0 4px;
+}
+
+.sidebar-foot {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-foot .sidebar-privacy {
+  margin-top: 0;
+}
+
+.masquer-montants {
+  justify-content: flex-start;
+  align-self: flex-start;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.topbar .logo {
+  flex-shrink: 0;
+}
+
+/* Détail du mois (révélation progressive des chiffres secondaires) */
+.detail-mois {
+  max-width: none;
+  margin-top: 14px;
+}
+
+.detail-mois .disclosure-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 4px;
+}
+
+/* Budgets sans limite : liste compacte */
+.sans-limite-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sans-limite-liste li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: var(--dp-border-hairline) solid var(--border);
+}
+
+.sans-limite-liste li:last-child {
+  border-bottom: 0;
+}
+
+.sans-limite-liste .sans-limite-nom {
+  min-width: 0;
+}
+
+.sans-limite-liste .item-meta {
+  display: block;
+}
+
+/* Mention de confidentialité en bas de chaque page */
+.app-footer {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: var(--dp-border-hairline) solid var(--border);
+  font-size: var(--dp-typography-metadata);
+  color: var(--muted);
+  line-height: var(--dp-typography-body-leading);
+}
+
+.app-footer svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--primary-text);
 }

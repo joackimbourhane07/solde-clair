@@ -107,7 +107,7 @@ test('clavier : lien d’évitement en premier, contour de focus visible, fenêt
 
   // Fenêtre : ouverte au clavier, focus piégé, Échap rend le focus
   await aller(page, 'depenses');
-  await page.getByRole('button', { name: 'Ajouter une dépense' }).focus();
+  await page.locator('main').getByRole('button', { name: 'Ajouter une dépense' }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('dialog')).toBeVisible();
   for (let i = 0; i < 12; i++) {

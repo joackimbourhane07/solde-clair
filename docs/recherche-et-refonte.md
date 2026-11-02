@@ -86,8 +86,8 @@ Conditions : Chromium 1.63, date simulée au 12 novembre 2026, profils fictifs. 
 8. « Budget consommé : 68 % » : expression floue.
 9. États vides sans bouton d'action (dépenses, revenus, charges).
 10. Configuration : la démonstration n'était visible qu'en faisant défiler l'écran sur mobile.
-11. Tableau de bord mobile chargé : 30 montants, 8 tuiles, 3 458 px de haut (non modifié, voir « à valider »).
-12. Budgets d'un nouvel utilisateur : longue suite de cartes « Pas de limite » identiques (non modifié, voir « à valider »).
+11. Tableau de bord mobile chargé : 30 montants, 8 tuiles, 3 458 px de haut → corrigé après votre accord : 4 chiffres + « Détail du mois » (section 6).
+12. Budgets d'un nouvel utilisateur : longue suite de cartes « Pas de limite » identiques → corrigé après votre accord : liste compacte (section 6).
 
 ## 4. Parcours utilisateurs simulés (étapes = clics, saisies ou choix)
 
@@ -97,7 +97,7 @@ Conditions : Chromium 1.63, date simulée au 12 novembre 2026, profils fictifs. 
 | 2 | Profil alternant | 13 | 13 | Aucune | — |
 | 3 | Démonstration | 2 | 2 | Bouton hors écran sur mobile → lien ajouté en haut | Moyenne |
 | 4 | Ajouter un revenu | 7 | 7 | « Récurrent » par défaut, Revenus dans « Plus » → libellés et aide | Moyenne |
-| 5 | Dépense depuis l'accueil | 4 | 4 | Aucune ; bouton « + » global proposé | À valider |
+| 5 | Dépense depuis l'accueil | 4 | 4 | Bouton « + » ajouté après votre accord (section 6) : 1 geste pour ouvrir le formulaire depuis toute page | Appliqué |
 | 6 | Charge fixe ajoutée puis modifiée | 11 | 11 | Aucune | — |
 | 7 | Limite budgétaire | 4 | 4 | Aucune | — |
 | 8 | Alertes 75 / 90 / dépassement | 12 | 12 | Alertes sans piste d'action → montant restant ajouté | Moyenne |
@@ -145,16 +145,16 @@ Les 20 parcours réussissent avant et après les modifications, sans erreur dans
 
 Captures : [tableau de bord, ordinateur](captures/tableau-de-bord-ordinateur.jpg) · [tableau de bord, mobile](captures/tableau-de-bord-mobile.jpg) · [historique, mobile](captures/historique-mobile.jpg) · [paramètres, mobile](captures/parametres-mobile.jpg) · [graphique vide](captures/graphique-epargne-vide.jpg)
 
-## 6. Améliorations qui demandent votre accord
+## 6. Améliorations soumises à votre accord
 
-| Proposition | Problème | Bénéfice attendu | Risque | Statut |
+| Proposition | Problème | Bénéfice attendu | Risque | Décision |
 |---|---|---|---|---|
-| Bouton « + » central dans la barre mobile | La saisie depuis une autre page que l'accueil demande 4 à 5 actions | Saisie en 1 geste depuis n'importe quelle page (motif d'abandon n° 1 selon les avis) | Change la navigation : « Objectifs » passerait dans « Plus » | [R/H] |
-| Catégories fréquentes en raccourcis dans la saisie rapide | Liste déroulante à ouvrir | 1 geste de moins | Ajoute des éléments à l'écran | [R/H] |
-| Masquer les montants | Utilisation en public | Discrétion | Un bouton de plus | [R] |
-| Rappel de sauvegarde sur l'accueil | Seul risque majeur d'un stockage local : perdre ses données | Moins de pertes de données | Encombre l'accueil si mal dosé | [R] |
-| Accueil limité à 4 chiffres + « Détail du mois » | 30 montants visibles sur mobile | Lecture plus rapide | Change les habitudes ; aucune information supprimée | [V/H] |
-| Budgets sans limite regroupés en une liste compacte | Longue suite de cartes identiques | Page plus courte | Réorganise une page | [V] |
+| Bouton « + » central dans la barre mobile | La saisie depuis une autre page que l'accueil demande 4 à 5 actions | Saisie en 1 geste depuis n'importe quelle page (motif d'abandon n° 1 selon les avis) | Change la navigation : « Objectifs » passe dans « Plus » | **Appliquée** — bouton orange au centre de la barre du bas ; « Ajouter une dépense » en haut de la barre latérale sur ordinateur |
+| Catégories fréquentes en raccourcis dans la saisie | Liste déroulante à ouvrir | 1 geste de moins | Ajoute des éléments à l'écran | **Appliquée** — 4 catégories les plus utilisées sur 90 jours, sous la liste des catégories |
+| Masquer les montants | Utilisation en public | Discrétion | Un bouton de plus | **Appliquée** — icône œil dans la barre du haut (mobile) et la barre latérale ; choix mémorisé et inclus dans la sauvegarde |
+| Rappel de sauvegarde sur l'accueil | Seul risque majeur d'un stockage local : perdre ses données | Moins de pertes de données | Encombre l'accueil si mal dosé | **Non retenue** — le rappel reste dans Paramètres (date de la dernière sauvegarde, rappel au-delà de 30 jours) |
+| Accueil limité à 4 chiffres + « Détail du mois » | 30 montants visibles sur mobile | Lecture plus rapide | Change les habitudes ; aucune information supprimée | **Appliquée** — revenus, total des dépenses, solde disponible, épargné ; le reste dans « Détail du mois » |
+| Budgets sans limite regroupés en une liste compacte | Longue suite de cartes identiques | Page plus courte | Réorganise une page | **Appliquée** — liste « Catégories sans limite » avec un bouton « Fixer une limite » par ligne |
 
 ## 7. Changements à éviter
 
@@ -163,9 +163,9 @@ Synchronisation bancaire, compte en ligne, intelligence artificielle de catégor
 ## 8. Recommandations pour une version 2
 
 1. Application installable et utilisable hors connexion (PWA).
-2. Rappel de sauvegarde sur l'accueil et export chiffré facultatif.
-3. Bouton « + » global et catégories fréquentes, après test auprès de quelques utilisateurs.
-4. Accueil allégé par divulgation progressive.
+2. Export chiffré facultatif.
+3. Tester le bouton « + », les catégories fréquentes et l'accueil allégé auprès de quelques utilisateurs.
+4. Ajouter `npm run test:e2e` à la publication automatique.
 5. Dépenses récurrentes variables et modèles de saisie.
 6. Tests avec de vrais utilisateurs (5 personnes par profil suffisent pour repérer l'essentiel), sur un iPhone et un Android réels, et avec un lecteur d'écran.
-7. Intégration continue gratuite lançant `npm test` et `npm run test:e2e`.
+7. Traductions et adaptation des catégories par pays.

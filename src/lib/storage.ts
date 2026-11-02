@@ -214,7 +214,11 @@ export function validateData(input: unknown): ValidationResult {
       data: {
         version: 1,
         profile,
-        settings: { theme, ...(isValidISODate(settingsIn.lastBackup) ? { lastBackup: settingsIn.lastBackup } : {}) },
+        settings: {
+          theme,
+          ...(isValidISODate(settingsIn.lastBackup) ? { lastBackup: settingsIn.lastBackup } : {}),
+          ...(typeof settingsIn.hideAmounts === 'boolean' ? { hideAmounts: settingsIn.hideAmounts } : {}),
+        },
         categories,
         incomes,
         fixedCharges,

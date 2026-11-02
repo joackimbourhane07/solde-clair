@@ -64,6 +64,9 @@ export function Budgets() {
   const spentInBudgeted = sum(withBudget.map((l) => l.spent));
   const order = { depasse: 0, alerte: 1, attention: 2, ok: 3, sans: 4 };
   const sorted = [...lines].sort((a, b) => order[a.level] - order[b.level] || b.spent - a.spent);
+  // Les catégories sans limite sont regroupées dans une liste compacte (page moins chargée).
+  const avecLimite = sorted.filter((l) => l.budget !== null);
+  const sansLimite = sorted.filter((l) => l.budget === null).sort((a, b) => b.spent - a.spent || a.category.name.localeCompare(b.category.name, 'fr'));
 
   return (
     <div className="page">
@@ -90,11 +93,10 @@ export function Budgets() {
         Repères : <strong>75 %</strong> (attention), <strong>90 %</strong> (alerte) et <strong>100 %</strong> (dépassement). Chaque état est
         indiqué par un texte et une icône, en plus de la couleur.
       </Notice>
-      {lines.length === 0 ? (
-        <EmptyState title="Aucune catégorie de dépenses" />
-      ) : (
+      {lines.length === 0 && <EmptyState title="Aucune catégorie de dépenses" />}
+      {avecLimite.length > 0 && (
         <div className="budget-grid">
-          {sorted.map((l) => (
+          {avecLimite.map((l) => (
             <Card key={l.category.id} className={`budget-card budget-${l.level}`} headingLevel={3} title={l.category.name}>
               <div className="budget-top">
                 <LevelBadge level={l.level} />
@@ -102,7 +104,7 @@ export function Budgets() {
                   Modifier
                 </Button>
               </div>
-              {l.budget !== null ? (
+              {l.budget !== null && (
                 <>
                   <ProgressBar
                     value={l.spent}
@@ -130,14 +132,32 @@ export function Budgets() {
                     </div>
                   </dl>
                 </>
-              ) : (
-                <p className="muted">
-                  Dépensé : <strong>{fmt(l.spent)}</strong>. Aucune limite fixée.
-                </p>
               )}
             </Card>
           ))}
         </div>
+      )}
+      {sansLimite.length > 0 && (
+        <Card title={`Catégories sans limite (${sansLimite.length})`}>
+          <p className="muted">
+            {avecLimite.length === 0
+              ? 'Fixez une limite pour suivre une catégorie de près : sa barre de progression apparaîtra ici.'
+              : 'Ces catégories sont suivies sans plafond. Fixez une limite pour voir leur barre de progression.'}
+          </p>
+          <ul className="sans-limite-liste">
+            {sansLimite.map((l) => (
+              <li key={l.category.id}>
+                <span className="sans-limite-nom">
+                  <span className="item-title">{l.category.name}</span>
+                  <span className="item-meta">Dépensé ce mois : {fmt(l.spent)}</span>
+                </span>
+                <Button variant="discret" className="btn-small" icon="plus" onClick={() => setEditing(l)} aria-label={`Fixer une limite pour ${l.category.name}`}>
+                  Fixer une limite
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
       {editing && <BudgetEditor line={editing} onClose={() => setEditing(null)} />}
     </div>
