@@ -7,6 +7,10 @@ import {
   IllustrationBocal,
   IllustrationConfidentialite,
   IllustrationPrincipale,
+  PetitCadenas,
+  PetitCalendrier,
+  PetitesPieces,
+  PetitTicket,
   PictoApercu,
   PictoDebuter,
   PictoSansBanque,
@@ -14,10 +18,26 @@ import {
   ProfilEtudiant,
   ProfilSalarie,
 } from '../components/accueil/Illustrations';
+// Vraies captures de SoldeClair (profil de démonstration « Léa, étudiante » : données fictives)
+import captureOrdinateur from '../assets/accueil/ordi-tableau.webp';
+import captureTableau from '../assets/accueil/tel-tableau.webp';
+import captureAjout from '../assets/accueil/tel-ajout.webp';
+import captureAVenir from '../assets/accueil/tel-avenir.webp';
+import captureObjectifs from '../assets/accueil/tel-objectifs.webp';
+import captureSimulateur from '../assets/accueil/tel-simulateur.webp';
 import '../styles/accueil.css';
 
 /** Montants fictifs des maquettes (aucune donnée réelle). */
 const N = ' ';
+
+/** Capture dans un cadre de téléphone. */
+function Telephone({ src, alt, className = '', eager = false }: { src: string; alt: string; className?: string; eager?: boolean }) {
+  return (
+    <div className={`appareil-tel ${className}`}>
+      <img src={src} alt={alt} width={600} height={1200} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+    </div>
+  );
+}
 
 function Logo() {
   return (
@@ -47,10 +67,53 @@ const LIENS: [string, string][] = [
   ['confidentialite', 'Confidentialité'],
 ];
 
+/** Choix du profil : continuer avec le sien, ouvrir un autre profil ou en créer un nouveau. */
+function ChoixProfils({ centre = true }: { centre?: boolean }) {
+  const { data, profils, profilActif, changerProfil, nouveauProfil } = useApp();
+  const navigate = useNavigate();
+  const actif = data.profile ? { id: profilActif, nom: data.profile.name } : null;
+  const autres = profils.filter((p) => p.id !== profilActif);
+  const principal = actif ?? autres[0] ?? null;
+  const secondaires = autres.filter((p) => p.id !== principal?.id);
+  const ouvrir = (id: string) => {
+    changerProfil(id);
+    navigate('/');
+  };
+  const creer = () => {
+    nouveauProfil();
+    navigate('/bienvenue');
+  };
+  if (!principal) return null;
+  return (
+    <div className={`accueil-choix ${centre ? 'centre' : ''}`}>
+      <div className="accueil-actions">
+        <button type="button" className="btn btn-primaire btn-grand" onClick={() => ouvrir(principal.id)}>
+          Continuer avec {principal.nom}
+        </button>
+        <button type="button" className="btn btn-secondaire btn-grand" onClick={creer}>
+          Créer un nouveau profil
+        </button>
+      </div>
+      {secondaires.length > 0 && (
+        <div className="accueil-autres-profils" role="group" aria-label="Autres profils">
+          <span>Autres profils :</span>
+          {secondaires.map((p) => (
+            <button key={p.id} type="button" className="chip chip-petit" onClick={() => ouvrir(p.id)}>
+              {p.nom}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Accueil() {
-  const { data } = useApp();
+  const { data, profils, nouveauProfil } = useApp();
   const navigate = useNavigate();
   const aDesDonnees = data.profile !== null;
+  // Des profils existent sur cet appareil : on propose de continuer ou d'en créer un.
+  const aDesProfils = aDesDonnees || profils.length > 0;
   const titreRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -61,6 +124,10 @@ export default function Accueil() {
   const commencer = () => navigate(aDesDonnees ? '/' : '/bienvenue');
   const libelleCommencer = aDesDonnees ? 'Accéder à mon tableau de bord' : 'Commencer';
   const essayerDemo = () => navigate('/bienvenue', { state: { demo: true } });
+  const creerProfil = () => {
+    nouveauProfil();
+    navigate('/bienvenue');
+  };
 
   return (
     <div className="accueil">
@@ -104,14 +171,18 @@ export default function Accueil() {
           <p className="accueil-chapeau">
             Découvrez ce qu’il vous reste réellement pour terminer le mois, suivez vos dépenses et avancez vers vos objectifs sans connecter votre banque.
           </p>
-          <div className="accueil-actions">
-            <button type="button" className="btn btn-primaire btn-grand" onClick={commencer}>
-              {libelleCommencer}
-            </button>
-            <button type="button" className="btn btn-secondaire btn-grand" onClick={() => allerA('fonctionnalites')}>
-              Découvrir SoldeClair
-            </button>
-          </div>
+          {aDesProfils ? (
+            <ChoixProfils />
+          ) : (
+            <div className="accueil-actions">
+              <button type="button" className="btn btn-primaire btn-grand" onClick={commencer}>
+                {libelleCommencer}
+              </button>
+              <button type="button" className="btn btn-secondaire btn-grand" onClick={() => allerA('fonctionnalites')}>
+                Découvrir SoldeClair
+              </button>
+            </div>
+          )}
           <p className="accueil-garanties">
             <span>
               <Icon name="check" size={16} /> Gratuit
@@ -125,9 +196,38 @@ export default function Accueil() {
           </p>
         </section>
 
-        {/* 3. Illustration principale */}
+        {/* 3. Vitrine : SoldeClair sur ordinateur et sur téléphone, entouré d'objets du quotidien */}
         <div className="accueil-conteneur accueil-illustration">
-          <IllustrationPrincipale />
+          <div className="vitrine">
+            <div className="vitrine-fond" aria-hidden="true" />
+            <div className="appareil-ordi">
+              <div className="ecran">
+                <img
+                  src={captureOrdinateur}
+                  alt="Tableau de bord de SoldeClair sur ordinateur : « Il vous reste 134 € pour terminer le mois, soit environ 7 € par jour », charges à venir et chiffres du mois."
+                  width={1440}
+                  height={900}
+                  decoding="async"
+                />
+              </div>
+              <div className="socle" aria-hidden="true" />
+            </div>
+            <Telephone
+              src={captureTableau}
+              eager
+              className="vitrine-tel"
+              alt="Le même tableau de bord sur téléphone, avec le bouton « + » pour ajouter une dépense au pouce."
+            />
+            <div className="vitrine-objet objet-calendrier">
+              <PetitCalendrier />
+            </div>
+            <div className="vitrine-objet objet-pieces">
+              <PetitesPieces />
+            </div>
+            <div className="vitrine-objet objet-cadenas">
+              <PetitCadenas />
+            </div>
+          </div>
         </div>
 
         {/* 4. Avantages */}
@@ -177,7 +277,10 @@ export default function Accueil() {
               </li>
             </ul>
           </div>
-          <div className="accueil-colonne-visuel">
+          <div className="accueil-colonne-visuel visuel-avec-objet">
+            <div className="objet-coin objet-coin-haut" aria-hidden="true">
+              <PetitCalendrier />
+            </div>
             <div className="maquette" aria-hidden="true">
               <p className="maquette-mois">Novembre</p>
               <p className="maquette-phrase">
@@ -225,36 +328,11 @@ export default function Accueil() {
               </li>
             </ol>
           </div>
-          <div className="accueil-colonne-visuel">
-            <div className="maquette" aria-hidden="true">
-              <p className="maquette-titre">À venir</p>
-              <p className="maquette-meta">Dans les 7 prochains jours : 3 charges prévues pour un total de 145,00{N}€.</p>
-              <ul className="maquette-liste">
-                <li>
-                  <span className="pastille bleu" />
-                  <span>
-                    Forfait mobile
-                    <small>Demain</small>
-                  </span>
-                  <span>9,99{N}€</span>
-                </li>
-                <li>
-                  <span className="pastille orange" />
-                  <span>
-                    Abonnement musique
-                    <small>Dans 3 jours</small>
-                  </span>
-                  <span>10,99{N}€</span>
-                </li>
-                <li>
-                  <span className="pastille vert" />
-                  <span>
-                    Assurance habitation
-                    <small>Dans 6 jours</small>
-                  </span>
-                  <span>124,02{N}€</span>
-                </li>
-              </ul>
+          <div className="accueil-colonne-visuel visuel-tel duo-tel">
+            <Telephone src={captureAjout} className="tel-arriere" alt="Ajout d’une dépense : montant, catégories fréquentes en un geste, description et date." />
+            <Telephone src={captureAVenir} className="tel-avant" alt="Carte « À venir » : « Dans les 7 prochains jours : 1 charge prévue », prélèvements et revenus attendus avec leurs dates." />
+            <div className="objet-coin objet-coin-bas" aria-hidden="true">
+              <PetitTicket />
             </div>
           </div>
         </section>
@@ -269,19 +347,23 @@ export default function Accueil() {
             <p className="accueil-texte">
               Un ordinateur, un voyage, un fonds d’urgence : fixez un montant et une date, SoldeClair vous indique la prochaine petite étape.
             </p>
-            <div className="maquette maquette-compacte" aria-hidden="true">
-              <p className="maquette-titre">Ordinateur portable</p>
-              <p className="maquette-phrase-petite">
-                <strong>480,00{N}€</strong> sur 800,00{N}€
-              </p>
-              <div className="maquette-barre bleue">
-                <span style={{ width: '60%' }} />
-              </div>
-              <p className="maquette-meta">Vous avez atteint 60{N}% de votre objectif. Prochaine étape : mettre 80,00{N}€ de côté ce mois-ci.</p>
-            </div>
+            <ul className="accueil-liste">
+              <li>
+                <Icon name="check" size={18} /> La progression en un coup d’œil
+              </li>
+              <li>
+                <Icon name="check" size={18} /> Le montant à mettre de côté chaque mois
+              </li>
+              <li>
+                <Icon name="check" size={18} /> Une date d’arrivée estimée
+              </li>
+            </ul>
           </div>
-          <div className="accueil-colonne-visuel centre">
-            <IllustrationBocal />
+          <div className="accueil-colonne-visuel visuel-tel">
+            <Telephone src={captureObjectifs} alt="Objectif « Ordinateur » : 310 € sur 900 €, « Vous avez atteint 34 % de votre objectif », reste à épargner et date estimée." />
+            <div className="objet-coin objet-coin-bas grand" aria-hidden="true">
+              <IllustrationBocal />
+            </div>
           </div>
         </section>
 
@@ -295,15 +377,23 @@ export default function Accueil() {
             <p className="accueil-texte">
               Indiquez un prix : SoldeClair montre l’effet sur votre mois, sur votre épargne et sur vos objectifs. Rien n’est enregistré tant que vous ne le décidez pas.
             </p>
-            <div className="maquette maquette-compacte" aria-hidden="true">
-              <p className="maquette-titre">Vélo d’occasion · 180,00{N}€</p>
-              <p className="maquette-verdict">
-                <Icon name="info" size={18} /> Achat possible avec prudence : il vous resterait 245{N}€, soit environ 8{N}€ par jour.
-              </p>
-            </div>
+            <ul className="accueil-liste">
+              <li>
+                <Icon name="check" size={18} /> Le solde restant après l’achat
+              </li>
+              <li>
+                <Icon name="check" size={18} /> L’effet sur votre épargne et vos limites
+              </li>
+              <li>
+                <Icon name="check" size={18} /> Une appréciation claire, sans jugement
+              </li>
+            </ul>
           </div>
-          <div className="accueil-colonne-visuel centre">
-            <IllustrationBalance />
+          <div className="accueil-colonne-visuel visuel-tel">
+            <Telephone src={captureSimulateur} alt="Simulateur : achat de 25 € en loisirs, « Achat possible avec prudence », solde avant et après l’achat." />
+            <div className="objet-coin objet-coin-bas grand" aria-hidden="true">
+              <IllustrationBalance />
+            </div>
           </div>
         </section>
 
@@ -366,20 +456,25 @@ export default function Accueil() {
         {/* 11. Appel à l'action */}
         <section className="accueil-conteneur" aria-labelledby="titre-cta">
           <div className="accueil-cta">
+            <div className="accueil-cta-illustration" aria-hidden="true">
+              <IllustrationPrincipale />
+            </div>
             <h2 id="titre-cta" tabIndex={-1} className="accueil-h2">
               Commencer avec SoldeClair
             </h2>
             <p className="accueil-texte">Deux minutes suffisent pour préparer votre budget. Gratuit, sans compte et sans banque.</p>
-            <div className="accueil-actions">
-              <button type="button" className="btn btn-primaire btn-grand" onClick={commencer}>
-                {libelleCommencer}
-              </button>
-              {!aDesDonnees && (
+            {aDesProfils ? (
+              <ChoixProfils />
+            ) : (
+              <div className="accueil-actions">
+                <button type="button" className="btn btn-primaire btn-grand" onClick={commencer}>
+                  {libelleCommencer}
+                </button>
                 <button type="button" className="btn btn-secondaire btn-grand" onClick={essayerDemo}>
                   Essayer avec un profil de démonstration
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </section>
       </main>
@@ -411,6 +506,13 @@ export default function Accueil() {
                   {aDesDonnees ? 'Mon tableau de bord' : 'Créer mon budget'}
                 </button>
               </li>
+              {aDesProfils && (
+                <li>
+                  <button type="button" className="accueil-pied-lien" onClick={creerProfil}>
+                    Créer un nouveau profil
+                  </button>
+                </li>
+              )}
               {!aDesDonnees && (
                 <>
                   <li>

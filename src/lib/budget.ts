@@ -163,6 +163,49 @@ export function earliestDate(data: AppData, today: ISODate): ISODate {
 
 export type ForecastBasis = 'reel' | 'rythme' | 'plan';
 
+/* -------------------------------------------------------------------------- */
+/* Report du reste d'un mois sur le suivant (cumul)                            */
+/* -------------------------------------------------------------------------- */
+
+/** Solde propre d'un mois, sans report : revenus − charges fixes − dépenses variables − épargne versée. */
+function monthNet(data: AppData, month: MonthKey, today: ISODate): Cents {
+  return sum(monthTransactions(data, month, today).map((t) => (t.type === 'revenu' ? t.amount : -t.amount)));
+}
+
+/** Le report est actif par défaut ; il peut être désactivé dans les paramètres. */
+export function carryOverEnabled(data: AppData): boolean {
+  return data.settings.carryOver !== false;
+}
+
+// Cache par jeu de données (les données sont immuables : un nouvel objet à chaque modification).
+const cacheReports = new WeakMap<AppData, Map<string, Cents>>();
+
+/**
+ * Report reçu par un mois : cumul des soldes de tous les mois précédents (depuis la première saisie,
+ * 10 ans au plus). Un reste positif s'ajoute, un dépassement se retranche.
+ * Exemple : une prime reçue le 26 octobre et non dépensée compte encore en novembre.
+ */
+export function carryOverInto(data: AppData, month: MonthKey, today: ISODate): Cents {
+  if (!carryOverEnabled(data)) return 0;
+  let cache = cacheReports.get(data);
+  if (!cache) {
+    cache = new Map();
+    cacheReports.set(data, cache);
+  }
+  const cle = `${today}|${month}`;
+  const deja = cache.get(cle);
+  if (deja !== undefined) return deja;
+  const debut = monthOf(earliestDate(data, today));
+  let total = 0;
+  let m = debut < addMonths(month, -120) ? addMonths(month, -120) : debut;
+  while (m < month) {
+    total += monthNet(data, m, today);
+    m = addMonths(m, 1);
+  }
+  cache.set(cle, total);
+  return total;
+}
+
 export interface MonthSummary {
   month: MonthKey;
   income: Cents;
@@ -177,7 +220,9 @@ export interface MonthSummary {
   savingsTarget: Cents;
   /** Ce qu'il reste à épargner pour atteindre l'objectif du mois. */
   savingsRemaining: Cents;
-  /** Solde disponible = revenus − charges fixes − dépenses variables − épargne versée. */
+  /** Reste (ou dépassement) des mois précédents reporté sur ce mois ; 0 si le report est désactivé. */
+  carryOver: Cents;
+  /** Solde disponible = report + revenus − charges fixes − dépenses variables − épargne versée. */
   available: Cents;
   /** Part des revenus consommée par les dépenses (charges + variables), en %. */
   budgetUsedPct: number | null;
@@ -214,7 +259,8 @@ export function monthSummary(data: AppData, month: MonthKey, today: ISODate): Mo
   const savingsTarget = data.profile?.monthlySavingsTarget ?? 0;
   const savingsRemaining = Math.max(0, savingsTarget - saved);
   const totalExpenses = fixed + variable;
-  const available = income - totalExpenses - saved;
+  const carryOver = carryOverInto(data, month, today);
+  const available = carryOver + income - totalExpenses - saved;
 
   const dim = daysInMonth(month);
   const daysRemaining = daysRemainingInMonth(month, today);
@@ -252,6 +298,7 @@ export function monthSummary(data: AppData, month: MonthKey, today: ISODate): Mo
     saved,
     savingsTarget,
     savingsRemaining,
+    carryOver,
     available,
     budgetUsedPct: percent(totalExpenses, income),
     daysInMonth: dim,
@@ -261,7 +308,7 @@ export function monthSummary(data: AppData, month: MonthKey, today: ISODate): Mo
     plannedVariable: plan,
     projectedVariable,
     forecastBasis,
-    forecastEndBalance: income - fixed - saved - projectedVariable,
+    forecastEndBalance: carryOver + income - fixed - saved - projectedVariable,
     period,
   };
 }
@@ -379,7 +426,7 @@ export function dailyBalanceSeries(data: AppData, month: MonthKey, today: ISODat
   const tx = monthTransactions(data, month, today);
   const lastIncluded = monthOf(today) === month ? today : lastDay(month);
   const series: { date: ISODate; balance: Cents }[] = [];
-  let balance = 0;
+  let balance = carryOverInto(data, month, today);
   let i = 0;
   for (let date = firstDay(month); date <= lastIncluded && monthOf(date) === month; date = addDays(date, 1)) {
     while (i < tx.length && tx[i].date <= date) {

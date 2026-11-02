@@ -526,6 +526,18 @@ export function Toasts() {
         <div key={t.id} className={`toast toast-${t.kind}`} role={t.kind === 'erreur' ? 'alert' : 'status'}>
           <Icon name={t.kind === 'erreur' ? 'stop' : t.kind === 'info' ? 'info' : 'check'} size={18} />
           <span>{t.message}</span>
+          {t.action && (
+            <button
+              type="button"
+              className="btn btn-secondaire btn-small toast-action"
+              onClick={() => {
+                t.action?.onClick();
+                dismissToast(t.id);
+              }}
+            >
+              {t.action.label}
+            </button>
+          )}
           <IconButton icon="close" label="Fermer le message" onClick={() => dismissToast(t.id)} />
         </div>
       ))}

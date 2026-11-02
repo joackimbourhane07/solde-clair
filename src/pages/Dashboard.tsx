@@ -2,6 +2,7 @@ import { useMemo, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import {
+  carryOverEnabled,
   dailyBalanceSeries,
   monthAlerts,
   monthSummary,
@@ -127,6 +128,12 @@ export function Dashboard() {
           <summary>Comment est-ce calculé ?</summary>
           <div className="disclosure-body">
             <dl className="calcul">
+              {s.carryOver !== 0 && (
+                <div>
+                  <dt>{s.carryOver > 0 ? '+' : '−'} Report des mois précédents</dt>
+                  <dd>{fmt(Math.abs(s.carryOver))}</dd>
+                </div>
+              )}
               <div>
                 <dt>+ Revenus du mois</dt>
                 <dd>{fmt(s.income)}</dd>
@@ -192,6 +199,11 @@ export function Dashboard() {
             <Stat label="Revenus" value={fmt(s.income)} />
             <Stat label="Total des dépenses" value={fmt(s.totalExpenses)} detail="Charges fixes + dépenses variables" />
           </div>
+          {s.carryOver !== 0 && (
+            <p className="report-ligne">
+              <Icon name="repeat" size={16} /> Report des mois précédents : {s.carryOver > 0 ? '+' : '−'} {fmt(Math.abs(s.carryOver))}, compté dans votre disponible.
+            </p>
+          )}
           {recent.length === 0 ? (
             <p className="muted">Aucune opération pour ce mois.</p>
           ) : (
@@ -308,7 +320,9 @@ export function Dashboard() {
               <summary>Ce qui compte dans l’estimation</summary>
               <div className="disclosure-body">
                 <p>
-                  Aujourd’hui : {fmt(prevision.start)} (revenus reçus moins charges, dépenses et épargne {ofMonth(monthOf(today), false)}). Ensuite, environ{' '}
+                  Aujourd’hui : {fmt(prevision.start)} (
+                  {prevision.carryOver !== 0 ? 'report des mois précédents, plus ' : ''}revenus reçus moins charges, dépenses et épargne{' '}
+                  {ofMonth(monthOf(today), false)}). Ensuite, environ{' '}
                   {fmt(prevision.dailyVariable)} de dépenses courantes par jour{' '}
                   {prevision.basis === 'rythme' ? '(votre rythme du mois)' : '(d’après vos limites prévues)'}.
                 </p>
@@ -325,7 +339,11 @@ export function Dashboard() {
                     ))}
                   </ul>
                 )}
-                <p className="muted">Estimation indicative fondée sur vos saisies : l’argent des mois précédents n’est pas compté.</p>
+                <p className="muted">
+                  {carryOverEnabled(data)
+                    ? 'Estimation indicative fondée sur vos saisies, report des mois précédents compris.'
+                    : 'Estimation indicative fondée sur vos saisies : l’argent des mois précédents n’est pas compté (report désactivé).'}
+                </p>
               </div>
             </details>
             <Link to="/simulateur" className="link">
@@ -349,6 +367,14 @@ export function Dashboard() {
         <summary>Détail du mois</summary>
         <div className="disclosure-body">
           <div className="stats-grid">
+            {carryOverEnabled(data) && (
+              <Stat
+                label="Report des mois précédents"
+                value={s.carryOver < 0 ? `− ${fmt(-s.carryOver)}` : fmt(s.carryOver)}
+                tone={s.carryOver < 0 ? 'negatif' : undefined}
+                detail="Reste (ou dépassement) des mois d’avant"
+              />
+            )}
             <Stat label="Charges fixes" value={fmt(s.fixed)} detail={`${fmt(s.fixedUpcoming)} encore à venir`} />
             <Stat label="Dépenses variables" value={fmt(s.variable)} />
             <Stat label="Solde disponible" value={fmt(s.available)} tone={s.available < 0 ? 'negatif' : 'positif'} detail="Revenus − dépenses − épargne" />

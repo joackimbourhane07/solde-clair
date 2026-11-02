@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { AppData, Category, CategoryKind, ProfileType, ThemeChoice } from '../types';
 import { CURRENCIES, centsToInput } from '../lib/money';
@@ -7,7 +7,7 @@ import { dayDiff, formatDate } from '../lib/dates';
 import { isDuplicateName, KIND_LABELS, makeCategory, PROFILE_LABELS } from '../lib/categories';
 import { buildDemoData, DEMO_PROFILES, type DemoProfile } from '../lib/demo';
 import { clearData, downloadFile, exportCSV, exportJSON, parseBackup } from '../lib/storage';
-import { Button, Card, ConfirmDialog, IconButton, Modal, MoneyField, Notice, PageHeader, SelectField, TextField } from '../components/ui';
+import { Button, Card, CheckboxField, ConfirmDialog, IconButton, Modal, MoneyField, Notice, PageHeader, SelectField, TextField } from '../components/ui';
 import { checkAmount } from '../components/forms';
 import { Icon } from '../components/Icon';
 
@@ -36,7 +36,14 @@ function ProfileSection() {
   };
 
   return (
-    <Card title="Mon profil">
+    <Card
+      title="Mon profil"
+      actions={
+        <Link to="/presentation" className="link">
+          Changer de profil
+        </Link>
+      }
+    >
       <form onSubmit={submit} noValidate className="form">
         <div className="form-grid">
           <TextField label="Prénom ou pseudonyme" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} maxLength={40} />
@@ -69,6 +76,25 @@ function ProfileSection() {
           </button>
         </div>
       </form>
+    </Card>
+  );
+}
+
+/** Calcul du disponible : report du reste d'un mois sur le suivant (cumul). */
+function CalculSection() {
+  const { data, dispatch, notify } = useApp();
+  const actif = data.settings.carryOver !== false;
+  return (
+    <Card title="Calcul du disponible">
+      <CheckboxField
+        label="Reporter le reste d’un mois sur le suivant"
+        hint="Ce qui reste à la fin d’un mois (ou ce qui manque) s’ajoute au mois suivant. Utile si vous êtes payé en fin de mois : un salaire ou une prime reçus fin octobre comptent encore en novembre."
+        checked={actif}
+        onChange={(e) => {
+          dispatch({ type: 'setCarryOver', value: e.target.checked });
+          notify(e.target.checked ? 'Report activé : le reste de chaque mois passe au suivant.' : 'Report désactivé : chaque mois est calculé à part.');
+        }}
+      />
     </Card>
   );
 }
@@ -212,7 +238,7 @@ export function DataSection({
   compact?: boolean;
   parts?: PartieDonnees[];
 }) {
-  const { data, dispatch, notify, today } = useApp();
+  const { data, dispatch, notify, today, profilActif, profils } = useApp();
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
   const [pendingImport, setPendingImport] = useState<AppData | null>(null);
@@ -344,7 +370,10 @@ export function DataSection({
 
       {parts.includes('reset') && (
         <Card title="Effacer toutes les données" className="danger-zone">
-          <p>Supprime définitivement votre profil, vos transactions, budgets et objectifs de ce navigateur.</p>
+          <p>
+            Supprime définitivement {data.profile ? `le profil « ${data.profile.name} »` : 'votre profil'} : transactions, budgets et objectifs, de ce
+            navigateur.{profils.length > 1 ? ' Les autres profils de cet appareil sont conservés.' : ''}
+          </p>
           <Button variant="danger" icon="trash" onClick={() => setResetStep(1)}>
             Effacer toutes mes données
           </Button>
@@ -393,7 +422,7 @@ export function DataSection({
           confirmDisabled={resetText.trim().toUpperCase() !== 'EFFACER'}
           onCancel={() => setResetStep(0)}
           onConfirm={() => {
-            clearData();
+            clearData(profilActif);
             dispatch({ type: 'reset' });
             setResetStep(0);
             notify('Toutes les données ont été effacées.');
@@ -418,6 +447,7 @@ export function SettingsPage() {
       {/* La sauvegarde d'abord : avec un stockage local, c'est la protection principale des données. */}
       <DataSection parts={['export', 'import']} />
       <ProfileSection />
+      <CalculSection />
       <ThemeSection />
       <CategoriesSection />
       <DataSection parts={['demo', 'reset']} />

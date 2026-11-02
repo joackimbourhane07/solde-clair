@@ -1060,6 +1060,18 @@ strong {
   .form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  /* Alignement en lignes : libellé, champ, aide. Un libellé sur deux lignes ne décale plus le champ voisin. */
+  .form-grid > .field {
+    display: grid;
+    grid-row: span 3;
+    grid-template-rows: subgrid;
+    row-gap: 6px;
+  }
+
+  .form-grid > .field > label {
+    align-self: end;
+  }
 }
 
 .form-row {
@@ -3054,5 +3066,46 @@ ol.rank-list li > span {
   .filters-dates {
     grid-template-columns: repeat(2, minmax(0, 220px));
   }
+}
+
+/* Notification avec une action (ex. : « Voir octobre 2026 ») */
+.toast-action {
+  flex-shrink: 0;
+  min-height: 36px;
+}
+
+/* Report des mois précédents */
+.report-ligne {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 4px 0 8px;
+  color: var(--text-2);
+  font-size: var(--dp-typography-supporting);
+  line-height: 1.5;
+}
+
+.report-ligne svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--primary-text);
+}
+
+/* Revenu non compté dans le mois affiché */
+.tag-autre-mois {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.montant-hors-mois {
+  color: var(--muted);
+}
+
+.lien-bouton.petit {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  font-size: var(--dp-typography-supporting);
+  margin-top: 2px;
 }
 

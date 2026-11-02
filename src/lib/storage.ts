@@ -42,9 +42,72 @@ export function emptyData(): AppData {
   };
 }
 
-export function loadData(): AppData {
+/* -------------------------------------------------------------------------- */
+/* Plusieurs profils sur le même appareil                                      */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Chaque profil a ses propres données. Le premier profil garde la clé historique
+ * (« soldeclair:donnees:v1 ») : les données existantes deviennent ce profil, sans rien perdre.
+ */
+export const PROFILES_KEY = 'soldeclair:profils:v1';
+export const PREMIER_PROFIL = 'principal';
+
+export interface ProfilesIndex {
+  /** Profil ouvert. */
+  actif: string;
+  /** Profils enregistrés (avec des données). */
+  ids: string[];
+}
+
+export interface ProfilResume {
+  id: string;
+  nom: string;
+  type: string;
+}
+
+export function dataKey(id: string): string {
+  return id === PREMIER_PROFIL ? STORAGE_KEY : `${STORAGE_KEY}:${id}`;
+}
+
+const idValide = (x: unknown): x is string => typeof x === 'string' && /^[a-z0-9-]{1,40}$/i.test(x);
+
+export function loadIndex(): ProfilesIndex {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(PROFILES_KEY);
+    if (raw) {
+      const p = JSON.parse(raw) as Partial<ProfilesIndex>;
+      const ids = Array.isArray(p.ids) ? p.ids.filter(idValide).slice(0, 20) : [];
+      return { actif: idValide(p.actif) ? p.actif : (ids[0] ?? PREMIER_PROFIL), ids };
+    }
+    // Avant les profils : une seule clé de données, qui devient le premier profil.
+    return { actif: PREMIER_PROFIL, ids: localStorage.getItem(STORAGE_KEY) ? [PREMIER_PROFIL] : [] };
+  } catch {
+    return { actif: PREMIER_PROFIL, ids: [] };
+  }
+}
+
+export function saveIndex(index: ProfilesIndex): void {
+  try {
+    localStorage.setItem(PROFILES_KEY, JSON.stringify(index));
+  } catch {
+    /* stockage indisponible */
+  }
+}
+
+/** Profils enregistrés sur cet appareil, avec leur nom (lu dans leurs données). */
+export function listProfiles(): ProfilResume[] {
+  const liste: ProfilResume[] = [];
+  for (const id of loadIndex().ids) {
+    const d = loadData(id);
+    if (d.profile) liste.push({ id, nom: d.profile.name, type: d.profile.type });
+  }
+  return liste;
+}
+
+export function loadData(id: string = PREMIER_PROFIL): AppData {
+  try {
+    const raw = localStorage.getItem(dataKey(id));
     if (!raw) return emptyData();
     const result = validateData(JSON.parse(raw));
     return result.ok ? result.data : emptyData();
@@ -53,18 +116,18 @@ export function loadData(): AppData {
   }
 }
 
-export function saveData(data: AppData): boolean {
+export function saveData(data: AppData, id: string = PREMIER_PROFIL): boolean {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(dataKey(id), JSON.stringify(data));
     return true;
   } catch {
     return false;
   }
 }
 
-export function clearData(): void {
+export function clearData(id: string = PREMIER_PROFIL): void {
   try {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(dataKey(id));
   } catch {
     /* stockage indisponible : rien à effacer */
   }
@@ -227,6 +290,7 @@ export function validateData(input: unknown): ValidationResult {
           appearanceVersion: APPEARANCE_VERSION,
           ...(isValidISODate(settingsIn.lastBackup) ? { lastBackup: settingsIn.lastBackup } : {}),
           ...(typeof settingsIn.hideAmounts === 'boolean' ? { hideAmounts: settingsIn.hideAmounts } : {}),
+          ...(typeof settingsIn.carryOver === 'boolean' ? { carryOver: settingsIn.carryOver } : {}),
           ...(Array.isArray(settingsIn.dismissedActions)
             ? { dismissedActions: settingsIn.dismissedActions.filter((x): x is string => typeof x === 'string' && x.length <= 120).slice(-50) }
             : {}),
