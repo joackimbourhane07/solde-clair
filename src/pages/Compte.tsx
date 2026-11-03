@@ -129,7 +129,7 @@ export function Compte() {
   const [params, setParams] = useSearchParams();
   const vue: Vue = params.get('vue') === 'a-venir' ? 'a-venir' : 'operations';
   const choisirVue = (v: Vue) => setParams(v === 'a-venir' ? { vue: 'a-venir' } : {}, { replace: true });
-  // « Ajuster mon solde » depuis Poksy : #/compte?ajuster=1 ouvre la fenêtre (rien n'est enregistré sans validation)
+  // « Ajuster mon solde » depuis Poksy : #/compte?ajuster=1 ouvre la fenêtre (rien n'est enregistré sans validation)
   useEffect(() => {
     if (params.get('ajuster') === '1') {
       setAjuster(true);

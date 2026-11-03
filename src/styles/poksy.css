@@ -345,8 +345,22 @@
   bottom: calc(184px + env(safe-area-inset-bottom));
 }
 
+/* Page d'accueil : pas de barre du bas, le bouton descend en bas de l'écran */
+.poksy-accueil .poksy-lanceur {
+  bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+.poksy-accueil .poksy-bienvenue {
+  right: calc(24px + var(--poksy-taille) + 8px);
+  bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
 /* Tablette (barre du bas toujours présente) : fenêtre flottante au-dessus du bouton */
 @media (min-width: 600px) {
+  .poksy-accueil .poksy-panneau {
+    bottom: calc(16px + var(--poksy-taille) + 12px + env(safe-area-inset-bottom));
+  }
+
   .poksy-panneau {
     left: auto;
     top: auto;

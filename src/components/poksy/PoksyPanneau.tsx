@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type Dispatch, type FormEvent, type SetStateAction } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useApp } from '../../state/AppState';
-import { monthSummary } from '../../lib/budget';
-import { monthOf } from '../../lib/dates';
+import { resteAVivre } from '../../lib/accounts';
 import {
   ACTION_LABELS,
   ACTION_ROUTES,
@@ -58,13 +57,15 @@ function Groupe({ id, titre, questions, onChoisir }: { id: string; titre: string
 export default function PoksyPanneau({ messages, setMessages, plus, setPlus, onFermer, naviguer, ajouterDepense }: Props) {
   const { data, today, fmtShort } = useApp();
   const location = useLocation();
-  const page = pageDe(location.pathname);
+  // Sans profil (page d'accueil d'un nouveau visiteur), on reste sur les questions de présentation
+  const page = data.profile ? pageDe(location.pathname) : 'presentation';
+  const avecActions = !!data.profile;
   const racine = useRef<HTMLDivElement>(null);
   const conversation = useRef<HTMLDivElement>(null);
   const [saisie, setSaisie] = useState('');
   const nbMessages = useRef(messages.length);
 
-  // À l'ouverture, le focus va dans la fenêtre (le lecteur d'écran annonce « Poksy, Guide SoldeClair »).
+  // À l'ouverture, le focus va dans la fenêtre (le lecteur d'écran annonce « Poksy, Guide SoldeClair »).
   useEffect(() => {
     racine.current?.focus();
   }, []);
@@ -81,12 +82,13 @@ export default function PoksyPanneau({ messages, setMessages, plus, setPlus, onF
   // Chiffres réels pour compléter certaines réponses (jamais inventés ; masqués si l'utilisateur l'a demandé).
   const contexte = useMemo<ContextePoksy>(() => {
     if (!data.profile) return {};
-    const s = monthSummary(data, monthOf(today), today);
+    // Mêmes chiffres que « Il vous reste » du tableau de bord : le solde de « Mon compte »
+    const r = resteAVivre(data, today);
     return {
-      resteAVivre: s.available < 0 ? `− ${fmtShort(-s.available, 'majore')}` : fmtShort(s.available, 'prudent'),
-      resteNegatif: s.available < 0,
-      parJour: s.dailyRemaining !== null && s.dailyRemaining >= 0 ? fmtShort(s.dailyRemaining, 'prudent') : undefined,
-      joursRestants: s.daysRemaining,
+      resteAVivre: r.solde < 0 ? `− ${fmtShort(-r.solde, 'majore')}` : fmtShort(r.solde, 'prudent'),
+      resteNegatif: r.solde < 0,
+      parJour: r.parJour !== null && r.parJour >= 0 ? fmtShort(r.parJour, 'prudent') : undefined,
+      joursRestants: r.joursRestants,
       ajustementFait: (data.adjustments ?? []).length > 0,
     };
   }, [data, today, fmtShort]);
@@ -165,7 +167,7 @@ export default function PoksyPanneau({ messages, setMessages, plus, setPlus, onF
                 {m.texte.split('\n').map((ligne, i) => (
                   <p key={i}>{typographie(ligne)}</p>
                 ))}
-                {m.action && (
+                {m.action && avecActions && (
                   <button type="button" className="btn btn-secondaire btn-small poksy-action" onClick={() => agir(m.action!)}>
                     {ACTION_LABELS[m.action]}
                   </button>

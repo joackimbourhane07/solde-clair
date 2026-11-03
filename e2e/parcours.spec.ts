@@ -47,7 +47,7 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   // --- Tableau de bord : 660,50 − 389,99 = 270,51 € sur 19 jours ---
   await expect(page.getByRole('heading', { name: 'Bonjour Léo Test' })).toBeVisible();
   expect(norm(await page.locator('.hero-text').innerText())).toBe('Il vous reste 270 € pour terminer le mois, soit environ 14 € par jour.');
-  expect(await stat(page, 'Solde disponible')).toBe('270,51 €');
+  expect(await stat(page, 'Bilan du mois')).toBe('270,51 €');
   // Une seule carte principale ; les chiffres secondaires sont dans « Détail du mois »
   await expect(page.locator('.hero-figure')).toHaveCount(0);
   await page.getByText('Détail du mois').click();
@@ -65,11 +65,11 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   await fenetre.getByRole('button', { name: 'Ajouter la dépense' }).click();
   await expect(fenetre).toHaveCount(0);
   await aller(page, '');
-  expect(await stat(page, 'Solde disponible')).toBe('269,51 €');
+  expect(await stat(page, 'Bilan du mois')).toBe('269,51 €');
 
   // --- Masquer les montants ---
   await page.locator('.topbar').getByRole('button', { name: 'Masquer les montants' }).click();
-  expect(await stat(page, 'Solde disponible')).toBe('••• €');
+  expect(await stat(page, 'Bilan du mois')).toBe('••• €');
   await page.locator('.topbar').getByRole('button', { name: 'Afficher les montants' }).click();
 
   // --- Dépense rapide depuis l'accueil, au pouce ---
@@ -78,7 +78,7 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   await rapide.getByLabel('Montant', { exact: true }).fill('7,89');
   await rapide.getByRole('button', { name: 'Ajouter la dépense' }).click();
   await expect(rapide).toHaveCount(0);
-  expect(await stat(page, 'Solde disponible')).toBe('261,62 €');
+  expect(await stat(page, 'Bilan du mois')).toBe('261,62 €');
 
   // --- Libellés avec élision au changement de mois ---
   await aller(page, 'charges');

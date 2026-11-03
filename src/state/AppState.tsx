@@ -45,6 +45,7 @@ export type Action =
   | { type: 'setHideAmounts'; hide: boolean }
   | { type: 'dismissAction'; id: string }
   | { type: 'setCarryOver'; value: boolean }
+  | { type: 'setIncomeShiftDay'; value: number | null }
   | { type: 'mettreAJourCategories' }
   | { [K in CollectionName]: { type: 'upsert'; collection: K; item: Collections[K] } }[CollectionName]
   | { type: 'remove'; collection: Exclude<CollectionName, 'categories' | 'goals'>; id: string }
@@ -83,6 +84,8 @@ export function reducer(state: AppData, action: Action): AppData {
     }
     case 'setCarryOver':
       return { ...state, settings: { ...state.settings, carryOver: action.value } };
+    case 'setIncomeShiftDay':
+      return { ...state, settings: { ...state.settings, incomeShiftDay: action.value } };
     case 'dismissAction': {
       // On garde les 50 derniers identifiants : la liste ne grossit pas indéfiniment.
       const deja = state.settings.dismissedActions ?? [];

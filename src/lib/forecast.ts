@@ -1,5 +1,6 @@
 import type { AppData, Cents, ISODate, Transaction } from '../types';
-import { carryOverInto, monthTransactions, plannedVariable, signedAmount, transactionsInRange } from './budget';
+import { carryOverInto, earliestDate, monthTransactions, plannedVariable, signedAmount, transactionsInRange } from './budget';
+import { resteAVivre } from './accounts';
 import { addDays, daysElapsedInMonth, daysInMonth, monthOf } from './dates';
 import { sum } from './money';
 
@@ -49,7 +50,10 @@ export function balanceForecast(data: AppData, today: ISODate, horizons: number[
   const passes = monthTransactions(data, month, today).filter((t) => t.date <= today);
   // Disponible du jour : report des mois précédents (s'il est actif) + mouvements du mois jusqu'à aujourd'hui
   const carryOver = carryOverInto(data, month, today);
-  const start = carryOver + sum(passes.map(signed));
+  // Point de départ : le solde de « Mon compte » (comme « Il vous reste » du tableau de bord),
+  // moins les charges passées pas encore payées (elles restent à prélever).
+  const enRetard = transactionsInRange(data, earliestDate(data, today), today, today).filter((t) => t.type === 'charge' && t.status === 'a_venir');
+  const start = resteAVivre(data, today).solde - sum(enRetard.map((t) => t.amount));
 
   // Rythme des dépenses courantes (variables)
   const elapsed = daysElapsedInMonth(month, today) + 1; // aujourd'hui inclus

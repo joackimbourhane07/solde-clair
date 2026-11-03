@@ -55,7 +55,7 @@ export function Simulator() {
           </section>
 
           <div className="stats-grid">
-            <Stat label="Solde disponible avant" value={fmt(result.availableBefore)} />
+            <Stat label="Solde aujourd’hui" value={fmt(result.availableBefore)} detail="Le solde de « Mon compte »" />
             <Stat
               label="Solde restant après l’achat"
               value={fmt(result.availableAfter)}

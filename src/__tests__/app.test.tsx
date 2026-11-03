@@ -83,12 +83,14 @@ describe('configuration initiale', () => {
 });
 
 describe('tableau de bord', () => {
-  it('affiche le reste à vivre et les chiffres clés', () => {
+  it('affiche le reste à vivre (le solde de « Mon compte ») et les chiffres clés', () => {
     renderApp();
+    // Solde de « Mon compte » : 2 590,52 € ; 19 jours restants → 136,34 € par jour
     expect(norm(screen.getByText(/Il vous reste/).textContent)).toBe(
-      'Il vous reste 821 € pour terminer le mois, soit environ 43 € par jour.',
+      'Il vous reste 2 590 € pour terminer le mois, soit environ 136 € par jour.',
     );
-    const stat = screen.getByText('Solde disponible').parentElement!;
+    // Le bilan du mois (budget) reste dans « Détail du mois »
+    const stat = screen.getByText('Bilan du mois').parentElement!;
     expect(norm(stat.textContent)).toContain('821,51 €');
     // La limite dépassée devient une action dans « À faire »
     expect(screen.getByText('Votre budget « Alimentation » est dépassé de 8,00 €.', { normalizer: norm })).toBeInTheDocument();
@@ -103,8 +105,9 @@ describe('tableau de bord', () => {
     await user.click(within(form).getByRole('button', { name: 'Ajouter la dépense' }));
 
     expect(await screen.findByText('Dépense de 21,51 € enregistrée.', { normalizer: norm })).toBeInTheDocument();
-    expect(norm(screen.getByText('Solde disponible').parentElement!.textContent)).toContain('800,00 €');
-    expect(norm(screen.getByText(/Il vous reste/).textContent)).toContain('environ 42 € par jour');
+    expect(norm(screen.getByText('Bilan du mois').parentElement!.textContent)).toContain('800,00 €');
+    // 2 590,52 − 21,51 = 2 569,01 € ÷ 19 jours
+    expect(norm(screen.getByText(/Il vous reste/).textContent)).toBe('Il vous reste 2 569 € pour terminer le mois, soit environ 135 € par jour.');
     await waitFor(() => expect(stored().expenses.some((e) => e.description === 'Pharmacie' && e.amount === 2151)).toBe(true));
   });
 
@@ -124,7 +127,8 @@ describe('tableau de bord', () => {
     expect(screen.getByText('Novembre 2026')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Mois précédent' }));
     expect(screen.getByText('Octobre 2026')).toBeInTheDocument();
-    expect(norm(screen.getByText(/Mois terminé :/).textContent)).toContain('1 034,01 €');
+    // Solde de « Mon compte » au 31 octobre
+    expect(norm(screen.getByText(/Mois terminé :/).textContent)).toBe('Mois terminé : il vous restait 1 753,02 € à la fin du mois.');
     await user.click(screen.getByRole('button', { name: 'Mois en cours' }));
     expect(screen.getByText('Novembre 2026')).toBeInTheDocument();
   });
@@ -173,10 +177,15 @@ describe('améliorations de simplicité (recherche et audit)', () => {
   it('tableau de bord : « Comment est-ce calculé ? » détaille le calcul avec les vrais chiffres', async () => {
     const user = renderApp();
     await user.click(screen.getByText('Comment est-ce calculé ?'));
-    const calcul = screen.getByText('= Solde disponible du mois').closest('dl')!;
-    expect(norm(calcul.textContent)).toContain('+ Revenus du mois1 700,50 €');
-    expect(norm(calcul.textContent)).toContain('= Solde disponible du mois821,51 €');
-    expect(norm(screen.getByText(/Divisé par 19 jours restants/).textContent)).toContain('environ 43,23 € par jour');
+    const calcul = screen.getByText(/= Solde de «.Mon compte.» aujourd’hui/).closest('dl')!;
+    // Cumul depuis la première saisie (15 mars) : tout ce qui est arrivé moins tout ce qui est parti
+    expect(norm(calcul.textContent)).toContain('+ Revenus reçus5 000,50 €');
+    expect(norm(calcul.textContent)).toContain('− Dépenses218,00 €');
+    expect(norm(calcul.textContent)).toContain('− Charges fixes prélevées2 041,98 €');
+    expect(norm(calcul.textContent)).toContain('− Épargne versée150,00 €');
+    expect(norm(calcul.textContent)).toContain('= Solde de « Mon compte » aujourd’hui2 590,52 €');
+    expect(norm(screen.getByText(/Divisé par 19 jours restants/).textContent)).toContain('environ 136,34 € par jour');
+    expect(norm(screen.getByText(/Divisé par 19 jours restants/).textContent)).toContain('depuis votre première saisie (15 mars 2026)');
     // Une seule carte principale : la phrase, les repères et le calcul (plus de panneau qui répète les montants)
     expect(document.querySelector('.hero-figure')).toBeNull();
     expect(screen.getByText(/46 % des revenus déjà dépensés/)).toBeInTheDocument();
@@ -334,11 +343,29 @@ describe('retours de la propriétaire : report, catégories, messages', () => {
     await user.clear(date);
     await user.type(date, '2026-10-26');
     await user.click(within(dialog).getByRole('button', { name: 'Ajouter le revenu' }));
+    // Règle du 20 (par défaut) : la prime du 26 octobre compte pour novembre
+    expect(await screen.findByText('Revenu enregistré. Reçu à partir du 20 : il compte pour novembre 2026.', { normalizer: norm })).toBeInTheDocument();
+    expect(norm(screen.getByText(/Les revenus reçus à partir du 20/).textContent)).toContain('Prime (26 oct. 2026) est compté ici');
+    expect(norm(screen.getByText('Revenus de novembre 2026').parentElement!.textContent)).toContain('2 700,50 €');
+  });
+
+  it('revenu daté d’un autre mois, règle du 20 désactivée : message clair et bouton pour voir ce mois', async () => {
+    const d = avecReport();
+    d.settings.incomeShiftDay = null;
+    const user = renderApp(d, '/revenus');
+    await user.click(screen.getByRole('button', { name: 'Ajouter un revenu' }));
+    const dialog = screen.getByRole('dialog');
+    await user.type(within(dialog).getByLabelText('Nom'), 'Prime');
+    await user.type(within(dialog).getByLabelText('Montant'), '1000');
+    await user.click(within(dialog).getByLabelText(/Exceptionnel/));
+    const date = within(dialog).getByLabelText('Date');
+    await user.clear(date);
+    await user.type(date, '2026-10-26');
+    await user.click(within(dialog).getByRole('button', { name: 'Ajouter le revenu' }));
     expect(
       await screen.findByText('Revenu enregistré. Mois concerné : octobre 2026. Le reste de ce mois est reporté sur les suivants.', { normalizer: norm }),
     ).toBeInTheDocument();
-    // Le report apparaît sur la page des revenus de novembre
-    expect(screen.getByText(/Le reste des mois précédents/)).toBeInTheDocument();
+    expect(screen.getByText(/Reste des mois précédents/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Voir octobre 2026' }));
     expect(screen.getByText('Octobre 2026')).toBeInTheDocument();
   });
@@ -351,14 +378,14 @@ describe('retours de la propriétaire : report, catégories, messages', () => {
     expect(within(ligne).getByRole('button', { name: 'Voir octobre 2026' })).toBeInTheDocument();
   });
 
-  it('tableau de bord : le report figure dans le calcul et dans « Ce mois-ci »', async () => {
-    const user = renderApp(avecReport());
-    expect(norm(document.querySelector('.report-ligne')?.textContent)).toContain('Report des mois précédents : + 1 753,02 €, compté dans votre disponible');
-    expect(document.querySelector('.report-ligne strong')).toHaveClass('montant-plus');
-    await user.click(screen.getByText('Comment est-ce calculé ?'));
-    const calcul = screen.getByText('= Solde disponible du mois').closest('dl')!;
-    expect(norm(calcul.textContent)).toContain('+ Report des mois précédents1 753,02 €');
-    expect(norm(calcul.textContent)).toContain('= Solde disponible du mois2 574,53 €');
+  it('tableau de bord : le solde cumule déjà tout ; le report reste dans « Détail du mois »', () => {
+    renderApp(avecReport());
+    // Même phrase qu'avec le report désactivé : c'est le solde de « Mon compte »
+    expect(norm(screen.getByText(/Il vous reste/).textContent)).toContain('Il vous reste 2 590 €');
+    expect(document.body.textContent).not.toContain('compté dans votre disponible');
+    const detail = screen.getByText('Détail du mois').closest('details')!;
+    expect(norm(within(detail).getByText('Report des mois précédents').parentElement!.textContent)).toContain('1 753,02 €');
+    expect(norm(within(detail).getByText('Bilan du mois').parentElement!.textContent)).toContain('2 574,53 €');
   });
 
   it('paramètres : le report se désactive', async () => {
@@ -397,10 +424,18 @@ describe('identité claire et améliorations v2', () => {
     expect(pageHtml).toContain('<title>SoldeClair</title>');
   });
 
-  it('accueil : résumé des 7 prochains jours et dates relatives', () => {
+  it('accueil : « À venir » seulement sur les 3 prochains jours, avec des dates relatives', () => {
     renderApp();
-    expect(screen.getByText('Aucune charge prévue dans les 7 prochains jours.')).toBeInTheDocument();
-    expect(screen.getByText(/Le 20 nov\. 2026 – Téléphone/)).toBeInTheDocument();
+    // Le forfait du 20 est trop loin : il reste visible dans « Mon compte » → « À venir »
+    expect(screen.getByText('Rien de prévu dans les 3 prochains jours.')).toBeInTheDocument();
+    expect(screen.queryByText(/Téléphone/)).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Tout voir' })).toHaveAttribute('href', '/compte?vue=a-venir');
+    cleanup();
+    const d = fixture();
+    d.fixedCharges = d.fixedCharges.map((c) => (c.id === 'f-tel' ? { ...c, date: '2026-09-14' } : c));
+    renderApp(d);
+    expect(norm(screen.getByText(/Dans les 3 prochains jours/).textContent)).toBe('Dans les 3 prochains jours : 1 opération prévue, pas encore comptée dans votre solde.');
+    expect(screen.getByText(/Dans 2 jours – Téléphone/)).toBeInTheDocument();
   });
 
   it('historique : filtres actifs visibles et effaçables en un geste', async () => {
@@ -462,12 +497,12 @@ describe('améliorations validées : ajout rapide, raccourcis, discrétion, simp
     const [bouton] = screen.getAllByRole('button', { name: 'Masquer les montants' });
     await user.click(bouton);
     expect(norm(screen.getByText(/Il vous reste/).textContent)).toBe('Il vous reste ••• € pour terminer le mois, soit environ ••• € par jour.');
-    expect(norm(screen.getByText('Solde disponible').parentElement!.textContent)).toContain('••• €');
-    expect(document.body.textContent).not.toMatch(/821,51/);
+    expect(norm(screen.getByText('Bilan du mois').parentElement!.textContent)).toContain('••• €');
+    expect(document.body.textContent).not.toMatch(/821,51|2 590|2 590/);
     expect(screen.getAllByRole('button', { name: 'Afficher les montants' })[0]).toHaveAttribute('aria-pressed', 'true');
     await waitFor(() => expect(stored().settings.hideAmounts).toBe(true));
     await user.click(screen.getAllByRole('button', { name: 'Afficher les montants' })[0]);
-    expect(norm(screen.getByText('Solde disponible').parentElement!.textContent)).toContain('821,51 €');
+    expect(norm(screen.getByText('Bilan du mois').parentElement!.textContent)).toContain('821,51 €');
   });
 
   it('tableau de bord : ordre prévu, au plus quatre chiffres principaux, le reste dans « Détail du mois »', () => {
@@ -485,7 +520,7 @@ describe('améliorations validées : ajout rapide, raccourcis, discrétion, simp
     expect(Array.from(detail.querySelectorAll('.stat-label')).map((e) => e.textContent)).toEqual([
       'Charges fixes',
       'Dépenses variables',
-      'Solde disponible',
+      'Bilan du mois',
       'Épargné ce mois',
       'Reste à vivre par jour',
       'Prévision fin de mois',
@@ -506,9 +541,10 @@ describe('améliorations validées : ajout rapide, raccourcis, discrétion, simp
     const carte = screen.getByRole('heading', { name: 'Estimation des 30 prochains jours' }).closest('.card')! as HTMLElement;
     expect(within(carte).getByText('Estimation')).toBeInTheDocument();
     expect(Array.from(carte.querySelectorAll('.prevision-points dt')).map((e) => e.textContent)).toEqual(['Dans 7 jours', 'Dans 15 jours', 'Dans 30 jours']);
-    expect(norm(carte.querySelector('.prevision-points')!.textContent)).toContain('768,69 €');
+    // Départ : le solde de « Mon compte » (2 590,52 €), moins 9,83 € de dépenses courantes par jour
+    expect(norm(carte.querySelector('.prevision-points')!.textContent)).toContain('2 521,71 €');
     expect(norm(carte.querySelector('.prevision-phrase')!.textContent)).toBe(
-      'Si tout se passe comme prévu, il vous resterait environ 1 426 € dans 30 jours.',
+      'Si tout se passe comme prévu, il vous resterait environ 3 179 € dans 30 jours.',
     );
   });
 
@@ -583,12 +619,14 @@ describe('modification et suppression', () => {
 describe('simulateur', () => {
   it('donne une appréciation et le nouveau reste à vivre', async () => {
     const user = renderApp(fixture(), '/simulateur');
-    await user.type(screen.getByLabelText('Montant de l’achat'), '900');
+    // Point de départ : le solde de « Mon compte » (2 590,52 €)
+    await user.type(screen.getByLabelText('Montant de l’achat'), '3000');
     expect(screen.getByText('Achat susceptible de déséquilibrer le budget')).toBeInTheDocument();
     await user.clear(screen.getByLabelText('Montant de l’achat'));
     await user.type(screen.getByLabelText('Montant de l’achat'), '100');
     expect(screen.getByText('Situation confortable')).toBeInTheDocument();
-    expect(norm(screen.getByText('Solde restant après l’achat').parentElement!.textContent)).toContain('721,51 €');
+    expect(norm(screen.getByText('Solde aujourd’hui').parentElement!.textContent)).toContain('2 590,52 €');
+    expect(norm(screen.getByText('Solde restant après l’achat').parentElement!.textContent)).toContain('2 490,52 €');
     expect(screen.getByText(/pas un conseil financier/)).toBeInTheDocument();
   });
 });

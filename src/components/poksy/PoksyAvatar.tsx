@@ -1,7 +1,7 @@
 /**
  * Avatar de Poksy : tête de chat minimaliste, vue de face, dans un cercle bleu clair.
  * Dessin original (palette SoldeClair : #E7F3F8, #2383E2, #191919, #FFFFFF), sans texte ni symbole monétaire.
- * Décoratif : masqué aux lecteurs d'écran, car le nom « Poksy » est toujours écrit à côté.
+ * Décoratif : masqué aux lecteurs d'écran, car le nom « Poksy » est toujours écrit à côté.
  */
 export function PoksyAvatar({ taille = 40, className = '' }: { taille?: number; className?: string }) {
   return (

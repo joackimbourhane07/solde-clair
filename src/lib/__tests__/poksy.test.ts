@@ -22,6 +22,9 @@ import {
   type PageKey,
 } from '../poksy';
 
+/** Réponse avec espaces ordinaires (les fiches utilisent des espaces insécables dans les guillemets). */
+const rep = (f: Parameters<typeof reponseDe>[0], ctx?: ContextePoksy) => reponseDe(f, ctx).replace(/[\u00a0\u202f]/g, ' ');
+
 const CONTEXTE_COMPLET: ContextePoksy = { resteAVivre: '1 407 €', parJour: '74 €', joursRestants: 19, ajustementFait: false };
 
 /** Phrases d'une réponse (un point, « ? » ou « ! » suivi d'un espace ou de la fin). */
@@ -78,7 +81,7 @@ describe('Poksy : questions proposées', () => {
       'Confidentialité (7)',
       'Utilisation du site (6)',
     ]);
-    const toutes = RUBRIQUES.flatMap((r) => r.questions.map((q) => q.libelle));
+    const toutes = RUBRIQUES.flatMap((r) => r.questions.map((q) => q.libelle.replace(/[\u00a0\u202f]/g, ' ')));
     for (const attendue of [
       'Pourquoi mon solde ne correspond-il pas à ma banque ?',
       'Comment ajuster mon solde réel ?',
@@ -162,7 +165,7 @@ describe('Poksy : recherche par mots-clés', () => {
 
   it('« Puis-je acheter cet article ? » : Poksy ne décide pas à votre place', () => {
     const f = rechercher('Puis-je acheter cet article ?').fiche!;
-    expect(reponseDe(f)).toBe(
+    expect(rep(f)).toBe(
       'Poksy ne peut pas décider à votre place. Utilisez le simulateur d’achat pour voir l’impact sur votre solde, votre disponible quotidien et votre objectif d’épargne. Le résultat reste une indication budgétaire.',
     );
     expect(f.action).toBe('simulateur');
@@ -188,28 +191,28 @@ describe('Poksy : recherche par mots-clés', () => {
 
 describe('Poksy : réponses', () => {
   it('exemples demandés, mot pour mot', () => {
-    expect(reponseDe(fiche('ajouter-depense'))).toContain(
+    expect(rep(fiche('ajouter-depense'))).toContain(
       'Appuyez sur le bouton « + », saisissez le montant, choisissez une catégorie puis validez.',
     );
-    expect(reponseDe(fiche('fixe-variable'))).toBe(
+    expect(rep(fiche('fixe-variable'))).toBe(
       'Une charge fixe revient régulièrement avec un montant généralement prévisible, comme le loyer ou un abonnement. Une dépense variable peut changer chaque mois, comme les courses, le carburant ou les loisirs.',
     );
-    expect(reponseDe(fiche('ajuster-solde'))).toBe(
+    expect(rep(fiche('ajuster-solde'))).toBe(
       'Ouvrez la page « Mon compte », puis appuyez sur « Ajuster le solde ». Indiquez le montant réellement affiché par votre banque. SoldeClair enregistre une correction datée sans supprimer vos anciennes opérations.',
     );
-    expect(reponseDe(fiche('donnees-ou'))).toBe(
+    expect(rep(fiche('donnees-ou'))).toBe(
       'Vos données sont enregistrées uniquement dans le navigateur de l’appareil utilisé. Elles ne sont pas envoyées à une banque ni stockées dans un compte SoldeClair. Pensez à exporter régulièrement une sauvegarde.',
     );
-    expect(reponseDe(fiche('reste-a-vivre'))).toContain('Appuyez sur « Comment est-ce calculé ? » dans le tableau de bord');
+    expect(rep(fiche('reste-a-vivre'))).toContain('Appuyez sur « Comment est-ce calculé ? » dans le tableau de bord');
   });
 
   it('les chiffres réels complètent la réponse, sans jamais être inventés', () => {
-    expect(reponseDe(fiche('reste-a-vivre'), CONTEXTE_COMPLET)).toContain('Ce mois-ci, il vous reste 1 407 €.');
-    expect(reponseDe(fiche('reste-a-vivre'), { resteAVivre: '− 52 €', resteNegatif: true })).toContain('le solde du mois est de − 52 €');
-    expect(reponseDe(fiche('reste-a-vivre'), {})).not.toContain('Ce mois-ci');
-    expect(reponseDe(fiche('par-jour'), CONTEXTE_COMPLET)).toContain('environ 74 € par jour pendant 19 jours');
-    expect(reponseDe(fiche('solde-banque'), CONTEXTE_COMPLET)).toContain('Aucun solde réel n’a encore été indiqué.');
-    expect(reponseDe(fiche('solde-banque'), { ajustementFait: true })).not.toContain('Aucun solde réel');
+    expect(rep(fiche('reste-a-vivre'), CONTEXTE_COMPLET)).toContain('Aujourd’hui, il vous reste 1 407 €.');
+    expect(rep(fiche('reste-a-vivre'), { resteAVivre: '− 52 €', resteNegatif: true })).toContain('votre solde est de − 52 €');
+    expect(rep(fiche('reste-a-vivre'), {})).not.toContain('Aujourd’hui, il vous reste');
+    expect(rep(fiche('par-jour'), CONTEXTE_COMPLET)).toContain('environ 74 € par jour pendant 19 jours');
+    expect(rep(fiche('solde-banque'), CONTEXTE_COMPLET)).toContain('Aucun solde réel n’a encore été indiqué.');
+    expect(rep(fiche('solde-banque'), { ajustementFait: true })).not.toContain('Aucun solde réel');
   });
 
   it('de une à quatre phrases, en français simple', () => {
@@ -232,8 +235,8 @@ describe('Poksy : réponses', () => {
       /je suis une (intelligence artificielle|IA)/i,
       /\bje suis (une banque|un conseiller|un comptable)/i,
     ];
-    for (const f of FICHES) for (const motif of interdits) expect(reponseDe(f, CONTEXTE_COMPLET), f.id).not.toMatch(motif);
-    expect(reponseDe(fiche('qui-es-tu'))).toContain('je ne suis pas une intelligence artificielle');
+    for (const f of FICHES) for (const motif of interdits) expect(rep(f, CONTEXTE_COMPLET), f.id).not.toMatch(motif);
+    expect(rep(fiche('qui-es-tu'))).toContain('je ne suis pas une intelligence artificielle');
   });
 
   it('ne demande jamais de données bancaires', () => {

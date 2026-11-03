@@ -2,6 +2,7 @@ import type { AppData, Cents, ISODate } from '../types';
 import { budgetLevel, categoryBudgets, monthSummary, type BudgetLevel } from './budget';
 import { monthOf } from './dates';
 import { goalProgress, sortGoals } from './goals';
+import { resteAVivre } from './accounts';
 import { divideCents } from './money';
 
 export type Verdict = 'confortable' | 'prudence' | 'desequilibre';
@@ -53,7 +54,7 @@ export interface SimulationResult {
  * Règles de l'appréciation (indication budgétaire, pas un conseil financier) :
  * - « déséquilibre » : le solde du mois deviendrait négatif ;
  * - « prudence » : l'achat entame l'épargne prévue du mois, fait dépasser le
- *   budget de sa catégorie, ou consomme plus de la moitié du solde disponible ;
+ *   budget de sa catégorie, ou consomme plus de la moitié du solde ;
  * - « confortable » : sinon.
  */
 export function simulatePurchase(
@@ -64,11 +65,14 @@ export function simulatePurchase(
 ): SimulationResult {
   const month = monthOf(today);
   const s = monthSummary(data, month, today);
-  const availableAfter = s.available - amount;
-  const days = s.daysRemaining;
+  // Point de départ : le solde de « Mon compte », comme le tableau de bord
+  const reste = resteAVivre(data, today);
+  const availableBefore = reste.solde;
+  const availableAfter = availableBefore - amount;
+  const days = reste.joursRestants;
 
   const clamp = (v: Cents) => Math.max(0, Math.min(v, s.savingsRemaining));
-  const savingsPossibleBefore = clamp(s.available);
+  const savingsPossibleBefore = clamp(availableBefore);
   const savingsPossibleAfter = clamp(availableAfter);
   const savingsImpact = savingsPossibleBefore - savingsPossibleAfter;
 
@@ -103,24 +107,24 @@ export function simulatePurchase(
   let verdict: Verdict = 'confortable';
   if (availableAfter < 0) {
     verdict = 'desequilibre';
-    reasons.push('Votre solde du mois deviendrait négatif.');
+    reasons.push('Votre solde deviendrait négatif.');
   } else {
     if (savingsImpact > 0) reasons.push('L’achat réduit l’épargne prévue ce mois-ci.');
     if (category && category.levelAfter === 'depasse' && category.levelBefore !== 'depasse')
       reasons.push(`Le budget « ${category.name} » serait dépassé.`);
     else if (category && category.levelAfter === 'depasse')
       reasons.push(`Le budget « ${category.name} » est déjà dépassé.`);
-    if (s.available > 0 && amount * 2 > s.available) reasons.push('L’achat représente plus de la moitié de votre solde disponible.');
+    if (availableBefore > 0 && amount * 2 > availableBefore) reasons.push('L’achat représente plus de la moitié de votre solde.');
     if (reasons.length > 0) verdict = 'prudence';
     else reasons.push('L’achat reste compatible avec votre budget et votre épargne prévue.');
   }
 
   return {
     amount,
-    availableBefore: s.available,
+    availableBefore,
     availableAfter,
     daysRemaining: days,
-    dailyBefore: s.dailyRemaining,
+    dailyBefore: reste.parJour,
     dailyAfter: days > 0 ? divideCents(availableAfter, days) : null,
     savingsPossibleBefore,
     savingsPossibleAfter,

@@ -1,3 +1,4 @@
+import { Poksy } from '../components/poksy/Poksy';
 import { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../state/AppState';
@@ -554,6 +555,8 @@ export default function Accueil() {
           <Icon name="lock" size={14} /> Version de test : vos données restent dans ce navigateur, sur cet appareil. SoldeClair donne des repères budgétaires, pas des conseils financiers.
         </p>
       </footer>
+      {/* Poksy aussi sur la page d'accueil : questions sur SoldeClair, même sans profil */}
+      <Poksy surAccueil />
     </div>
   );
 }

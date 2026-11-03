@@ -11,10 +11,12 @@ import type {
   Profile,
   SavingsDeposit,
   SavingsGoal,
+  GoalTheme,
 } from '../types';
 import { earliestDate, signedAmount, transactionsInRange } from './budget';
 import { isValidISODate, lastDay, monthOf } from './dates';
 import { centsToInput } from './money';
+import { GOAL_THEMES } from './goals';
 
 /**
  * Stockage 100 % local : les données restent dans le navigateur (localStorage).
@@ -274,6 +276,7 @@ export function validateData(input: unknown): ValidationResult {
         priority: (['haute', 'moyenne', 'basse'].includes(r.priority as string) ? r.priority : 'moyenne') as SavingsGoal['priority'],
         monthlyContribution: isAmount(r.monthlyContribution) ? r.monthlyContribution : 0,
         createdAt: isValidISODate(r.createdAt) ? r.createdAt : '2026-01-01',
+        ...(GOAL_THEMES.includes(r.theme as GoalTheme) ? { theme: r.theme as GoalTheme } : {}),
       };
     });
 
@@ -313,6 +316,10 @@ export function validateData(input: unknown): ValidationResult {
           ...(isValidISODate(settingsIn.lastBackup) ? { lastBackup: settingsIn.lastBackup } : {}),
           ...(typeof settingsIn.hideAmounts === 'boolean' ? { hideAmounts: settingsIn.hideAmounts } : {}),
           ...(typeof settingsIn.carryOver === 'boolean' ? { carryOver: settingsIn.carryOver } : {}),
+          ...(settingsIn.incomeShiftDay === null ||
+          (Number.isInteger(settingsIn.incomeShiftDay) && (settingsIn.incomeShiftDay as number) >= 2 && (settingsIn.incomeShiftDay as number) <= 28)
+            ? { incomeShiftDay: settingsIn.incomeShiftDay as number | null }
+            : {}),
           ...(Number.isInteger(settingsIn.presetsVersion) ? { presetsVersion: settingsIn.presetsVersion as number } : {}),
           ...(Array.isArray(settingsIn.dismissedActions)
             ? { dismissedActions: settingsIn.dismissedActions.filter((x): x is string => typeof x === 'string' && x.length <= 120).slice(-50) }

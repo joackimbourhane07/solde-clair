@@ -28,7 +28,7 @@ function noterBienvenueVue() {
  * Poksy, guide de SoldeClair : bouton flottant (avatar), message de première visite et fenêtre de discussion.
  * Tout fonctionne sur l'appareil ; Poksy ne modifie jamais les données (ses boutons ouvrent seulement une page ou un formulaire).
  */
-export function Poksy({ onAjouterDepense, cache = false }: { onAjouterDepense: () => void; cache?: boolean }) {
+export function Poksy({ onAjouterDepense, cache = false, surAccueil = false }: { onAjouterDepense?: () => void; cache?: boolean; surAccueil?: boolean }) {
   const [ouvert, setOuvert] = useState(false);
   const [bulle, setBulle] = useState(() => !bienvenueDejaVue());
   // La conversation reste en mémoire tant que la page n'est pas rechargée (jamais enregistrée).
@@ -89,7 +89,7 @@ export function Poksy({ onAjouterDepense, cache = false }: { onAjouterDepense: (
   };
 
   return (
-    <div className={`poksy ${cache ? 'poksy-cache' : ''}`}>
+    <div className={`poksy ${cache ? 'poksy-cache' : ''} ${surAccueil ? 'poksy-accueil' : ''}`}>
       {bulle && !ouvert && (
         <div className="poksy-bienvenue">
           <button type="button" className="poksy-bienvenue-texte" onClick={ouvrir} onPointerEnter={precharger}>
@@ -137,7 +137,8 @@ export function Poksy({ onAjouterDepense, cache = false }: { onAjouterDepense: (
             }}
             ajouterDepense={() => {
               fermer(false);
-              onAjouterDepense();
+              if (onAjouterDepense) onAjouterDepense();
+              else navigate('/depenses');
             }}
           />
         </Suspense>
