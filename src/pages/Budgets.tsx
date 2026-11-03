@@ -2,10 +2,23 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import { categoryBudgets, type CategoryBudgetLine } from '../lib/budget';
-import { monthLabel } from '../lib/dates';
+import { formatDate, monthLabel, monthOf } from '../lib/dates';
 import { centsToInput, sum } from '../lib/money';
 import { isDuplicateName, makeCategory } from '../lib/categories';
-import { Button, Card, EmptyState, LevelBadge, Modal, MoneyField, MonthSwitcher, Notice, PageHeader, ProgressBar, Stat, TextField } from '../components/ui';
+import {
+  Button,
+  Card,
+  EmptyState,
+  LevelBadge,
+  Modal,
+  MoneyField,
+  MonthSwitcher,
+  Notice,
+  PageHeader,
+  ProgressBar,
+  Stat,
+  TextField,
+} from '../components/ui';
 import { checkAmount } from '../components/forms';
 
 function BudgetEditor({ line, onClose }: { line: CategoryBudgetLine | 'new'; onClose: () => void }) {
@@ -55,6 +68,37 @@ function BudgetEditor({ line, onClose }: { line: CategoryBudgetLine | 'new'; onC
   );
 }
 
+/** Les dépenses du mois de la catégorie, dépliables directement dans la carte (sans changer de page). */
+function DepensesDeLaCategorie({ categoryId }: { categoryId: string }) {
+  const { data, month, fmt } = useApp();
+  const depenses = data.expenses
+    .filter((e) => e.categoryId === categoryId && monthOf(e.date) === month)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.amount - a.amount);
+  if (depenses.length === 0) return <p className="budget-vide">Aucune dépense ce mois-ci.</p>;
+  return (
+    <details className="disclosure budget-detail">
+      <summary>
+        {depenses.length} dépense{depenses.length > 1 ? 's' : ''} ce mois-ci
+      </summary>
+      <div className="disclosure-body">
+        <ul className="budget-depenses">
+          {depenses.slice(0, 5).map((e) => (
+            <li key={e.id}>
+              <span>
+                {e.description || 'Dépense'} <span className="muted">– {formatDate(e.date)}</span>
+              </span>
+              <span className="montant montant-moins">− {fmt(e.amount)}</span>
+            </li>
+          ))}
+        </ul>
+        <Link to={`/depenses?categorie=${categoryId}`} className="link">
+          {depenses.length > 5 ? `Voir les ${depenses.length} dépenses` : 'Voir dans Dépenses'}
+        </Link>
+      </div>
+    </details>
+  );
+}
+
 export function Budgets() {
   const { data, month, fmt } = useApp();
   const [editing, setEditing] = useState<CategoryBudgetLine | 'new' | null>(null);
@@ -67,7 +111,9 @@ export function Budgets() {
   const sorted = [...lines].sort((a, b) => order[a.level] - order[b.level] || b.spent - a.spent);
   // Les catégories sans limite sont regroupées dans une liste compacte (page moins chargée).
   const avecLimite = sorted.filter((l) => l.budget !== null);
-  const sansLimite = sorted.filter((l) => l.budget === null).sort((a, b) => b.spent - a.spent || a.category.name.localeCompare(b.category.name, 'fr'));
+  const sansLimite = sorted
+    .filter((l) => l.budget === null)
+    .sort((a, b) => b.spent - a.spent || a.category.name.localeCompare(b.category.name, 'fr'));
 
   return (
     <div className="page">
@@ -91,8 +137,8 @@ export function Budgets() {
         />
       </div>
       <Notice>
-        Repères : <strong>75 %</strong> (attention), <strong>90 %</strong> (alerte) et <strong>100 %</strong> (dépassement). Chaque état est
-        indiqué par un texte et une icône, en plus de la couleur.
+        Repères : <strong>75 %</strong> (attention), <strong>90 %</strong> (alerte) et <strong>100 %</strong> (dépassement). Chaque état est indiqué
+        par un texte et une icône, en plus de la couleur.
       </Notice>
       {lines.length === 0 && <EmptyState title="Aucune catégorie de dépenses" />}
       {avecLimite.length > 0 && (
@@ -101,7 +147,13 @@ export function Budgets() {
             <Card key={l.category.id} className={`budget-card budget-${l.level}`} headingLevel={3} title={l.category.name}>
               <div className="budget-top">
                 <LevelBadge level={l.level} />
-                <Button variant="discret" className="btn-small" icon="edit" onClick={() => setEditing(l)} aria-label={`Modifier la limite de ${l.category.name}`}>
+                <Button
+                  variant="discret"
+                  className="btn-small"
+                  icon="edit"
+                  onClick={() => setEditing(l)}
+                  aria-label={`Modifier la limite de ${l.category.name}`}
+                >
                   Modifier
                 </Button>
               </div>
@@ -128,10 +180,11 @@ export function Budgets() {
                     label={`Budget ${l.category.name}`}
                     valueText={`${l.pct}\u00a0% utilisé, ${fmt(l.spent)} sur ${fmt(l.budget)}`}
                   />
+                  <DepensesDeLaCategorie categoryId={l.category.id} />
                   {l.level === 'depasse' && (
                     <p className="budget-conseil">
-                      Votre budget {l.category.name.toLocaleLowerCase('fr')} est dépassé. Vous pouvez consulter les dépenses concernées ou ajuster cette
-                      limite pour le mois.{' '}
+                      Votre budget {l.category.name.toLocaleLowerCase('fr')} est dépassé. Vous pouvez consulter les dépenses concernées ou ajuster
+                      cette limite pour le mois.{' '}
                       <Link to={`/depenses?categorie=${l.category.id}`} className="link">
                         Voir les dépenses
                       </Link>
@@ -157,7 +210,13 @@ export function Budgets() {
                   <span className="item-title">{l.category.name}</span>
                   <span className="item-meta">Dépensé ce mois : {fmt(l.spent)}</span>
                 </span>
-                <Button variant="discret" className="btn-small" icon="plus" onClick={() => setEditing(l)} aria-label={`Fixer une limite pour ${l.category.name}`}>
+                <Button
+                  variant="discret"
+                  className="btn-small"
+                  icon="plus"
+                  onClick={() => setEditing(l)}
+                  aria-label={`Fixer une limite pour ${l.category.name}`}
+                >
                   Fixer une limite
                 </Button>
               </li>

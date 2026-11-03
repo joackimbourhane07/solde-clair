@@ -19,7 +19,7 @@ import { Button, Card, CheckboxField, ConfirmDialog, EmptyState, IconButton, Mod
 import { IncomeForm } from '../components/forms';
 
 export function Incomes() {
-  const { data, month, setMonth, today, fmt, dispatch, notify } = useApp();
+  const { data, month, setMonth, today, fmt, dispatch, notify, recents } = useApp();
   const [editing, setEditing] = useState<Income | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<Income | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -172,7 +172,7 @@ export function Incomes() {
               const occ = occurrences.filter((t) => t.sourceId === inc.id);
               const hors = horsDuMois(inc);
               return (
-                <li key={inc.id} className="item">
+                <li key={inc.id} className={`item ${recents.has(inc.id) ? 'item-recent' : ''}`}>
                   <div className="item-main">
                     <p className="item-title">
                       {inc.name}{' '}
@@ -253,8 +253,12 @@ export function Incomes() {
           }
           onCancel={() => setToDelete(null)}
           onConfirm={() => {
-            dispatch({ type: 'remove', collection: 'incomes', id: toDelete.id });
-            notify('Revenu supprimé.');
+            const supprime = toDelete;
+            dispatch({ type: 'remove', collection: 'incomes', id: supprime.id });
+            notify('Revenu supprimé.', 'succes', {
+              label: 'Annuler',
+              onClick: () => dispatch({ type: 'upsert', collection: 'incomes', item: supprime }),
+            });
             setToDelete(null);
           }}
         />

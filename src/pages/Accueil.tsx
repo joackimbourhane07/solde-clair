@@ -33,15 +33,23 @@ const ECRANS = [
   {
     src: captureTableau,
     titre: 'Ce qu’il vous reste',
-    alt: 'Tableau de bord sur téléphone : il vous reste 134 € pour terminer le mois, soit environ 7 € par jour.',
+    alt: 'Tableau de bord sur téléphone : il vous reste 148 € pour terminer le mois, soit environ 7 € par jour, avec le choix par jour ou par semaine.',
   },
-  { src: captureAjout, titre: 'Ajouter une dépense', alt: 'Ajout d’une dépense : montant, catégories fréquentes en un geste, description et date.' },
-  { src: captureAVenir, titre: 'Ce qui arrive', alt: 'Carte À venir : prélèvements et revenus prévus avec leurs dates.' },
-  { src: captureObjectifs, titre: 'Vos objectifs', alt: 'Objectif Ordinateur : 310 € sur 900 €, 34 % atteint, reste à épargner et date estimée.' },
+  {
+    src: captureAjout,
+    titre: 'Ajouter une dépense',
+    alt: 'Ajout d’une dépense : montant avec ajout rapide de 5, 10, 20 ou 50 €, catégories fréquentes en un geste, description et date.',
+  },
+  {
+    src: captureAVenir,
+    titre: 'Ce qui arrive',
+    alt: 'Mon compte, onglet À venir : prélèvements et revenus des 30 prochains jours avec leurs dates et le solde prévu.',
+  },
+  { src: captureObjectifs, titre: 'Vos objectifs', alt: 'Objectifs d’épargne : 465 € épargnés au total, objectif Ordinateur atteint à 34 %.' },
   {
     src: captureSimulateur,
     titre: 'Simuler un achat',
-    alt: 'Simulateur : achat de 25 € en loisirs, achat possible avec prudence, solde avant et après.',
+    alt: 'Simulateur : achat de 25 €, situation confortable, solde de 148,57 € avant et 123,57 € après.',
   },
 ];
 
@@ -229,7 +237,7 @@ export default function Accueil() {
               <div className="ecran">
                 <img
                   src={captureOrdinateur}
-                  alt="Tableau de bord de SoldeClair sur ordinateur : « Il vous reste 134 € pour terminer le mois, soit environ 7 € par jour », charges à venir et chiffres du mois."
+                  alt="Tableau de bord de SoldeClair sur ordinateur : il vous reste 148 € pour terminer le mois, soit environ 7 € par jour ; menu avec Mon plan d’épargne, objectif et repères pour vous."
                   width={1440}
                   height={900}
                   decoding="async"
@@ -347,12 +355,12 @@ export default function Accueil() {
             <Telephone
               src={captureAjout}
               className="tel-arriere"
-              alt="Ajout d’une dépense : montant, catégories fréquentes en un geste, description et date."
+              alt="Ajout d’une dépense : montant avec ajout rapide de 5, 10, 20 ou 50 €, catégories fréquentes en un geste, description et date."
             />
             <Telephone
               src={captureAVenir}
               className="tel-avant"
-              alt="Carte « À venir » : « Dans les 7 prochains jours : 1 charge prévue », prélèvements et revenus prévus avec leurs dates."
+              alt="Mon compte, onglet À venir : prélèvements et revenus des 30 prochains jours avec leurs dates et le solde prévu."
             />
             <div className="objet-coin objet-coin-bas" aria-hidden="true">
               <PetitTicket />
@@ -383,10 +391,7 @@ export default function Accueil() {
             </ul>
           </div>
           <div className="accueil-colonne-visuel visuel-tel">
-            <Telephone
-              src={captureObjectifs}
-              alt="Objectif « Ordinateur » : 310 € sur 900 €, « Vous avez atteint 34 % de votre objectif », reste à épargner et date estimée."
-            />
+            <Telephone src={captureObjectifs} alt="Objectifs d’épargne : 465 € épargnés au total, objectif Ordinateur atteint à 34 %." />
             <div className="objet-coin objet-coin-bas grand" aria-hidden="true">
               <IllustrationBocal />
             </div>

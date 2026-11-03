@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { AppProvider } from '../state/AppState';
@@ -253,16 +253,17 @@ describe('salaire de fin de mois : dernier versement déjà reçu', () => {
     return d;
   }
 
-  it('l’accueil le signale ; indiquer le 28 octobre fait compter le salaire pour novembre', async () => {
+  it('la page Revenus le signale ; indiquer le 28 octobre fait compter le salaire pour novembre (plus d’alerte sur l’accueil)', async () => {
     const user = renderApp(salaireFinDeMois(false), '/');
-    const alerte = screen.getByText(/commence le 28 nov\. 2026|commence le 28/).closest('.notice')!;
-    await user.click(within(alerte as HTMLElement).getByRole('link', { name: 'Indiquer le dernier versement reçu' }));
+    expect(screen.queryByRole('link', { name: 'Indiquer le dernier versement reçu' })).not.toBeInTheDocument();
+    cleanup();
+    renderApp(salaireFinDeMois(false), '/revenus');
+    await user.click(screen.getByRole('button', { name: 'Indiquer le dernier versement reçu' }));
     const dialog = await screen.findByRole('dialog', { name: 'Dernier versement : Salaire' });
     await user.type(within(dialog).getByLabelText(/^Dernier versement déjà reçu/), '2026-10-28');
     await user.click(within(dialog).getByRole('button', { name: 'Enregistrer les modifications' }));
     expect(stored().incomes[0].date).toBe('2026-10-28');
     expect(stored().adjustments).toHaveLength(0);
-    // Novembre a maintenant son salaire : plus d'alerte
     expect(screen.queryByRole('button', { name: 'Indiquer le dernier versement reçu' })).not.toBeInTheDocument();
     const stat = (label: string) => norm(screen.getByText(label).parentElement!.textContent);
     expect(stat('Revenus de novembre 2026')).toContain('700,00 €');

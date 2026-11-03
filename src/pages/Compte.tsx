@@ -58,8 +58,9 @@ function IconeOperation({ t }: { t: Transaction }) {
 
 function Operation({ t, avecCompte, onSupprimer }: { t: Transaction; avecCompte: boolean; onSupprimer?: () => void }) {
   const montant = signedAmount(t);
+  const { recents } = useApp();
   return (
-    <li className="operation">
+    <li className={`operation ${recents.has(t.sourceId) ? 'item-recent' : ''}`}>
       <IconeOperation t={t} />
       <div className="operation-texte">
         <p className="operation-libelle">{t.label}</p>
@@ -310,7 +311,7 @@ export function Compte() {
         ))}
       </div>
 
-      <section id="panneau-compte" className="card panneau-compte" role="tabpanel" aria-labelledby={`bulle-${vue}`}>
+      <section key={vue} id="panneau-compte" className="card panneau-compte" role="tabpanel" aria-labelledby={`bulle-${vue}`}>
         {vue === 'a-venir' ? (
           <>
             <h2 className="sr-only">Opérations à venir</h2>
@@ -414,8 +415,13 @@ export function Compte() {
           message="Le solde sera de nouveau calculé uniquement à partir de vos saisies."
           onCancel={() => setASupprimer(null)}
           onConfirm={() => {
+            const ajustement = (data.adjustments ?? []).find((a) => a.id === aSupprimer.sourceId);
             dispatch({ type: 'remove', collection: 'adjustments', id: aSupprimer.sourceId });
-            notify('Ajustement supprimé.');
+            notify(
+              'Ajustement supprimé.',
+              'succes',
+              ajustement ? { label: 'Annuler', onClick: () => dispatch({ type: 'upsert', collection: 'adjustments', item: ajustement }) } : undefined,
+            );
             setASupprimer(null);
           }}
         />

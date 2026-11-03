@@ -304,3 +304,145 @@ details[open] > div:not(.disclosure-body) {
   opacity: 1;
   transform: none;
 }
+
+/* ----------------------- Interactivité des pages (série 10) ----------------------- */
+
+/* Élément qui vient d'être ajouté ou modifié : il glisse en place et se signale brièvement */
+.item-recent {
+  animation: element-recent 1600ms var(--courbe-sortie) both;
+  border-radius: 10px;
+}
+
+@keyframes element-recent {
+  0% {
+    transform: translateY(-6px);
+    box-shadow: inset 4px 0 0 var(--primary);
+    background-color: var(--primary-soft);
+  }
+  15% {
+    transform: none;
+  }
+  70% {
+    box-shadow: inset 4px 0 0 var(--primary);
+    background-color: var(--primary-soft);
+  }
+  100% {
+    box-shadow: inset 0 0 0 transparent;
+    background-color: transparent;
+  }
+}
+
+/* Montants rapides dans l'ajout d'une dépense */
+.chips-montants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  grid-column: 1 / -1;
+}
+
+.chip-effacer {
+  background: transparent;
+  text-decoration: underline;
+}
+
+/* Budget : les dépenses de la catégorie se déplient dans la carte */
+.budget-detail {
+  margin-top: 10px;
+}
+
+.budget-depenses {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.budget-depenses li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--dp-typography-supporting);
+}
+
+.budget-depenses li .montant {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-vide {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: var(--dp-typography-supporting);
+}
+
+/* Graphique de répartition : chaque catégorie ouvre ses dépenses */
+.hbar-lien {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+.hbar-lien svg {
+  opacity: 0.5;
+  transition:
+    transform var(--duree-survol) var(--courbe-sortie),
+    opacity var(--duree-survol);
+}
+
+.hbar-lien:hover {
+  text-decoration: underline;
+}
+
+.hbar-lien:hover svg,
+.hbar-lien:focus-visible svg {
+  opacity: 1;
+  transform: translateX(3px);
+}
+
+.hbar-lien:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .hbar-cliquable:hover .hbar-fill {
+    filter: brightness(1.08);
+  }
+}
+
+/* Mon compte : la bulle choisie réagit, le contenu de l'onglet arrive en douceur */
+.bulle[aria-selected='true'] {
+  animation: bulle-choisie 220ms var(--courbe-ressort);
+}
+
+@keyframes bulle-choisie {
+  from {
+    transform: scale(0.94);
+  }
+}
+
+.panneau-compte {
+  animation: bloc-entree 220ms var(--courbe-sortie) both;
+}
+
+/* Charges fixes : la coche « Payé » apparaît avec un petit ressort */
+.status-toggle svg {
+  animation: coche 240ms var(--courbe-ressort);
+}
+
+/* Tableau de bord : choix « par jour / par semaine » */
+.hero-rythme {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 12px;
+}
+
+/* Configuration : chaque étape arrive en glissant */
+.etape-onboarding {
+  animation: bloc-entree 240ms var(--courbe-sortie) both;
+}

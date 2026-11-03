@@ -126,7 +126,11 @@ export function Goals() {
                     {d.note && <span className="muted"> – {d.note}</span>}
                   </span>
                   <span>
-                    <IconButton icon="edit" label={`Modifier le versement du ${formatDate(d.date)}`} onClick={() => setDeposit({ goalId: null, initial: d })} />
+                    <IconButton
+                      icon="edit"
+                      label={`Modifier le versement du ${formatDate(d.date)}`}
+                      onClick={() => setDeposit({ goalId: null, initial: d })}
+                    />
                     <IconButton icon="trash" label={`Supprimer le versement du ${formatDate(d.date)}`} onClick={() => setDepositToDelete(d)} />
                   </span>
                 </li>
@@ -190,8 +194,12 @@ export function Goals() {
           message={`Le versement de ${fmt(depositToDelete.amount)} du ${formatDate(depositToDelete.date)} sera supprimé.`}
           onCancel={() => setDepositToDelete(null)}
           onConfirm={() => {
-            dispatch({ type: 'remove', collection: 'savings', id: depositToDelete.id });
-            notify('Versement supprimé.');
+            const supprime = depositToDelete;
+            dispatch({ type: 'remove', collection: 'savings', id: supprime.id });
+            notify('Versement supprimé.', 'succes', {
+              label: 'Annuler',
+              onClick: () => dispatch({ type: 'upsert', collection: 'savings', item: supprime }),
+            });
             setDepositToDelete(null);
           }}
         />

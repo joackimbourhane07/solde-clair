@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../state/AppState';
-import type { ProfileType } from '../types';
+import type { ISODate, ProfileType } from '../types';
 import { CURRENCIES, formatMoney, parseAmount } from '../lib/money';
 import { PROFILE_LABELS, PROFILE_PRESETS } from '../lib/categories';
-import { buildInitialData, type SetupLine } from '../lib/setup';
+import { buildInitialData, dernierVersementPropose, type SetupLine } from '../lib/setup';
+import { accountBalance } from '../lib/accounts';
+import { isValidISODate } from '../lib/dates';
+import { newId } from '../lib/id';
 import { Button, Card, CheckboxField, IconButton, MoneyField, Notice, SelectField, TextField } from '../components/ui';
 import { checkAmount } from '../components/forms';
 import { DataSection } from './Settings';
@@ -16,11 +19,22 @@ interface Line {
   amount: string;
   day: string;
   category: string;
+  /** Revenu : dernier versement reçu (prérempli d'après le jour, modifiable, vide = pas encore reçu). */
+  dernier: string;
+  dernierModifie: boolean;
 }
 
 const STEPS = ['Vous', 'Revenus', 'Charges fixes', 'Dépenses et épargne', 'Catégories', 'Récapitulatif'];
 let lineKey = 0;
-const newLine = (name = '', category = '', day = '5'): Line => ({ key: (lineKey += 1), name, amount: '', day, category });
+const newLine = (name = '', category = '', day = '5', today?: ISODate): Line => ({
+  key: (lineKey += 1),
+  name,
+  amount: '',
+  day,
+  category,
+  dernier: today ? dernierVersementPropose(Number(day) || 1, today) : '',
+  dernierModifie: false,
+});
 
 /** Ligne de saisie (revenu ou charge). Définie hors du parcours pour garder le focus pendant la saisie. */
 function LineRow({
@@ -30,6 +44,8 @@ function LineRow({
   kind,
   error,
   options,
+  today,
+  erreurDernier,
 }: {
   line: Line;
   onChange: (l: Line) => void;
@@ -37,6 +53,8 @@ function LineRow({
   kind: 'income' | 'fixed';
   error?: string | null;
   options: string[];
+  today: ISODate;
+  erreurDernier?: string | null;
 }) {
   return (
     <div className="line-row">
@@ -56,8 +74,27 @@ function LineRow({
         max={31}
         inputMode="numeric"
         value={line.day}
-        onChange={(e) => onChange({ ...line, day: e.target.value })}
+        onChange={(e) =>
+          onChange({
+            ...line,
+            day: e.target.value,
+            // Le dernier versement suit le jour tant qu'il n'a pas été modifié à la main
+            dernier: kind === 'income' && !line.dernierModifie ? dernierVersementPropose(Number(e.target.value) || 1, today) : line.dernier,
+          })
+        }
       />
+      {kind === 'income' && (
+        <TextField
+          label="Dernier versement reçu"
+          optional
+          type="date"
+          max={today}
+          value={line.dernier}
+          error={erreurDernier}
+          onChange={(e) => onChange({ ...line, dernier: e.target.value, dernierModifie: true })}
+          hint="Compté tout de suite dans votre solde. Videz le champ s’il n’est pas encore arrivé."
+        />
+      )}
       {onRemove && <IconButton icon="trash" label={`Retirer la ligne ${line.name || ''}`} onClick={onRemove} className="line-remove" />}
     </div>
   );
@@ -75,7 +112,9 @@ export function Onboarding() {
   const [currency, setCurrency] = useState('EUR');
   const preset = PROFILE_PRESETS[type];
 
-  const [mainIncome, setMainIncome] = useState<Line>(newLine('', preset.income[0], '1'));
+  const [mainIncome, setMainIncome] = useState<Line>(() => newLine('', preset.income[0], '1', today));
+  // Solde du compte aujourd'hui (facultatif) : SoldeClair part de ce montant
+  const [soldeActuel, setSoldeActuel] = useState('');
   const [extras, setExtras] = useState<Line[]>([]);
   const [charges, setCharges] = useState<Line[]>(preset.suggestedCharges.map((c) => newLine(c, c)));
   const [variableEstimate, setVariableEstimate] = useState('');
@@ -116,9 +155,16 @@ export function Onboarding() {
     if (step === 0) errs.name = name.trim() ? null : 'Indiquez un prénom ou un pseudonyme.';
     if (step === 1) {
       errs.main = checkAmount(mainIncome.amount, { allowZero: true, required: false })[1];
+      const dateKo = (l: Line) =>
+        (l.dernier &&
+          (!isValidISODate(l.dernier) ? 'Date invalide.' : l.dernier > today ? 'Le dernier versement doit être aujourd’hui ou avant.' : null)) ||
+        null;
+      errs['dernier-main'] = dateKo(mainIncome);
       extras.forEach((l) => {
         errs[`extra-${l.key}`] = checkAmount(l.amount, { allowZero: true, required: false })[1];
+        errs[`dernier-${l.key}`] = dateKo(l);
       });
+      errs.solde = checkAmount(soldeActuel, { allowZero: true, required: false })[1];
     }
     if (step === 2) {
       charges.forEach((l) => {
@@ -135,7 +181,13 @@ export function Onboarding() {
     return !Object.values(errs).some(Boolean);
   };
 
-  const toLine = (l: Line): SetupLine => ({ name: l.name, amount: amountOf(l.amount), day: Number(l.day) || 1, category: l.category });
+  const toLine = (l: Line): SetupLine => ({
+    name: l.name,
+    amount: amountOf(l.amount),
+    day: Number(l.day) || 1,
+    category: l.category,
+    lastReceived: l.dernier && isValidISODate(l.dernier) && l.dernier <= today ? l.dernier : null,
+  });
   const pick = (kind: 'income' | 'fixed' | 'variable') => cats[kind].filter((n) => selected.has(`${kind}:${n}`));
 
   const finish = () => {
@@ -158,6 +210,19 @@ export function Onboarding() {
       },
       today,
     );
+    // Solde indiqué : un ajustement fait partir « Mon compte » de ce montant réel
+    if (soldeActuel.trim()) {
+      const reel = amountOf(soldeActuel);
+      const calcule = accountBalance(data, 'compte', today, today);
+      if (reel !== calcule)
+        data.adjustments.push({
+          id: newId('aju'),
+          account: 'compte',
+          date: today,
+          amount: reel - calcule,
+          note: 'Solde indiqué à la création du profil',
+        });
+    }
     dispatch({ type: 'replace', data });
     notify(`Bienvenue ${name.trim()} ! Votre budget est prêt.`);
     navigate('/');
@@ -259,7 +324,8 @@ export function Onboarding() {
                   next();
                 }}
                 noValidate
-                className="form"
+                className="form etape-onboarding"
+                key={step}
               >
                 {step === 0 && (
                   <>
@@ -305,7 +371,15 @@ export function Onboarding() {
                 {step === 1 && (
                   <>
                     <h2 className="subhead">Revenu principal</h2>
-                    <LineRow line={mainIncome} onChange={setMainIncome} kind="income" error={errors.main} options={cats.income} />
+                    <LineRow
+                      line={mainIncome}
+                      onChange={setMainIncome}
+                      kind="income"
+                      error={errors.main}
+                      erreurDernier={errors['dernier-main']}
+                      options={cats.income}
+                      today={today}
+                    />
                     <h2 className="subhead">Revenus complémentaires</h2>
                     {extras.length === 0 && <p className="muted">Aides, job, aide familiale… Ajoutez-en si besoin.</p>}
                     {extras.map((l) => (
@@ -314,14 +388,25 @@ export function Onboarding() {
                         line={l}
                         kind="income"
                         error={errors[`extra-${l.key}`]}
+                        erreurDernier={errors[`dernier-${l.key}`]}
                         options={cats.income}
+                        today={today}
                         onChange={(n) => setExtras(extras.map((x) => (x.key === l.key ? n : x)))}
                         onRemove={() => setExtras(extras.filter((x) => x.key !== l.key))}
                       />
                     ))}
-                    <Button icon="plus" onClick={() => setExtras([...extras, newLine('', cats.income[1] ?? cats.income[0])])}>
+                    <Button icon="plus" onClick={() => setExtras([...extras, newLine('', cats.income[1] ?? cats.income[0], '5', today)])}>
                       Ajouter un revenu complémentaire
                     </Button>
+                    <h2 className="subhead">Votre compte aujourd’hui</h2>
+                    <MoneyField
+                      label="Solde de votre compte aujourd’hui"
+                      optional
+                      value={soldeActuel}
+                      onChange={(e) => setSoldeActuel(e.target.value)}
+                      error={errors.solde}
+                      hint="Le montant affiché par votre banque. SoldeClair part de ce solde réel ; sinon il part des revenus déjà reçus indiqués ci-dessus."
+                    />
                   </>
                 )}
 
@@ -333,6 +418,7 @@ export function Onboarding() {
                         key={l.key}
                         line={l}
                         kind="fixed"
+                        today={today}
                         error={errors[`charge-${l.key}`]}
                         options={cats.fixed}
                         onChange={(n) => setCharges(charges.map((x) => (x.key === l.key ? n : x)))}

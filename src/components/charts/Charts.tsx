@@ -1,3 +1,5 @@
+import { Icon } from '../Icon';
+import { Link } from 'react-router-dom';
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useApp } from '../../state/AppState';
 import { niceTicks, visibleTickIndexes } from '../../lib/chartScale';
@@ -122,7 +124,8 @@ export function CategoryBarsChart({
   emptyText = 'Aucune dépense ce mois-ci.',
 }: {
   title: string;
-  items: { name: string; amount: number }[];
+  /** `lien` : la ligne ouvre cette page (ex. les dépenses de la catégorie). */
+  items: { name: string; amount: number; lien?: string }[];
   emptyText?: string;
 }) {
   const { fmt } = useApp();
@@ -130,7 +133,8 @@ export function CategoryBarsChart({
   const max = Math.max(1, ...items.map((i) => i.amount));
   const shown = items.slice(0, 7);
   const rest = items.slice(7);
-  const rows = rest.length > 0 ? [...shown, { name: 'Autres catégories', amount: rest.reduce((a, b) => a + b.amount, 0) }] : shown;
+  const rows: { name: string; amount: number; lien?: string }[] =
+    rest.length > 0 ? [...shown, { name: 'Autres catégories', amount: rest.reduce((a, b) => a + b.amount, 0) }] : shown;
   return (
     <ChartFrame
       title={title}
@@ -144,11 +148,22 @@ export function CategoryBarsChart({
       ) : (
         <ul className="hbars">
           {rows.map((r) => (
-            <li key={r.name} className="hbar" title={`${r.name} : ${fmt(r.amount)}`}>
+            <li key={r.name} className={`hbar ${r.lien ? 'hbar-cliquable' : ''}`} title={`${r.name} : ${fmt(r.amount)}`}>
               <div className="hbar-text">
-                <span className="hbar-name">{r.name}</span>
+                {r.lien ? (
+                  <Link to={r.lien} className="hbar-name hbar-lien">
+                    {r.name}
+                    <Icon name="right" size={14} />
+                  </Link>
+                ) : (
+                  <span className="hbar-name">{r.name}</span>
+                )}
                 <span className="hbar-value">
-                  {fmt(r.amount)} <span className="muted">({total ? Math.round((r.amount * 100) / total) : 0}{'\u00a0'}%)</span>
+                  {fmt(r.amount)}{' '}
+                  <span className="muted">
+                    ({total ? Math.round((r.amount * 100) / total) : 0}
+                    {'\u00a0'}%)
+                  </span>
                 </span>
               </div>
               <div className="hbar-track" aria-hidden="true">
@@ -166,13 +181,7 @@ export function CategoryBarsChart({
 /* 2. Revenus et dépenses par mois (barres groupées)                          */
 /* -------------------------------------------------------------------------- */
 
-export function IncomeExpenseChart({
-  title,
-  points,
-}: {
-  title: string;
-  points: { label: string; income: number; expenses: number }[];
-}) {
+export function IncomeExpenseChart({ title, points }: { title: string; points: { label: string; income: number; expenses: number }[] }) {
   const { fmt, fmtShort } = useApp();
   const { ref, width } = useWidth<HTMLDivElement>();
   const { active, setActive, onKeyDown } = useKeyboardIndex(points.length);
@@ -285,7 +294,12 @@ export function LineChart({
   const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(' ');
   const areaPath = points.length > 0 ? `${path} L${x(points.length - 1)},${y(Math.max(lo, 0))} L${x(0)},${y(Math.max(lo, 0))} Z` : '';
   // Libellés de l’axe horizontal espacés d’au moins 68 px (jamais superposés).
-  const tickIndexes = new Set(visibleTickIndexes(points.map((_, i) => x(i)), 68));
+  const tickIndexes = new Set(
+    visibleTickIndexes(
+      points.map((_, i) => x(i)),
+      68,
+    ),
+  );
   const vide = points.length === 0 || points.every((p) => p.value === 0);
 
   const onMove = (e: React.PointerEvent<SVGSVGElement>) => {
@@ -327,7 +341,13 @@ export function LineChart({
             ))}
             {points.map((p, i) =>
               tickIndexes.has(i) ? (
-                <text key={p.label} x={x(i)} y={height - 8} className="tick" textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}>
+                <text
+                  key={p.label}
+                  x={x(i)}
+                  y={height - 8}
+                  className="tick"
+                  textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}
+                >
                   {p.tick ?? p.label}
                 </text>
               ) : null,

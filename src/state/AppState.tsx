@@ -16,7 +16,18 @@ import type {
   SavingsSupport,
   TemporaryHold,
 } from '../types';
-import { clearData, clearDepart, emptyData, listProfiles, loadData, loadIndex, PRESETS_VERSION, saveData, saveIndex, type ProfilResume } from '../lib/storage';
+import {
+  clearData,
+  clearDepart,
+  emptyData,
+  listProfiles,
+  loadData,
+  loadIndex,
+  PRESETS_VERSION,
+  saveData,
+  saveIndex,
+  type ProfilResume,
+} from '../lib/storage';
 import { isCarteRestaurant } from '../lib/budget';
 import { newId } from '../lib/id';
 import { monthOf, todayISO } from '../lib/dates';
@@ -130,8 +141,7 @@ export function reducer(state: AppData, action: Action): AppData {
         categories = [...categories, fallback];
       }
       const to = fallback.id;
-      const move = <T extends { categoryId: string }>(items: T[]) =>
-        items.map((x) => (x.categoryId === cat.id ? { ...x, categoryId: to } : x));
+      const move = <T extends { categoryId: string }>(items: T[]) => items.map((x) => (x.categoryId === cat.id ? { ...x, categoryId: to } : x));
       return {
         ...state,
         categories,
@@ -143,9 +153,7 @@ export function reducer(state: AppData, action: Action): AppData {
     case 'setChargeStatus':
       return {
         ...state,
-        fixedCharges: state.fixedCharges.map((c) =>
-          c.id === action.id ? { ...c, status: { ...c.status, [action.date]: action.status } } : c,
-        ),
+        fixedCharges: state.fixedCharges.map((c) => (c.id === action.id ? { ...c, status: { ...c.status, [action.date]: action.status } } : c)),
       };
   }
 }
@@ -188,6 +196,8 @@ interface AppContextValue {
   changerProfil: (id: string) => void;
   /** Prépare un nouveau profil vide (il est enregistré à la fin de la configuration). */
   nouveauProfil: () => void;
+  /** Éléments ajoutés ou modifiés à l'instant : ils sont mis en valeur brièvement dans les listes. */
+  recents: ReadonlySet<string>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -240,7 +250,17 @@ export function AppProvider({
     const index = loadIndex();
     const isEmpty =
       !data.profile &&
-      [data.categories, data.incomes, data.fixedCharges, data.expenses, data.goals, data.savings, data.adjustments ?? [], data.supports ?? [], data.holds ?? []].every((l) => l.length === 0);
+      [
+        data.categories,
+        data.incomes,
+        data.fixedCharges,
+        data.expenses,
+        data.goals,
+        data.savings,
+        data.adjustments ?? [],
+        data.supports ?? [],
+        data.holds ?? [],
+      ].every((l) => l.length === 0);
     if (isEmpty) {
       clearData(profilActif); // après « Tout effacer », rien ne reste dans le navigateur pour ce profil
       clearDepart(profilActif);
@@ -281,7 +301,10 @@ export function AppProvider({
   );
 
   const nouveauProfil = useCallback(() => {
-    const id = newId('profil').toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 40);
+    const id = newId('profil')
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, '-')
+      .slice(0, 40);
     const ids = garderProfilOuvert();
     saveIndex({ actif: id, ids });
     sauterSauvegarde.current = true;
@@ -310,15 +333,33 @@ export function AppProvider({
   const montantMasque = useMemo(() => `•••\u00a0${formatMoney(0, currency).replace(/[\d,.\s\u00a0-]/g, '')}`, [currency]);
   const fmt = useCallback((cents: number) => (masque ? montantMasque : formatMoney(cents, currency)), [currency, masque, montantMasque]);
   const fmtShort = useCallback(
-    (cents: number, mode: 'arrondi' | 'prudent' | 'majore' = 'arrondi') =>
-      masque ? montantMasque : formatMoneyShort(cents, currency, mode),
+    (cents: number, mode: 'arrondi' | 'prudent' | 'majore' = 'arrondi') => (masque ? montantMasque : formatMoneyShort(cents, currency, mode)),
     [currency, masque, montantMasque],
   );
+
+  // Éléments enregistrés à l'instant (ajout ou modification) : surlignés 2 secondes dans les listes
+  const [recents, setRecents] = useState<ReadonlySet<string>>(() => new Set());
+  const dispatchSuivi = useCallback((action: Action) => {
+    dispatch(action);
+    if (action.type === 'upsert') {
+      const id = (action.item as { id: string }).id;
+      setRecents((r) => new Set(r).add(id));
+      setTimeout(
+        () =>
+          setRecents((r) => {
+            const n = new Set(r);
+            n.delete(id);
+            return n;
+          }),
+        2200,
+      );
+    }
+  }, []);
 
   const value = useMemo(
     () => ({
       data,
-      dispatch,
+      dispatch: dispatchSuivi,
       today,
       month,
       setMonth,
@@ -333,8 +374,26 @@ export function AppProvider({
       profilActif,
       changerProfil,
       nouveauProfil,
+      recents,
     }),
-    [data, today, month, currency, fmt, fmtShort, masque, notify, toasts, dismissToast, profils, profilActif, changerProfil, nouveauProfil],
+    [
+      data,
+      dispatchSuivi,
+      today,
+      month,
+      currency,
+      fmt,
+      fmtShort,
+      masque,
+      notify,
+      toasts,
+      dismissToast,
+      profils,
+      profilActif,
+      changerProfil,
+      nouveauProfil,
+      recents,
+    ],
   );
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
