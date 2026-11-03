@@ -21,6 +21,7 @@ import {
   TextField,
 } from '../components/ui';
 import { Icon } from '../components/Icon';
+import { MontantAnime } from '../components/mouvement';
 
 type Vue = 'operations' | 'a-venir';
 
@@ -238,7 +239,9 @@ export function Compte() {
         <p id="solde-titre" className="solde-libelle">
           {actif === 'tout' ? 'Solde total aujourd’hui' : `${ACCOUNT_LABELS[actif]} – solde aujourd’hui`}
         </p>
-        <p className={`solde-montant ${solde < 0 ? 'montant-moins' : 'montant-plus'}`}>{solde < 0 ? `− ${fmt(-solde)}` : fmt(solde)}</p>
+        <p className={`solde-montant ${solde < 0 ? 'montant-moins' : 'montant-plus'}`}>
+          <MontantAnime cents={solde} format={(c) => (c < 0 ? `− ${fmt(-c)}` : fmt(c))} brut />
+        </p>
         {bloque > 0 && (
           <p className="solde-bloque">
             dont {fmt(bloque)} bloqué{bloque >= 200 ? 's' : ''} temporairement ({bloquees.map((h) => h.label).join(', ')}) : disponible tout de suite,{' '}

@@ -5,39 +5,104 @@
    ========================================================================== */
 
 .poksy {
-  --poksy-taille: 52px;
+  --poksy-taille: 56px;
+  /* Bas du bouton : au-dessus de la barre du bas sur téléphone et tablette */
+  --poksy-bas: calc(61px + 12px + env(safe-area-inset-bottom));
+  --poksy-creme: #fbf6ef;
+  --poksy-vert: #dcebdc;
 }
 
+/* ---------------------------- Bouton flottant ---------------------------- */
 .poksy-lanceur {
   position: fixed;
   right: 16px;
-  bottom: calc(61px + 12px + env(safe-area-inset-bottom));
+  bottom: var(--poksy-bas);
   z-index: 35;
   display: grid;
   place-items: center;
   width: var(--poksy-taille);
   height: var(--poksy-taille);
   padding: 0;
-  border: 2px solid var(--brand);
+  border: 3px solid #ffffff;
   border-radius: 50%;
-  background: #e7f3f8;
-  box-shadow: 0 4px 14px rgba(25, 25, 25, 0.14);
+  background: var(--poksy-creme);
+  box-shadow:
+    0 0 0 2px var(--brand),
+    0 6px 18px rgba(25, 25, 25, 0.18);
   cursor: pointer;
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition:
+    transform 160ms cubic-bezier(0.2, 0, 0, 1),
+    box-shadow 160ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .poksy-lanceur .poksy-avatar {
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .poksy-lanceur:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(25, 25, 25, 0.18);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow:
+    0 0 0 2px var(--brand),
+    0 10px 24px rgba(25, 25, 25, 0.22);
+}
+
+.poksy-lanceur:active {
+  transform: scale(0.95);
+  transition-duration: 90ms;
+}
+
+/* Étiquette « Une question ? » au survol ou au focus (ordinateur) */
+.poksy-lanceur-etiquette {
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: var(--dp-typography-supporting);
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(6px, -50%);
+  pointer-events: none;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+@media (hover: hover) {
+  .poksy-lanceur:hover .poksy-lanceur-etiquette,
+  .poksy-lanceur:focus-visible .poksy-lanceur-etiquette {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+}
+
+/* Première visite : Poksy fait deux petits bonds pour se présenter, une seule fois */
+.poksy-lanceur-appel {
+  animation: poksy-bond 760ms cubic-bezier(0.3, 0, 0.2, 1) 700ms 2 both;
+}
+
+@keyframes poksy-bond {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-8px);
+  }
+  60% {
+    transform: translateY(0);
+  }
+  78% {
+    transform: translateY(-3px);
+  }
 }
 
 .poksy-lanceur:focus-visible,
-.poksy-bienvenue button:focus-visible,
+.poksy-carte button:focus-visible,
 .poksy-question:focus-visible,
 .poksy-plus:focus-visible,
 .poksy-panneau:focus-visible {
@@ -46,74 +111,210 @@
 }
 
 .poksy-lanceur[aria-expanded='true'] {
-  box-shadow: 0 0 0 3px var(--primary-soft), 0 4px 14px rgba(25, 25, 25, 0.14);
+  box-shadow:
+    0 0 0 2px var(--brand),
+    0 0 0 6px var(--primary-soft),
+    0 6px 18px rgba(25, 25, 25, 0.18);
 }
 
 .poksy-cache .poksy-lanceur,
-.poksy-cache .poksy-bienvenue {
+.poksy-cache .poksy-carte {
   display: none;
 }
 
-/* Message de première visite : une seule fois, facile à fermer */
-/* Téléphone : à gauche du bouton (les notifications s'affichent au-dessus, sans le recouvrir) */
-.poksy-bienvenue {
+/* Avatar : photo ronde de Poksy */
+.poksy-avatar {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--poksy-creme);
+}
+
+.poksy-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------------------- Carte d'accueil et astuces ----------------------- */
+/* Au-dessus du bouton, avec une pointe vers lui : bien visible, sans couvrir le contenu principal */
+.poksy-carte {
   position: fixed;
-  right: calc(16px + var(--poksy-taille) + 8px);
-  bottom: calc(61px + 12px + env(safe-area-inset-bottom));
-  z-index: 35;
-  display: flex;
-  align-items: flex-start;
-  gap: 2px;
-  max-width: min(290px, calc(100vw - 16px - var(--poksy-taille) - 8px - 16px));
-  padding: 4px;
-  border-radius: 14px 14px 4px 14px;
-  background: var(--surface);
+  z-index: 36;
+  right: 16px;
+  bottom: calc(var(--poksy-bas) + var(--poksy-taille) + 14px);
+  width: min(360px, calc(100vw - 32px));
+  padding: 14px 14px 12px;
+  border-radius: 18px 18px 6px 18px;
+  background: radial-gradient(circle at 12% 0%, var(--poksy-vert) 0 46px, transparent 47px), var(--surface);
   color: var(--text);
   border: var(--dp-border-hairline) solid var(--border);
-  box-shadow: var(--shadow-fenetre);
+  box-shadow:
+    0 18px 40px rgba(25, 25, 25, 0.16),
+    0 2px 6px rgba(25, 25, 25, 0.08);
+  transform-origin: calc(100% - 28px) calc(100% + 20px);
+  animation: poksy-entree 420ms cubic-bezier(0.2, 0.9, 0.25, 1.15) 600ms both;
 }
 
-.poksy-bienvenue-texte {
+/* Pointe vers le bouton de Poksy */
+.poksy-carte::after {
+  content: '';
+  position: absolute;
+  right: 22px;
+  bottom: -8px;
+  width: 16px;
+  height: 16px;
+  background: var(--surface);
+  border-right: var(--dp-border-hairline) solid var(--border);
+  border-bottom: var(--dp-border-hairline) solid var(--border);
+  transform: rotate(45deg);
+  border-bottom-right-radius: 4px;
+}
+
+.poksy-astuce {
+  animation-delay: 0ms;
+  background: var(--surface);
+}
+
+@keyframes poksy-entree {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.poksy-bulle-tete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.poksy-bulle-photo {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 3px #ffffff,
+    0 0 0 5px var(--brand);
+}
+
+.poksy-bulle-photo .poksy-avatar img {
+  animation: poksy-salut 900ms ease-in-out 1100ms 1 both;
+  transform-origin: 50% 90%;
+}
+
+@keyframes poksy-salut {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  30% {
+    transform: rotate(-7deg);
+  }
+  65% {
+    transform: rotate(4deg);
+  }
+}
+
+/* Traits « eurêka » au-dessus de la tête, dessinés une fois */
+.poksy-eclats {
+  position: absolute;
+  top: -16px;
+  right: -12px;
+  color: var(--brand);
+}
+
+.poksy-eclats path {
+  stroke-dasharray: 16;
+  animation: poksy-trait 420ms ease-out 1250ms both;
+}
+
+@keyframes poksy-trait {
+  from {
+    stroke-dashoffset: 16;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.poksy-bulle-identite {
   flex: 1;
-  min-height: 44px;
-  padding: 8px 10px;
-  border: 0;
-  border-radius: 10px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: var(--dp-typography-supporting);
-  font-weight: 500;
-  line-height: 1.45;
-  text-align: left;
-  cursor: pointer;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
 }
 
-.poksy-bienvenue-texte:hover {
-  background: var(--surface-hover);
+.poksy-bulle-nom {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
-.poksy-bienvenue-fermer {
+.poksy-bulle-role {
+  font-size: var(--dp-typography-metadata);
+  color: var(--muted);
+}
+
+.poksy-bulle-fermer {
+  align-self: flex-start;
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
+  margin: -8px -8px 0 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: 10px;
   background: transparent;
   color: var(--text-2);
   cursor: pointer;
+  transition: background-color 140ms ease;
 }
 
-.poksy-bienvenue-fermer:hover {
+.poksy-bulle-fermer:hover {
   background: var(--surface-hover);
+}
+
+.poksy-bulle-texte {
+  margin: 12px 0 4px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.poksy-bulle-detail {
+  margin: 0;
+  font-size: var(--dp-typography-supporting);
+  line-height: 1.45;
+  color: var(--text-2);
+}
+
+.poksy-bulle-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.poksy-astuce .poksy-bulle-texte {
+  font-size: 1rem;
+  font-weight: 500;
 }
 
 /* Fenêtre : panneau occupant la majeure partie de l'écran sur téléphone */
 .poksy-panneau {
   position: fixed;
-  z-index: 40;
+  z-index: 46; /* au-dessus des notifications (45), sous les fenêtres (50) */
   left: 0;
   right: 0;
   bottom: 0;
@@ -340,19 +541,30 @@
   padding-bottom: calc(144px + env(safe-area-inset-bottom));
 }
 
-/* Les notifications passent au-dessus du bouton de Poksy et de son message de première visite */
+/* Téléphone et tablette : les notifications s'affichent en haut, le bas de l'écran reste à Poksy */
 .toasts {
-  bottom: calc(184px + env(safe-area-inset-bottom));
+  top: calc(64px + env(safe-area-inset-top));
+  bottom: auto;
+}
+
+.toast {
+  animation: toast-entree 220ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@keyframes toast-entree {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* Page d'accueil : pas de barre du bas, le bouton descend en bas de l'écran */
-.poksy-accueil .poksy-lanceur {
-  bottom: calc(16px + env(safe-area-inset-bottom));
-}
-
-.poksy-accueil .poksy-bienvenue {
-  right: calc(24px + var(--poksy-taille) + 8px);
-  bottom: calc(16px + env(safe-area-inset-bottom));
+.poksy-accueil {
+  --poksy-bas: calc(16px + env(safe-area-inset-bottom));
 }
 
 /* Tablette (barre du bas toujours présente) : fenêtre flottante au-dessus du bouton */
@@ -379,16 +591,14 @@
     --poksy-taille: 56px;
   }
 
-  .poksy-lanceur {
-    right: 24px;
-    bottom: 24px;
+  .poksy,
+  .poksy-accueil {
+    --poksy-bas: 24px;
   }
 
-  /* Ordinateur : au-dessus du bouton (les notifications sont à sa gauche) */
-  .poksy-bienvenue {
+  .poksy-lanceur,
+  .poksy-carte {
     right: 24px;
-    bottom: calc(24px + 56px + 10px);
-    max-width: 290px;
   }
 
   .poksy-panneau {
@@ -401,10 +611,23 @@
     padding-bottom: 112px;
   }
 
-  /* À gauche du bouton de Poksy, sous sa fenêtre : rien n'est masqué */
+  /* En bas, à gauche du contenu : jamais sous Poksy ni sous sa carte */
   .toasts {
+    top: auto;
     bottom: 24px;
-    right: calc(24px + 56px + 16px);
+    right: auto;
+    left: calc(264px + 24px);
+  }
+
+  @keyframes toast-entree {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 }
 
@@ -415,5 +638,38 @@
 
   .poksy-lanceur:hover {
     transform: none;
+  }
+}
+
+/* Notification de réussite : Poksy approuve d'une petite coche */
+.toast-poksy {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  animation: toast-poksy 360ms cubic-bezier(0.2, 0.9, 0.25, 1.3) 80ms both;
+}
+
+.toast-coche {
+  position: absolute;
+  right: -4px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--entree-vif);
+  color: var(--entree-encre);
+  box-shadow: 0 0 0 2px var(--surface-2);
+}
+
+@keyframes toast-poksy {
+  from {
+    transform: scale(0.6) rotate(-10deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
   }
 }

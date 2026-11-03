@@ -14,6 +14,10 @@ const PATHS: Record<string, string> = {
   edit: 'M4 20h4L19 9l-4-4L4 16v4ZM13.5 6.5l4 4',
   trash: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
   check: 'M5 12.5 10 17l9-10',
+  // Étincelles (réussite) : trois éclats, sans symbole d'emoji
+  sparkle: 'M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.4 2.4M15.3 15.3l2.4 2.4M17.7 6.3l-2.4 2.4M8.7 15.3l-2.4 2.4',
+  pause: 'M9 5v14M15 5v14',
+  play: 'M7 4.5v15l12-7.5-12-7.5Z',
   alert: 'M12 4 2.5 20h19L12 4Zm0 6v4.5m0 3h.01',
   info: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 8v5m0-8.5h.01',
   stop: 'M8.5 3h7L21 8.5v7L15.5 21h-7L3 15.5v-7L8.5 3ZM12 7.5v5.5m0 3h.01',

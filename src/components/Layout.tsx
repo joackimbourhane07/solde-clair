@@ -31,7 +31,13 @@ function Logo() {
       <span className="logo">
         <svg viewBox="0 0 64 64" width="28" height="28" aria-hidden="true">
           <rect width="64" height="64" rx="14" fill="currentColor" />
-          <path d="M18 40c3 4 8 6 14 6 8 0 13-4 13-10 0-12-25-7-25-17 0-4 4-7 11-7 5 0 9 2 11 5" fill="none" stroke="var(--logo-ink)" strokeWidth="6" strokeLinecap="round" />
+          <path
+            d="M18 40c3 4 8 6 14 6 8 0 13-4 13-10 0-12-25-7-25-17 0-4 4-7 11-7 5 0 9 2 11 5"
+            fill="none"
+            stroke="var(--logo-ink)"
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
         </svg>
         <span className="logo-text">SoldeClair</span>
       </span>
@@ -87,7 +93,14 @@ export function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="app">
-      <a className="skip-link" href="#contenu" onClick={(e) => { e.preventDefault(); document.getElementById('contenu')?.focus(); }}>
+      <a
+        className="skip-link"
+        href="#contenu"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById('contenu')?.focus();
+        }}
+      >
         Aller au contenu
       </a>
       <aside className="sidebar" aria-label="Navigation principale">
@@ -125,12 +138,15 @@ export function Layout({ children }: { children: ReactNode }) {
       </header>
 
       <main id="contenu" className="main" tabIndex={-1}>
-        {children}
+        {/* Nouvelle page : ses blocs arrivent en glissant légèrement (voir mouvement.css) */}
+        <div key={location.pathname} className="transition-page">
+          {children}
+        </div>
         <footer className="app-footer">
           <Icon name="lock" size={16} />
           <p>
-            Vos données restent dans ce navigateur, sur cet appareil : elles ne sont ni envoyées sur Internet ni partagées avec d’autres
-            personnes. Pensez à faire une sauvegarde dans les paramètres.{' '}
+            Vos données restent dans ce navigateur, sur cet appareil : elles ne sont ni envoyées sur Internet ni partagées avec d’autres personnes.
+            Pensez à faire une sauvegarde dans les paramètres.{' '}
             <Link to="/presentation" className="link">
               Voir la présentation de SoldeClair
             </Link>

@@ -9,6 +9,7 @@ import {
   type TextareaHTMLAttributes,
 } from 'react';
 import { Icon } from './Icon';
+import { PoksyAvatar } from './poksy/PoksyAvatar';
 import type { BudgetLevel } from '../lib/budget';
 import { BUDGET_LEVEL_LABELS } from '../lib/budget';
 import { addMonths, capitalize, monthLabel, monthOf } from '../lib/dates';
@@ -58,14 +59,7 @@ interface FieldProps {
   optional?: boolean;
 }
 
-function FieldShell({
-  id,
-  label,
-  hint,
-  error,
-  optional,
-  children,
-}: FieldProps & { id: string; children: ReactNode }) {
+function FieldShell({ id, label, hint, error, optional, children }: FieldProps & { id: string; children: ReactNode }) {
   return (
     <div className={`field ${error ? 'field-erreur' : ''}`}>
       <label htmlFor={id}>
@@ -93,41 +87,21 @@ function describedBy(id: string, hint?: string, error?: string | null) {
   return undefined;
 }
 
-export function TextField({
-  label,
-  hint,
-  error,
-  optional,
-  ...rest
-}: FieldProps & InputHTMLAttributes<HTMLInputElement>) {
+export function TextField({ label, hint, error, optional, ...rest }: FieldProps & InputHTMLAttributes<HTMLInputElement>) {
   const autoId = useId();
   const id = rest.id ?? autoId;
   return (
     <FieldShell id={id} label={label} hint={hint} error={error} optional={optional}>
-      <input
-        id={id}
-        className="input"
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy(id, hint, error)}
-        {...rest}
-      />
+      <input id={id} className="input" aria-invalid={error ? true : undefined} aria-describedby={describedBy(id, hint, error)} {...rest} />
     </FieldShell>
   );
 }
 
-export function MoneyField({
-  label,
-  hint,
-  error,
-  optional,
-  ...rest
-}: FieldProps & InputHTMLAttributes<HTMLInputElement>) {
+export function MoneyField({ label, hint, error, optional, ...rest }: FieldProps & InputHTMLAttributes<HTMLInputElement>) {
   const { currency } = useApp();
   const autoId = useId();
   const id = rest.id ?? autoId;
-  const symbol = new Intl.NumberFormat('fr-FR', { style: 'currency', currency })
-    .formatToParts(0)
-    .find((p) => p.type === 'currency')?.value;
+  const symbol = new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).formatToParts(0).find((p) => p.type === 'currency')?.value;
   return (
     <FieldShell id={id} label={label} hint={hint} error={error} optional={optional}>
       <div className="input-money">
@@ -149,38 +123,19 @@ export function MoneyField({
   );
 }
 
-export function SelectField({
-  label,
-  hint,
-  error,
-  optional,
-  children,
-  ...rest
-}: FieldProps & SelectHTMLAttributes<HTMLSelectElement>) {
+export function SelectField({ label, hint, error, optional, children, ...rest }: FieldProps & SelectHTMLAttributes<HTMLSelectElement>) {
   const autoId = useId();
   const id = rest.id ?? autoId;
   return (
     <FieldShell id={id} label={label} hint={hint} error={error} optional={optional}>
-      <select
-        id={id}
-        className="input"
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy(id, hint, error)}
-        {...rest}
-      >
+      <select id={id} className="input" aria-invalid={error ? true : undefined} aria-describedby={describedBy(id, hint, error)} {...rest}>
         {children}
       </select>
     </FieldShell>
   );
 }
 
-export function TextAreaField({
-  label,
-  hint,
-  error,
-  optional,
-  ...rest
-}: FieldProps & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function TextAreaField({ label, hint, error, optional, ...rest }: FieldProps & TextareaHTMLAttributes<HTMLTextAreaElement>) {
   const autoId = useId();
   const id = rest.id ?? autoId;
   return (
@@ -524,7 +479,17 @@ export function Toasts() {
     <div className="toasts" aria-live="polite" aria-atomic="false">
       {toasts.map((t) => (
         <div key={t.id} className={`toast toast-${t.kind}`} role={t.kind === 'erreur' ? 'alert' : 'status'}>
-          <Icon name={t.kind === 'erreur' ? 'stop' : t.kind === 'info' ? 'info' : 'check'} size={18} />
+          {t.kind === 'succes' ? (
+            // Réussite : Poksy approuve, avec une coche
+            <span className="toast-poksy" aria-hidden="true">
+              <PoksyAvatar taille={30} />
+              <span className="toast-coche">
+                <Icon name="check" size={12} />
+              </span>
+            </span>
+          ) : (
+            <Icon name={t.kind === 'erreur' ? 'stop' : 'info'} size={18} />
+          )}
           <span>{t.message}</span>
           {t.action && (
             <button

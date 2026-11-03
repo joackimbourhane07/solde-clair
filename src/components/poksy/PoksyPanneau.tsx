@@ -33,6 +33,8 @@ interface Props {
   onFermer: () => void;
   naviguer: (route: string) => void;
   ajouterDepense: () => void;
+  /** Question posée dès l'ouverture (astuce d'une page). */
+  questionInitiale?: { texte: string; id: string } | null;
 }
 
 function Groupe({
@@ -65,7 +67,7 @@ function Groupe({
 }
 
 /** Fenêtre de discussion de Poksy (chargée à la demande). Réponses préparées, calculées sur l'appareil. */
-export default function PoksyPanneau({ messages, setMessages, plus, setPlus, onFermer, naviguer, ajouterDepense }: Props) {
+export default function PoksyPanneau({ messages, setMessages, plus, setPlus, onFermer, naviguer, ajouterDepense, questionInitiale }: Props) {
   const { data, today, fmtShort } = useApp();
   const location = useLocation();
   // Sans profil (page d'accueil d'un nouveau visiteur), on reste sur les questions de présentation
@@ -117,6 +119,15 @@ export default function PoksyPanneau({ messages, setMessages, plus, setPlus, onF
       ];
     });
   };
+  // Astuce d'une page : la question est posée dès l'ouverture (une seule fois)
+  const questionPosee = useRef(false);
+  useEffect(() => {
+    if (questionInitiale && !questionPosee.current) {
+      questionPosee.current = true;
+      repondre(questionInitiale.texte, questionInitiale.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionInitiale]);
 
   const envoyer = (e: FormEvent) => {
     e.preventDefault();

@@ -8,6 +8,7 @@ import { isDuplicateName, KIND_LABELS, makeCategory, PROFILE_LABELS } from '../l
 import { buildDemoData, DEMO_PROFILES, type DemoProfile } from '../lib/demo';
 import { clearData, clearDepart, downloadFile, exportCSV, exportJSON, loadDepart, parseBackup, saveDepart } from '../lib/storage';
 import { LIBELLES_SITUATION } from '../lib/profil';
+import { enregistrerMouvement, lireMouvement, type ChoixMouvement } from '../lib/mouvement';
 import { age } from '../lib/plan';
 import { JOUR_BASCULE_DEFAUT, jourBascule } from '../lib/budget';
 import {
@@ -221,6 +222,8 @@ function CalculSection() {
 
 function ThemeSection() {
   const { data, dispatch } = useApp();
+  // Animations : propre à cet appareil (comme le réglage « réduire les animations » du système)
+  const [mouvement, setMouvement] = useState<ChoixMouvement>(lireMouvement);
   const options: { value: ThemeChoice; label: string }[] = [
     { value: 'system', label: 'Comme mon appareil' },
     { value: 'light', label: 'Mode clair' },
@@ -244,6 +247,34 @@ function ThemeSection() {
             </label>
           ))}
         </div>
+      </fieldset>
+      <fieldset className="fieldset">
+        <legend>Animations</legend>
+        <div className="radio-row">
+          {(
+            [
+              ['auto', 'Comme mon appareil'],
+              ['reduit', 'Animations réduites'],
+            ] as const
+          ).map(([valeur, libelle]) => (
+            <label key={valeur} className="radio radio-card">
+              <input
+                type="radio"
+                name="mouvement"
+                checked={mouvement === valeur}
+                onChange={() => {
+                  setMouvement(valeur);
+                  enregistrerMouvement(valeur);
+                }}
+              />
+              {libelle}
+            </label>
+          ))}
+        </div>
+        <p className="field-hint">
+          « Animations réduites » supprime les mouvements (transitions, apparitions, bonds de Poksy) sans rien retirer : toutes les informations
+          restent affichées. Ce choix vaut pour cet appareil.
+        </p>
       </fieldset>
     </Card>
   );

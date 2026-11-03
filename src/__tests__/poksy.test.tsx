@@ -44,12 +44,18 @@ describe('Poksy : bouton flottant et message de première visite', () => {
     const bouton = lanceur();
     expect(bouton).toHaveAccessibleName('Ouvrir l’aide de Poksy');
     expect(bouton).toHaveAttribute('aria-expanded', 'false');
-    expect(bouton.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+    // Photo de Poksy : décorative (texte alternatif vide, masquée aux lecteurs d'écran)
+    expect(bouton.querySelector('.poksy-avatar')).toHaveAttribute('aria-hidden', 'true');
+    expect(bouton.querySelector('img')).toHaveAttribute('alt', '');
   });
 
   it('première visite : le message s’affiche une seule fois et se ferme facilement', async () => {
     const user = renderApp();
-    expect(screen.getByText(/Bonjour, je suis Poksy\. Une question sur SoldeClair/)).toBeInTheDocument();
+    // Carte de première visite : personnalisée avec le prénom, avec deux choix clairs
+    const carte = screen.getByRole('complementary', { name: 'Message de Poksy' });
+    expect(within(carte).getByText(/Bonjour Test, je suis Poksy\. Une question sur SoldeClair/)).toBeInTheDocument();
+    expect(within(carte).getByRole('button', { name: 'Poser une question' })).toBeInTheDocument();
+    expect(within(carte).getByRole('button', { name: 'Plus tard' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Fermer le message de Poksy' }));
     expect(screen.queryByText(/Une question sur SoldeClair/)).not.toBeInTheDocument();
     expect(localStorage.getItem(CLE_POKSY)).toBe('{"bienvenueVue":true}');
@@ -67,9 +73,14 @@ describe('Poksy : bouton flottant et message de première visite', () => {
     expect(localStorage.getItem(CLE_POKSY)).not.toBeNull();
   });
 
-  it('cliquer sur le message ouvre Poksy', async () => {
+  it('« Poser une question » ouvre Poksy ; « Plus tard » ferme la carte', async () => {
     const user = renderApp();
-    await user.click(screen.getByText(/Une question sur SoldeClair/));
+    await user.click(screen.getByRole('button', { name: 'Plus tard' }));
+    expect(screen.queryByText(/Une question sur SoldeClair/)).not.toBeInTheDocument();
+    cleanup();
+    localStorage.clear();
+    renderApp();
+    await user.click(screen.getByRole('button', { name: 'Poser une question' }));
     expect(await screen.findByRole('dialog', { name: 'Poksy' })).toBeInTheDocument();
   });
 });
@@ -82,7 +93,7 @@ describe('Poksy : fenêtre de discussion', () => {
     expect(within(fenetre).getByRole('heading', { name: 'Poksy' })).toBeInTheDocument();
     expect(within(fenetre).getByText('Guide SoldeClair')).toBeInTheDocument();
     expect(fenetre).toHaveAccessibleDescription('Poksy vous aide à comprendre votre budget, simplement.');
-    expect(norm(within(fenetre).getByRole('log').textContent)).toContain('Bonjour, je suis Poksy 👋');
+    expect(norm(within(fenetre).getByRole('log').textContent)).toContain('Bonjour, je suis Poksy.');
     expect(norm(within(fenetre).getByRole('log').textContent)).toContain('Que souhaitez-vous savoir ?');
     expect(within(fenetre).getByRole('button', { name: 'Fermer Poksy' })).toBeInTheDocument();
     expect(within(fenetre).getByLabelText('Votre question pour Poksy')).toBeInTheDocument();
@@ -92,7 +103,7 @@ describe('Poksy : fenêtre de discussion', () => {
     // Le focus entre dans la fenêtre
     expect(fenetre).toHaveFocus();
     // Avatars décoratifs
-    for (const svg of fenetre.querySelectorAll('svg.poksy-avatar')) expect(svg).toHaveAttribute('aria-hidden', 'true');
+    for (const avatar of fenetre.querySelectorAll('.poksy-avatar')) expect(avatar).toHaveAttribute('aria-hidden', 'true');
   });
 
   it('fermeture avec Échap : le focus revient sur le bouton', async () => {

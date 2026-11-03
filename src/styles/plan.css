@@ -319,3 +319,19 @@
     display: none;
   }
 }
+
+/* Statut de l'objectif : icône + mot (jamais la couleur seule) */
+.statut-plan {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.statut-ok {
+  color: var(--entree);
+}
+
+.statut-retard {
+  color: var(--warn);
+}

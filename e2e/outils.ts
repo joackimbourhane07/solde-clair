@@ -29,6 +29,12 @@ export async function preparer(page: Page): Promise<string[]> {
   });
   page.on('pageerror', (e) => erreurs.push(e.message));
   await page.clock.setFixedTime(AUJOURDHUI);
+  // Les astuces de Poksy apparaissent après un délai : désactivées par défaut pour des mesures stables
+  // (le test qui les vérifie les réactive avec activerAstuces).
+  await page.addInitScript(() => {
+    if (!(window as unknown as { __astuces?: boolean }).__astuces)
+      localStorage.setItem('soldeclair:poksy-astuces:v1', JSON.stringify({ vues: [], desactivees: true }));
+  });
   return erreurs;
 }
 
@@ -37,12 +43,35 @@ export async function chargerDemo(page: Page, profil: 'etudiant' | 'alternant' |
   await page.getByLabel('Profil de démonstration').selectOption(profil);
   await page.getByRole('button', { name: 'Charger la démonstration' }).click();
   await expect(page.getByRole('heading', { name: /^Bonjour / })).toBeVisible();
+  await finAnimations(page);
 }
 
 export async function aller(page: Page, route: string) {
   await page.goto(`./#/${route}`);
   await page.waitForTimeout(100);
+  await finAnimations(page);
 }
+
+/** Attend la fin des animations d'entrée (blocs de page, fenêtres) avant de mesurer ou d'analyser. */
+export async function finAnimations(page: Page) {
+  await page.waitForFunction(
+    () =>
+      document.getAnimations().every((a) => a.playState !== 'running' || (a.effect?.getTiming().iterations ?? 1) === Infinity) &&
+      !document.querySelector('[data-anime]'),
+    undefined,
+    { timeout: 5000 },
+  );
+}
+
+/** Réactive les astuces de Poksy (à appeler juste après preparer). */
+export async function activerAstuces(page: Page) {
+  await page.addInitScript(() => {
+    (window as unknown as { __astuces?: boolean }).__astuces = true;
+  });
+}
+
+/** Tout pictogramme emoji visible dans le texte de la page. */
+export const EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/gu;
 
 export async function stat(page: Page, libelle: string) {
   const carte = page.locator('.stat').filter({ has: page.locator('.stat-label', { hasText: new RegExp(`^${libelle}$`) }) });
@@ -58,7 +87,8 @@ export async function problemesDeMiseEnPage(page: Page): Promise<string[]> {
     if (document.documentElement.scrollWidth > vw) out.push(`débordement horizontal de ${document.documentElement.scrollWidth - vw}px`);
     for (const el of Array.from(document.querySelectorAll<HTMLElement>('body *'))) {
       const cs = getComputedStyle(el);
-      if (cs.display === 'none' || cs.visibility === 'hidden' || el.closest('.sr-only, svg')) continue;
+      // Les zones à défilement horizontal voulu (galerie d'écrans, tableaux) ne comptent pas comme un débordement
+      if (cs.display === 'none' || cs.visibility === 'hidden' || el.closest('.sr-only, svg, .galerie-piste')) continue;
       const texte = Array.from(el.childNodes).some((n) => n.nodeType === 3 && n.textContent?.trim());
       if (!texte) continue;
       const r = el.getBoundingClientRect();
