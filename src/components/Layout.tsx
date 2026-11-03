@@ -5,6 +5,7 @@ import { Modal, Toasts } from './ui';
 import { ExpenseForm } from './forms';
 import { defaultDateFor } from '../lib/dates';
 import { useApp } from '../state/AppState';
+import { Poksy } from './poksy/Poksy';
 
 export const NAV_ITEMS = [
   { to: '/', label: 'Tableau de bord', short: 'Accueil', icon: 'home' },
@@ -176,6 +177,10 @@ export function Layout({ children }: { children: ReactNode }) {
           </li>
         </ul>
       </nav>
+
+      {/* Poksy, guide SoldeClair : aide locale, ne modifie jamais les données */}
+      <Poksy onAjouterDepense={() => setAjoutOuvert(true)} cache={menuOpen} />
+
       {menuOpen && (
         <div className="sheet-backdrop" onClick={() => setMenuOpen(false)}>
           <div id="menu-plus" className="sheet" role="dialog" aria-label="Autres pages" onClick={(e) => e.stopPropagation()}>

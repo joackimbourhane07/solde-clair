@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { SavingsDeposit, SavingsGoal } from '../types';
 import { goalProgress, PRIORITY_LABELS, sortGoals } from '../lib/goals';
@@ -17,6 +18,14 @@ export function Goals() {
   const [deposit, setDeposit] = useState<{ goalId: string | null; initial?: SavingsDeposit } | null>(null);
   const [depositToDelete, setDepositToDelete] = useState<SavingsDeposit | null>(null);
   const [openHistory, setOpenHistory] = useState<string | null>(null);
+  // « Créer un objectif » depuis Poksy : #/objectifs?ajouter=1 ouvre le formulaire (rien n'est enregistré sans validation)
+  const [params, setParams] = useSearchParams();
+  useEffect(() => {
+    if (params.get('ajouter') === '1') {
+      setEditing('new');
+      setParams({}, { replace: true });
+    }
+  }, [params, setParams]);
 
   const goals = sortGoals(data.goals);
   const savedThisMonth = sum(data.savings.filter((s) => monthOf(s.date) === currentMonth).map((s) => s.amount));

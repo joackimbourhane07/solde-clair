@@ -546,10 +546,11 @@ export function Toasts() {
 }
 
 /** Montant signé avec un signe explicite (+ / −), pas seulement une couleur. */
-export function SignedAmount({ cents, positive }: { cents: number; positive: boolean }) {
+/** Montant signé : vert s'il entre, rouge s'il sort, bleu pour l'épargne (argent mis de côté, pas dépensé). */
+export function SignedAmount({ cents, positive, epargne = false }: { cents: number; positive: boolean; epargne?: boolean }) {
   const { fmt } = useApp();
   return (
-    <span className={`montant ${positive ? 'montant-plus' : 'montant-moins'}`}>
+    <span className={`montant ${epargne ? 'montant-epargne' : positive ? 'montant-plus' : 'montant-moins'}`}>
       {positive ? '+' : '−'}
       {' '}
       {fmt(Math.abs(cents))}

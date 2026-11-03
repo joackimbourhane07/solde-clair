@@ -23,11 +23,13 @@ Toutes les données restent **dans votre navigateur**. Aucun compte, aucune banq
 7. [Tests](#tests)
 8. [Organisation des fichiers](#organisation-des-fichiers)
 9. [Données de démonstration](#données-de-démonstration)
-10. [Données locales et confidentialité](#données-locales-et-confidentialité)
-11. [Règles de calcul](#règles-de-calcul)
-12. [Limites actuelles](#limites-actuelles)
-13. [Améliorations possibles (version 2)](#améliorations-possibles-version-2)
-14. [Version en ligne (GitHub Pages)](#version-en-ligne-github-pages)
+10. [Poksy, guide SoldeClair](#poksy-guide-soldeclair)
+11. [Données locales et confidentialité](#données-locales-et-confidentialité)
+12. [Règles de calcul](#règles-de-calcul)
+13. [Limites actuelles](#limites-actuelles)
+14. [Améliorations possibles (version 2)](#améliorations-possibles-version-2)
+15. [Installer SoldeClair comme une application](#installer-soldeclair-comme-une-application)
+16. [Version en ligne (GitHub Pages)](#version-en-ligne-github-pages)
 
 ---
 
@@ -62,6 +64,8 @@ Permettre à chacun de :
 | **Paramètres** | Sauvegarde en premier (export CSV, sauvegarde JSON avec la date de la dernière sauvegarde et un rappel au-delà de 30 jours, import JSON), profil, devise, objectif d’épargne, thème clair / sombre / automatique, catégories (ajouter, renommer, supprimer), données de démonstration, effacement total avec **double confirmation**. |
 
 **Partout dans l’application** :
+
+- **Poksy, guide SoldeClair** (bouton rond en bas à droite, avec une tête de chat) : une aide simple pour comprendre le site, vos chiffres et les calculs. Voir [Poksy](#poksy-guide-soldeclair) ;
 
 - **plusieurs profils** sur le même appareil, chacun avec ses propres données (le logo ramène à la page d’accueil pour changer de profil ou en créer un) ;
 - **report du reste d’un mois sur le suivant** (cumul, désactivable dans les paramètres) : une prime reçue fin octobre et non dépensée compte encore en novembre ;
@@ -154,7 +158,7 @@ Vérification des types TypeScript :
 npm run typecheck
 ```
 
-**223 tests** couvrent notamment :
+**275 tests** couvrent notamment :
 
 - la saisie et l’arrondi des montants (virgule, espaces, deux décimales, 0,1 + 0,2) ;
 - les dates (années bissextiles, fins de mois, passage d’année, jours restants) ;
@@ -167,6 +171,7 @@ npm run typecheck
 - les **limites par catégorie** (seuils exacts 75 %, 90 %, 100 %) et les alertes ;
 - les **objectifs d’épargne** (mois restants, effort mensuel, date estimée, objectif atteint, date dépassée) ;
 - le **simulateur d’achat** (trois appréciations, impact sur l’épargne, sur une catégorie, sur les objectifs) ;
+- **Poksy** : chaque question proposée retrouve sa réponse, mots-clés, message sans résultat, réponses de une à quatre phrases, jamais culpabilisantes, aucune donnée bancaire demandée, questions adaptées à la page, boutons qui ouvrent seulement une page ou un formulaire (aucune donnée modifiée), ouverture, fermeture avec Échap, retour du focus, message de première visite affiché une seule fois ;
 - les **exports CSV et JSON**, l’**import** (aller-retour sans perte, fichiers invalides refusés avec un message clair, protection contre les formules dans les tableurs) ;
 - les **données de démonstration** (validité, cohérence, plusieurs mois d’historique) ;
 - l’interface : parcours de configuration complet, ajout rapide, **modification et suppression** avec confirmation, messages d’erreur, statut des charges, limites, simulateur, import, effacement en deux étapes, thème, filtres de l’historique, bilan ;
@@ -192,7 +197,10 @@ Ils vérifient :
 - toutes les pages aux formats petit mobile (320 px), mobile, tablette et ordinateur, en mode clair et sombre : aucune erreur dans la console, aucun débordement ni texte coupé ;
 - l’accessibilité WCAG 2.2 AA avec axe-core, en mode clair et sombre (contrastes, libellés, rôles, taille des cibles…) ;
 - la navigation au clavier (lien d’évitement, contour de focus, fenêtres) et les trois thèmes ;
-- le chargement local de la police (aucune requête externe), les chiffres alignés et l’absence de transitions en mouvement réduit.
+- le chargement local de la police (aucune requête externe), les chiffres alignés et l’absence de transitions en mouvement réduit ;
+- **Poksy** aux largeurs 1440, 1100, 800, 520, 390 et 320 px, en mode clair et sombre : position (au-dessus de la barre du bas, sans gêner le « + »), fenêtre dans l’écran, accessibilité WCAG 2.2 AA fenêtre ouverte, Échap, clavier, aucune erreur, aucune requête vers un autre site.
+
+Pour rejouer ces tests sur une copie du site servie sous `/solde-clair/` (comme GitHub Pages) : `E2E_BASE_URL=http://localhost:4321/solde-clair/ npx playwright test`.
 
 ## Organisation des fichiers
 
@@ -217,6 +225,8 @@ solde-clair/
     │   ├── dates.ts           Manipulation des dates et des mois
     │   ├── recurrence.ts      Échéances des revenus et charges récurrents
     │   ├── budget.ts          Totaux, solde, reste à vivre, budgets, alertes, bilan
+    │   ├── poksy.ts           Poksy : questions, réponses, recherche par mots-clés (chargé à l’ouverture)
+    │   ├── poksyTextes.ts     Poksy : textes du bouton et du message de première visite
     │   ├── accounts.ts        Soldes des comptes, relevé jour par jour, opérations à venir
     │   ├── goals.ts           Objectifs d’épargne
     │   ├── simulator.ts       Simulateur d’achat
@@ -235,12 +245,14 @@ solde-clair/
     │   ├── forms.tsx          Formulaires (dépense, revenu, charge, objectif, versement)
     │   ├── Layout.tsx         Navigation (barre latérale / barre du bas sur mobile)
     │   ├── Icon.tsx           Icônes
+    │   ├── poksy/             Poksy : avatar (SVG), bouton flottant, fenêtre de discussion
     │   ├── accueil/           Illustrations originales de la présentation (SVG)
     │   └── charts/Charts.tsx  Graphiques SVG
     ├── pages/                 Une page par écran (Accueil.tsx : présentation, chargée séparément)
     ├── styles/global.css      Identité claire (palette --dp-*), thèmes clair et sombre, responsive
     ├── styles/fonts.css       Police IBM Plex Sans hébergée localement
     ├── styles/accueil.css     Styles de la présentation
+    ├── styles/poksy.css       Styles de Poksy
     ├── test/                  Configuration et jeu de données des tests
     └── __tests__/             Tests de l’interface
 ```
@@ -259,6 +271,23 @@ Trois profils **entièrement fictifs** sont fournis, chacun avec plusieurs reven
 - ou à tout moment dans **Paramètres → Données de démonstration** (une confirmation est demandée, car les données actuelles sont remplacées : exportez-les avant si besoin).
 
 Les dates sont calculées par rapport au jour actuel, et les données sont identiques à chaque chargement.
+
+## Poksy, guide SoldeClair
+
+<img src="docs/poksy-avatar.svg" alt="" width="64" height="64">
+
+**Poksy vous aide à comprendre votre budget, simplement.** C’est un assistant guidé qui fonctionne **entièrement sur l’appareil** : des réponses préparées à l’avance, une recherche par mots-clés et des questions adaptées à la page ouverte. **Ce n’est pas une intelligence artificielle** et aucune question n’est envoyée sur Internet.
+
+- **Bouton flottant** (avatar de Poksy) : en bas à droite sur ordinateur ; au-dessus de la barre du bas sur téléphone, à droite, loin du bouton « + ». Lors de la première visite, un petit message « Bonjour, je suis Poksy. Une question sur SoldeClair ? » s’affiche **une seule fois** (seule information mémorisée par Poksy : `soldeclair:poksy:v1`).
+- **Fenêtre** : avatar, nom, « Guide SoldeClair », message de bienvenue, questions rapides, « Voir plus de questions » (7 rubriques, 38 questions), zone pour écrire une question, réponses de une à quatre phrases, et parfois un bouton vers la bonne page. Panneau sur presque tout l’écran sur téléphone.
+- **Sur cette page** : sur Mon compte, Dépenses, Budgets, Objectifs et Paramètres, trois questions propres à la page sont proposées en premier.
+- **Chiffres réels** : certaines réponses ajoutent vos montants du mois (reste à vivre, disponible par jour), calculés sur l’appareil et masqués si vous avez choisi de masquer les montants. Poksy n’invente jamais de chiffre.
+- **Boutons d’action** : « Ajouter une dépense », « Ajouter un revenu », « Ajuster mon solde », « Voir mon tableau de bord », « Créer un objectif », « Ouvrir le simulateur », « Voir mes budgets », « Exporter une sauvegarde », « Ouvrir les paramètres ». Ils **ouvrent seulement** la page ou le formulaire : Poksy n’enregistre, ne modifie et ne supprime jamais rien.
+- **Sécurité** : Poksy ne demande jamais d’identifiant, de mot de passe, de numéro de carte ni de coordonnées bancaires ; un long numéro tapé par erreur est masqué (« •••• ») et Poksy rappelle de ne jamais le saisir. Il ne donne pas de conseil en placement ou en crédit.
+- **Accessibilité** : ouverture et fermeture au clavier, Échap pour fermer (le focus revient sur le bouton), ordre de tabulation logique, nouvelles réponses annoncées aux lecteurs d’écran, avatar décoratif masqué, contrastes WCAG 2.2 AA en clair et en sombre.
+- **Poids** : environ 2,5 Ko (compressés) au chargement ; les questions et réponses (11 Ko compressés) ne sont chargées qu’à la première ouverture (ou dès que la souris passe sur le bouton, pour une ouverture immédiate).
+
+Mention affichée dans la fenêtre : « Poksy fonctionne sur votre appareil et ne remplace pas un conseiller financier professionnel. »
 
 ## Données locales et confidentialité
 
@@ -306,6 +335,7 @@ Tous les calculs se font en centimes entiers ; la conversion en euros n’a lieu
 
 ## Limites actuelles
 
+- **Poksy** ne comprend que des questions proches de celles qu’il connaît (54 fiches, recherche par mots-clés) : une question formulée très différemment reçoit le message « Je n’ai pas encore trouvé la réponse exacte ». Il ne garde pas la conversation après un rechargement de la page.
 - Les données sont liées **à un seul navigateur sur un seul appareil** (pas de synchronisation entre téléphone et ordinateur ; utiliser export / import JSON).
 - Le `localStorage` est limité à quelques mégaoctets (largement suffisant pour plusieurs années de saisies manuelles).
 - Supprimer un revenu ou une charge récurrente le retire aussi des mois passés : pour l’arrêter seulement à partir d’une date, il faut renseigner une **date de fin**.
@@ -317,6 +347,9 @@ Tous les calculs se font en centimes entiers ; la conversion en euros n’a lieu
 - L’application s’installe sur l’écran d’accueil mais a besoin d’une connexion pour s’ouvrir (pas encore de fonctionnement hors ligne).
 
 ## Améliorations possibles (version 2)
+
+**Poksy avec une véritable IA (plus tard, à décider)** : seulement avec l’accord explicite de la personne, un modèle **exécuté sur l’appareil** de préférence (rien ne quitte le téléphone) ; sinon un service externe choisi pour sa confidentialité, sans envoyer les montants ni l’historique, avec une mention claire avant chaque envoi. Garder les réponses préparées comme base vérifiée (une IA peut se tromper), refuser tout conseil en placement ou en crédit, et tester les réponses sur une liste de questions types.
+
 
 1. **Fonctionnement hors ligne** : l’application s’installe déjà sur l’écran d’accueil ; il resterait à la faire fonctionner sans connexion (service worker).
 2. **Stockage IndexedDB** avec sauvegarde automatique planifiée et rappel d’export.

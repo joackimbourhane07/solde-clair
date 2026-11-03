@@ -287,7 +287,18 @@ Sources de cette série : [Journal du Net, agréments DSP2 des fintech](https://
 
 Sources : [iOS 26, toute page ajoutée à l’écran d’accueil s’ouvre en app web (heise)](https://heise.de/-10749652), [iDownloadBlog](https://www.idownloadblog.com/?p=1042117), [The Register, stockage des apps web de l’écran d’accueil](https://www.theregister.com/2020/03/26/apple_relax_were_not_totally/).
 
-## 14. Sources consultées
+## 14. Poksy, guide SoldeClair (6ᵉ série)
+
+| Demande | Réalisation |
+|---|---|
+| Assistant « Poksy », guide SoldeClair, widget flottant | Bouton rond avec l’avatar (en bas à droite sur ordinateur, au-dessus de la barre du bas sur téléphone, loin du « + »), fenêtre de discussion, message de première visite affiché une seule fois |
+| Avatar original | Tête de chat minimaliste dans un cercle #E7F3F8, détails #2383E2 et #191919, étincelle près de l’oreille droite ; SVG de 1,3 Ko (`docs/poksy-avatar.svg`, composant `PoksyAvatar`) |
+| Questions rapides, « Voir plus » (7 rubriques), questions par page | 6 questions rapides, 38 questions en rubriques, 3 questions par page (Mon compte, Dépenses, Budgets, Objectifs, Paramètres) ; 54 fiches au total avec les questions supplémentaires (report, estimation, profils, installation, sécurité…) |
+| Fonctionnement local, sans IA | Réponses préparées, recherche par mots-clés (sans accents, pluriels, débuts de mots, bonus pour la page ouverte), message sans résultat ; aucune requête réseau |
+| Actions | 9 boutons qui ouvrent seulement une page ou un formulaire (`?ajouter=1`, `?ajuster=1`) ; aucune donnée modifiée |
+| « Pourquoi l’épargne apparaît-elle en bleu et non en rouge ? » | L’épargne versée s’affiche désormais en bleu (icône et montant) dans Mon compte, le tableau de bord, l’historique et le bilan : ce n’est pas une dépense |
+
+## 15. Sources consultées
 
 - Notion : [teardown de la page d'accueil (uirip)](https://uirip.pages.dev/blog/teardowns/notion), [analyse du design marketing](https://webtrends.pages.dev/posts/notion-marketing-design-analysis), [étude de design (Blake Crosley)](https://blakecrosley.com/blog/design-study-notion), [divulgation progressive (LogRocket)](https://blog.logrocket.com/ux-design/progressive-disclosure-ux-types-use-cases)
 - Stripe : [composant de paiements](https://docs.stripe.com/connect/supported-embedded-components/payments), [tableau des comptes et statuts](https://docs.stripe.com/connect/dashboard/viewing-all-accounts)
