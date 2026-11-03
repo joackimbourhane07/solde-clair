@@ -1,25 +1,5 @@
-import type {
-  AccountId,
-  AppData,
-  Category,
-  Cents,
-  ChargeStatus,
-  FixedCharge,
-  ISODate,
-  MonthKey,
-  Transaction,
-} from '../types';
-import {
-  addDays,
-  addMonths,
-  daysElapsedInMonth,
-  daysInMonth,
-  daysRemainingInMonth,
-  firstDay,
-  lastDay,
-  monthOf,
-  parseISO,
-} from './dates';
+import type { AccountId, AppData, Category, Cents, ChargeStatus, FixedCharge, Income, ISODate, MonthKey, Transaction } from '../types';
+import { addDays, addMonths, daysElapsedInMonth, daysInMonth, daysRemainingInMonth, firstDay, lastDay, monthOf, parseISO } from './dates';
 import { divideCents, percent, sum } from './money';
 import { occurrencesInMonth } from './recurrence';
 
@@ -51,7 +31,9 @@ export function chargeStatus(charge: FixedCharge, date: ISODate, today: ISODate)
 /** Reconnaît la carte restaurant / les titres-restaurant dans un nom (catégorie, revenu, moyen de paiement). */
 export function isCarteRestaurant(nom: string): boolean {
   // « Restaurants » (catégorie de dépenses) ne doit pas être confondu avec la carte restaurant.
-  return /(?:cartes?|titres?|tickets?|ch[eè]ques?)[- ]?(?:rest(?:o|aurant)s?|d[ée]jeuners?)\b|swile|edenred|pluxee|sodexo|up d[ée]j|bimpli|apetiz|conecs/i.test(nom);
+  return /(?:cartes?|titres?|tickets?|ch[eè]ques?)[- ]?(?:rest(?:o|aurant)s?|d[ée]jeuners?)\b|swile|edenred|pluxee|sodexo|up d[ée]j|bimpli|apetiz|conecs/i.test(
+    nom,
+  );
 }
 
 export const PAIEMENT_CARTE_RESTAURANT = 'Carte restaurant';
@@ -102,9 +84,8 @@ export function monthTransactions(data: AppData, month: MonthKey, today: ISODate
  */
 function mouvementsDuMois(data: AppData, month: MonthKey, today: ISODate, budget: boolean): Transaction[] {
   const cats = categoryMap(data);
-  const name = (id: string | null) => (id ? cats.get(id)?.name ?? 'Catégorie supprimée' : 'Sans catégorie');
-  const goalName = (id: string | null) =>
-    id ? data.goals.find((g) => g.id === id)?.name ?? 'Objectif supprimé' : 'Épargne libre';
+  const name = (id: string | null) => (id ? (cats.get(id)?.name ?? 'Catégorie supprimée') : 'Sans catégorie');
+  const goalName = (id: string | null) => (id ? (data.goals.find((g) => g.id === id)?.name ?? 'Objectif supprimé') : 'Épargne libre');
   const list: Transaction[] = [];
   const compteRevenu = (inc: AppData['incomes'][number]): AccountId =>
     inc.account ?? (isCarteRestaurant(name(inc.categoryId)) || isCarteRestaurant(inc.name) ? 'carte-restaurant' : 'compte');
@@ -116,11 +97,7 @@ function mouvementsDuMois(data: AppData, month: MonthKey, today: ISODate, budget
     // Un revenu attendu (incertain) n'est compté nulle part tant qu'il n'est pas confirmé.
     if (inc.certitude === 'attendu') continue;
     const dates = moisSources.flatMap((m) =>
-      inc.recurring && inc.frequency
-        ? occurrencesInMonth(inc.date, inc.frequency, m, inc.endDate)
-        : monthOf(inc.date) === m
-          ? [inc.date]
-          : [],
+      inc.recurring && inc.frequency ? occurrencesInMonth(inc.date, inc.frequency, m, inc.endDate) : monthOf(inc.date) === m ? [inc.date] : [],
     );
     for (const date of dates) {
       if (jour !== null && moisDuRevenu(date, jour) !== month) continue;
@@ -328,7 +305,7 @@ export interface MonthSummary {
 /** Dépenses variables prévues : somme des budgets par catégorie, sinon estimation du profil. */
 export function plannedVariable(data: AppData): Cents {
   const budgets = sum(data.categories.filter((c) => c.kind === 'variable' && c.budget).map((c) => c.budget ?? 0));
-  return budgets > 0 ? budgets : data.profile?.variableEstimate ?? 0;
+  return budgets > 0 ? budgets : (data.profile?.variableEstimate ?? 0);
 }
 
 export function monthSummary(data: AppData, month: MonthKey, today: ISODate): MonthSummary {
@@ -533,12 +510,7 @@ export interface BudgetAlert {
   message: string;
 }
 
-export function monthAlerts(
-  data: AppData,
-  month: MonthKey,
-  today: ISODate,
-  fmt: (c: Cents) => string,
-): BudgetAlert[] {
+export function monthAlerts(data: AppData, month: MonthKey, today: ISODate, fmt: (c: Cents) => string): BudgetAlert[] {
   const s = monthSummary(data, month, today);
   const alerts: BudgetAlert[] = [];
   if (s.income === 0 && s.totalExpenses > 0) {
@@ -571,9 +543,15 @@ export function monthAlerts(
         message: `Budget « ${line.category.name} » dépassé de ${fmt(-(line.remaining ?? 0))}. Vous pouvez ajuster la limite si elle était trop basse.`,
       });
     } else if (line.level === 'alerte') {
-      alerts.push({ level: 'attention', message: `Budget « ${line.category.name} » utilisé à ${line.pct}\u00a0% : il reste ${fmt(line.remaining ?? 0)}.` });
+      alerts.push({
+        level: 'attention',
+        message: `Budget « ${line.category.name} » utilisé à ${line.pct}\u00a0% : il reste ${fmt(line.remaining ?? 0)}.`,
+      });
     } else if (line.level === 'attention') {
-      alerts.push({ level: 'info', message: `Budget « ${line.category.name} » utilisé à ${line.pct}\u00a0% : il reste ${fmt(line.remaining ?? 0)}.` });
+      alerts.push({
+        level: 'info',
+        message: `Budget « ${line.category.name} » utilisé à ${line.pct}\u00a0% : il reste ${fmt(line.remaining ?? 0)}.`,
+      });
     }
   }
   const order: Record<AlertLevel, number> = { danger: 0, attention: 1, info: 2 };
@@ -627,11 +605,7 @@ export function monthsHistory(data: AppData, endMonth: MonthKey, count: number, 
 }
 
 /** Montant total épargné cumulé (objectifs + versements) à la fin de chaque mois. */
-export function savingsBalanceByMonth(
-  data: AppData,
-  endMonth: MonthKey,
-  count: number,
-): { month: MonthKey; saved: Cents; total: Cents }[] {
+export function savingsBalanceByMonth(data: AppData, endMonth: MonthKey, count: number): { month: MonthKey; saved: Cents; total: Cents }[] {
   const result: { month: MonthKey; saved: Cents; total: Cents }[] = [];
   for (let k = count - 1; k >= 0; k -= 1) {
     const month = addMonths(endMonth, -k);
@@ -678,4 +652,14 @@ export function frequentCategories(data: AppData, today: ISODate, count = 4): Ca
     });
   const complement = variables.filter((c) => !stats.has(c.id));
   return [...utilisees, ...complement].slice(0, count);
+}
+
+/**
+ * Revenus récurrents sûrs qui commencent ce mois-ci mais comptent pour le mois suivant (reçus à partir du 20) :
+ * le mois en cours n'a alors pas ce revenu. Souvent, le versement du mois dernier a simplement été oublié.
+ */
+export function revenusSansDernierVersement(data: AppData, month: MonthKey): Income[] {
+  const jour = jourBascule(data);
+  if (jour === null) return [];
+  return data.incomes.filter((i) => i.recurring && i.certitude !== 'attendu' && monthOf(i.date) === month && moisDuRevenu(i.date, jour) !== month);
 }

@@ -2,7 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { Income } from '../types';
-import { carryOverInto, categoryName, jourBascule, moisDuRevenu, monthTransactions, transactionsInRange } from '../lib/budget';
+import {
+  carryOverInto,
+  categoryName,
+  jourBascule,
+  moisDuRevenu,
+  monthTransactions,
+  revenusSansDernierVersement,
+  transactionsInRange,
+} from '../lib/budget';
 import { usesCarteRestaurant } from '../lib/accounts';
 import { addMonths, defaultDateFor, firstDay, formatDate, lastDay, monthLabel, monthOf, ofMonth, parseISO } from '../lib/dates';
 import { sum } from '../lib/money';
@@ -15,6 +23,8 @@ export function Incomes() {
   const [editing, setEditing] = useState<Income | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<Income | null>(null);
   const [showAll, setShowAll] = useState(false);
+  // Formulaire ouvert sur « Dernier versement déjà reçu »
+  const [dernierPour, setDernierPour] = useState<Income | null>(null);
   // « Ajouter un revenu » depuis Poksy : #/revenus?ajouter=1 ouvre le formulaire (rien n'est enregistré sans validation)
   const [params, setParams] = useSearchParams();
   useEffect(() => {
@@ -22,7 +32,14 @@ export function Incomes() {
       setEditing('new');
       setParams({}, { replace: true });
     }
-  }, [params, setParams]);
+    const id = params.get('dernier');
+    if (id) {
+      const inc = data.incomes.find((i) => i.id === id);
+      if (inc) setDernierPour(inc);
+      setParams({}, { replace: true });
+    }
+  }, [params, setParams, data.incomes]);
+  const sansDernier = revenusSansDernierVersement(data, month);
 
   const occurrences = useMemo(() => monthTransactions(data, month, today).filter((t) => t.type === 'revenu'), [data, month, today]);
   const total = sum(occurrences.map((t) => t.amount));
@@ -117,6 +134,15 @@ export function Incomes() {
           </Link>
         </p>
       )}
+      {sansDernier.map((inc) => (
+        <Notice key={inc.id} tone="attention">
+          « {inc.name} » commence le {formatDate(inc.date)} : reçu à partir du {jour}, il compte pour {monthLabel(addMonths(month, 1))}.{' '}
+          {monthLabel(month)} n’a donc pas ce revenu. Vous l’avez déjà reçu le mois dernier ?{' '}
+          <button type="button" className="lien-bouton" onClick={() => setDernierPour(inc)}>
+            Indiquer le dernier versement reçu
+          </button>
+        </Notice>
+      ))}
       {report !== 0 && (
         <p className="muted petit-texte">
           {report > 0 ? `Reste des mois précédents : + ${fmt(report)}` : `Dépassement des mois précédents : − ${fmt(-report)}`}, déjà compris dans le
@@ -203,6 +229,17 @@ export function Incomes() {
             defaultDate={defaultDateFor(month, today)}
             onDone={() => setEditing(null)}
             onCancel={() => setEditing(null)}
+          />
+        </Modal>
+      )}
+      {dernierPour && (
+        <Modal title={`Dernier versement : ${dernierPour.name}`} onClose={() => setDernierPour(null)}>
+          <IncomeForm
+            initial={dernierPour}
+            ouvrirDernierVersement
+            defaultDate={today}
+            onDone={() => setDernierPour(null)}
+            onCancel={() => setDernierPour(null)}
           />
         </Modal>
       )}

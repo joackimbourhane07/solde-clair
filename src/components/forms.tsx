@@ -20,7 +20,7 @@ import { useApp } from '../state/AppState';
 import { centsToInput, parseAmount } from '../lib/money';
 import { isValidISODate, monthLabel, monthOf } from '../lib/dates';
 import { frequentCategories, isCarteRestaurant, jourBascule, moisDuRevenu } from '../lib/budget';
-import { usesCarteRestaurant } from '../lib/accounts';
+import { accountBalance, usesCarteRestaurant } from '../lib/accounts';
 import { newId } from '../lib/id';
 import { FREQUENCY_LABELS } from '../lib/recurrence';
 import { makeCategory, PAYMENT_METHODS } from '../lib/categories';
@@ -306,6 +306,7 @@ export function IncomeForm({
   certitudeParDefaut = 'sur',
   confirmerReception = false,
   nomPropose,
+  ouvrirDernierVersement = false,
   onDone,
   onCancel,
 }: {
@@ -317,10 +318,12 @@ export function IncomeForm({
   confirmerReception?: boolean;
   /** Nom prérempli (suggestion selon le profil : 13e mois…). */
   nomPropose?: string;
+  /** Ouvre le formulaire sur « Dernier versement déjà reçu » (salaire de fin de mois compté le mois suivant). */
+  ouvrirDernierVersement?: boolean;
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const { data, dispatch, notify, fmt } = useApp();
+  const { data, dispatch, notify, fmt, today } = useApp();
   const confirmer = useConfirmation();
   const choix = useChoixCategorie('income', initial?.categoryId);
   const [name, setName] = useState(initial?.name ?? nomPropose ?? '');
@@ -349,6 +352,13 @@ export function IncomeForm({
   );
   const lignesLues = lignes.map((l) => ({ label: l.label.trim(), amount: lireMontantSigne(l.montant) }));
   const totalLignes = lignesLues.reduce((t, l) => t + (l.amount ?? 0), 0);
+  // Dernier versement déjà reçu (salaire de fin de mois) : la série commence à cette date, il compte pour le mois en cours
+  const [dernier, setDernier] = useState('');
+  // Un solde réel a déjà été indiqué dans « Mon compte » après ce versement : il le comprend déjà
+  const dernierAjustement = (data.adjustments ?? [])
+    .filter((a) => a.account === compte && dernier && a.date >= dernier)
+    .sort((a, b) => b.date.localeCompare(a.date))[0];
+  const [dejaDansSolde, setDejaDansSolde] = useState(true);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -368,17 +378,57 @@ export function IncomeForm({
       endDate: recurring
         ? (checkDate(endDate, false) ?? (endDate && endDate < date ? 'La date de fin doit être après la date de début.' : null))
         : null,
+      dernier:
+        recurring && !attendu && dernier
+          ? (checkDate(dernier) ??
+            (dernier > today
+              ? 'Le dernier versement reçu doit être aujourd’hui ou avant.'
+              : dernier >= date
+                ? 'Le dernier versement reçu doit être avant la date du prochain versement.'
+                : null))
+          : null,
     };
     setErrors(errs);
     if (hasErrors(errs) || cents === null) return;
+    // Avec un dernier versement reçu, la série commence à cette date (les suivants s'enchaînent selon la fréquence)
+    const debutSerie = recurring && !attendu && dernier ? dernier : date;
+    const item: Income = {
+      id: initial?.id ?? newId('rev'),
+      name: name.trim(),
+      amount: cents,
+      date: debutSerie,
+      categoryId: '',
+      recurring,
+      frequency: recurring ? frequency : null,
+      endDate: recurring && endDate ? endDate : null,
+      note: '',
+    };
+    // Le solde réel indiqué dans « Mon compte » comprend déjà ce versement : une correction évite de le compter deux fois
+    if (debutSerie !== date && dernierAjustement && dejaDansSolde) {
+      const avec = { ...data, incomes: [...data.incomes.filter((i) => i.id !== item.id), { ...item, account: compte }] };
+      const sans = { ...data, incomes: data.incomes.filter((i) => i.id !== item.id).concat(initial ? [initial] : []) };
+      const ecart = accountBalance(avec, compte, dernierAjustement.date, today) - accountBalance(sans, compte, dernierAjustement.date, today);
+      if (ecart !== 0)
+        dispatch({
+          type: 'upsert',
+          collection: 'adjustments',
+          item: {
+            id: newId('aju'),
+            account: compte,
+            date: dernierAjustement.date,
+            amount: -ecart,
+            note: `${name.trim()} déjà compris dans le solde réel`,
+          },
+        });
+    }
     dispatch({
       type: 'upsert',
       collection: 'incomes',
       item: {
-        id: initial?.id ?? newId('rev'),
+        id: item.id,
         name: name.trim(),
         amount: cents,
-        date,
+        date: debutSerie,
         categoryId: choix.resoudre(),
         recurring,
         frequency: recurring ? frequency : null,
@@ -401,7 +451,8 @@ export function IncomeForm({
     if (attendu)
       notify(initial ? 'Revenu attendu modifié.' : 'Revenu attendu enregistré : il n’est pas compté tant qu’il n’est pas confirmé.', 'info');
     else if (confirmerReception) notify('Revenu confirmé : il est maintenant compté.');
-    else confirmer(initial ? 'Revenu modifié et enregistré.' : 'Revenu enregistré.', date, recurring, moisDuRevenu(date, jourBascule(data)));
+    else
+      confirmer(initial ? 'Revenu modifié et enregistré.' : 'Revenu enregistré.', debutSerie, recurring, moisDuRevenu(debutSerie, jourBascule(data)));
     onDone();
   };
 
@@ -452,12 +503,28 @@ export function IncomeForm({
         )}
         <ChampCategorie choix={choix} errors={errors} />
         <TextField
-          label={recurring ? 'Date du premier versement' : 'Date'}
+          label={recurring ? (initial && !ouvrirDernierVersement ? 'Date du premier versement' : 'Date du prochain versement') : 'Date'}
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
           error={errors.date}
         />
+        {recurring && !attendu && (
+          <TextField
+            label="Dernier versement déjà reçu"
+            optional
+            type="date"
+            value={dernier}
+            autoFocus={ouvrirDernierVersement}
+            onChange={(e) => setDernier(e.target.value)}
+            error={errors.dernier}
+            hint={
+              jourBascule(data) !== null
+                ? `Vous avez déjà touché ce revenu (ex. : le salaire du 28 du mois dernier) ? Indiquez la date : il compte pour le mois en cours (reçu à partir du ${jourBascule(data)}, il compte pour le mois suivant), puis les versements s’enchaînent.`
+                : 'Vous avez déjà touché ce revenu ? Indiquez la date : les versements suivants s’enchaînent à partir de celle-ci.'
+            }
+          />
+        )}
       </div>
       {proposerCompte && (
         <fieldset className="fieldset">
@@ -509,6 +576,14 @@ export function IncomeForm({
             hint="Laissez vide si le revenu continue."
           />
         </div>
+      )}
+      {dernier && dernierAjustement && (
+        <CheckboxField
+          label="Mon solde réel indiqué dans « Mon compte » comprend déjà ce versement"
+          checked={dejaDansSolde}
+          onChange={(e) => setDejaDansSolde(e.target.checked)}
+          hint="Coché : SoldeClair ajoute une correction pour ne pas le compter deux fois dans votre solde."
+        />
       )}
       {attendu && (
         <div className="form-grid">

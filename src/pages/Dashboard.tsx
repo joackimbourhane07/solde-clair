@@ -3,7 +3,16 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import { objectifPrincipal, progressionObjectif, projection, totauxEpargne } from '../lib/plan';
 import { reperesPourVous, sousTitreProfil } from '../lib/profil';
-import { carryOverEnabled, dailyBalanceSeries, monthAlerts, monthSummary, monthTransactions, signedAmount, spendingByCategory } from '../lib/budget';
+import {
+  carryOverEnabled,
+  dailyBalanceSeries,
+  monthAlerts,
+  monthSummary,
+  monthTransactions,
+  revenusSansDernierVersement,
+  signedAmount,
+  spendingByCategory,
+} from '../lib/budget';
 import { balanceForecast } from '../lib/forecast';
 import { accountBalance, JOURS_A_VENIR_ACCUEIL, operationsAVenir, resteAVivre, usesCarteRestaurant } from '../lib/accounts';
 import { sortGoals } from '../lib/goals';
@@ -261,6 +270,18 @@ export function Dashboard() {
           </div>
         </details>
       </section>
+
+      {/* Revenu récurrent qui commence fin de mois : le mois en cours n'a pas ce revenu (dernier versement oublié ?) */}
+      {courant &&
+        revenusSansDernierVersement(data, month).map((inc) => (
+          <Notice key={inc.id} tone="attention">
+            « {inc.name} » commence le {formatDate(inc.date)} et compte donc pour le mois prochain : ce mois-ci n’a pas ce revenu. Déjà reçu le mois
+            dernier ?{' '}
+            <Link to={`/revenus?dernier=${inc.id}`} className="link">
+              Indiquer le dernier versement reçu
+            </Link>
+          </Notice>
+        ))}
 
       {/* Mon objectif : résumé de « Mon plan d'épargne » */}
       {plan && courant && (

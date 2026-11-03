@@ -155,7 +155,7 @@ test('carte restaurant et onglet Compte : revenu, paiement, soldes séparés, aj
   await revenu.getByLabel('Montant', { exact: true }).fill('180');
   await revenu.getByLabel('Catégorie').selectOption({ label: 'Carte restaurant' });
   await expect(revenu.getByRole('group', { name: 'Versé sur' }).getByLabel('Carte restaurant')).toBeChecked();
-  await revenu.getByLabel('Date du premier versement').fill('2026-11-01');
+  await revenu.getByLabel('Date du prochain versement').fill('2026-11-01');
   await revenu.getByRole('button', { name: 'Ajouter le revenu' }).click();
   expect(await stat(page, 'Pouvoir d’achat alimentaire')).toBe('180,00 €');
 
