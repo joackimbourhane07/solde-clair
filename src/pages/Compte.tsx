@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { AccountId, Transaction } from '../types';
@@ -31,10 +31,10 @@ function details(t: Transaction, avecCompte: boolean): string {
   return morceaux.join(' – ');
 }
 
-/** Pastille ronde : verte pour l'argent qui entre, rouge pour l'argent qui sort ; le pictogramme indique le type. */
+/** Pastille ronde : verte pour l'argent qui entre, rouge pour l'argent qui sort, bleue pour l'épargne ; le pictogramme indique le type. */
 function IconeOperation({ t }: { t: Transaction }) {
   return (
-    <span className={`operation-icone ${signedAmount(t) >= 0 ? 'sens-entree' : 'sens-sortie'}`} aria-hidden="true">
+    <span className={`operation-icone ${t.type === 'epargne' ? 'sens-epargne' : signedAmount(t) >= 0 ? 'sens-entree' : 'sens-sortie'}`} aria-hidden="true">
       <Icon name={ICONES[t.type]} size={18} />
     </span>
   );
@@ -49,7 +49,7 @@ function Operation({ t, avecCompte, onSupprimer }: { t: Transaction; avecCompte:
         <p className="operation-libelle">{t.label}</p>
         <p className="operation-detail">{details(t, avecCompte)}</p>
       </div>
-      <SignedAmount cents={Math.abs(montant)} positive={montant >= 0} />
+      <SignedAmount cents={Math.abs(montant)} positive={montant >= 0} epargne={t.type === 'epargne'} />
       {onSupprimer && <IconButton icon="trash" label={`Supprimer cet ajustement de ${montant >= 0 ? '+' : '−'}${centsToInput(Math.abs(montant))} €`} onClick={onSupprimer} />}
     </li>
   );
@@ -129,6 +129,13 @@ export function Compte() {
   const [params, setParams] = useSearchParams();
   const vue: Vue = params.get('vue') === 'a-venir' ? 'a-venir' : 'operations';
   const choisirVue = (v: Vue) => setParams(v === 'a-venir' ? { vue: 'a-venir' } : {}, { replace: true });
+  // « Ajuster mon solde » depuis Poksy : #/compte?ajuster=1 ouvre la fenêtre (rien n'est enregistré sans validation)
+  useEffect(() => {
+    if (params.get('ajuster') === '1') {
+      setAjuster(true);
+      setParams(vue === 'a-venir' ? { vue: 'a-venir' } : {}, { replace: true });
+    }
+  }, [params, setParams, vue]);
   // Flèches gauche / droite : passer d'une bulle à l'autre (comportement attendu d'onglets)
   const changerAvecFleches = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft' && e.key !== 'Home' && e.key !== 'End') return;
@@ -277,7 +284,7 @@ export function Compte() {
                         {details(t, avecCompte)}
                       </p>
                     </div>
-                    <SignedAmount cents={Math.abs(signedAmount(t))} positive={signedAmount(t) >= 0} />
+                    <SignedAmount cents={Math.abs(signedAmount(t))} positive={signedAmount(t) >= 0} epargne={t.type === 'epargne'} />
                   </li>
                 ))}
               </ul>

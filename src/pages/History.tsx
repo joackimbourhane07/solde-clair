@@ -183,7 +183,7 @@ function Transactions() {
                     {t.paymentMethod && ` – ${t.paymentMethod}`}
                   </p>
                 </div>
-                <SignedAmount cents={signedAmount(t)} positive={signedAmount(t) >= 0} />
+                <SignedAmount cents={signedAmount(t)} positive={signedAmount(t) >= 0} epargne={t.type === 'epargne'} />
               </li>
             ))}
           </ul>
@@ -200,15 +200,19 @@ function Report() {
   const s = r.summary;
   const p = r.previous;
   // sens : couleur du montant (vert pour ce qui entre ou un solde positif, rouge pour ce qui sort ou un solde négatif)
-  const rows: { label: string; cur: Cents; prev: Cents; delta: Cents; goodWhenUp: boolean; sens: 'entree' | 'sortie' | 'solde' | null }[] = [
+  const rows: { label: string; cur: Cents; prev: Cents; delta: Cents; goodWhenUp: boolean; sens: 'entree' | 'sortie' | 'solde' | 'epargne' }[] = [
     { label: 'Revenus du mois', cur: s.income, prev: p.income, delta: r.delta.income, goodWhenUp: true, sens: 'entree' },
     { label: 'Charges fixes', cur: s.fixed, prev: p.fixed, delta: r.delta.fixed, goodWhenUp: false, sens: 'sortie' },
     { label: 'Dépenses variables', cur: s.variable, prev: p.variable, delta: r.delta.variable, goodWhenUp: false, sens: 'sortie' },
-    { label: 'Montant épargné', cur: s.saved, prev: p.saved, delta: r.delta.saved, goodWhenUp: true, sens: null },
+    { label: 'Montant épargné', cur: s.saved, prev: p.saved, delta: r.delta.saved, goodWhenUp: true, sens: 'epargne' },
     { label: 'Solde final', cur: s.available, prev: p.available, delta: r.delta.available, goodWhenUp: true, sens: 'solde' },
   ];
   const couleur = (sens: (typeof rows)[number]['sens'], v: Cents) =>
-    sens === 'entree' || (sens === 'solde' && v >= 0) ? 'montant-plus' : sens === 'sortie' || (sens === 'solde' && v < 0) ? 'montant-moins' : '';
+    sens === 'epargne'
+      ? 'montant-epargne'
+      : sens === 'entree' || (sens === 'solde' && v >= 0)
+        ? 'montant-plus'
+        : 'montant-moins';
 
   return (
     <>

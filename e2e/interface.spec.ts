@@ -161,8 +161,9 @@ test('thèmes : clair par défaut, automatique, sombre', async ({ page }) => {
 
 test('police IBM Plex Sans chargée localement, chiffres alignés, aucune requête externe', async ({ page }) => {
   const externes: string[] = [];
+  const origine = new URL(test.info().project.use.baseURL ?? 'http://localhost:4173/').origin;
   page.on('request', (r) => {
-    if (!r.url().startsWith('http://localhost:4173')) externes.push(r.url());
+    if (new URL(r.url()).origin !== origine) externes.push(r.url());
   });
   await preparer(page);
   await chargerDemo(page);

@@ -170,7 +170,7 @@ export function Dashboard() {
               </div>
               <div>
                 <dt>− Épargne déjà versée</dt>
-                <dd className="montant-moins">{fmt(s.saved)}</dd>
+                <dd className="montant-epargne">{fmt(s.saved)}</dd>
               </div>
               <div className="calcul-total">
                 <dt>= Solde disponible du mois</dt>
@@ -258,7 +258,7 @@ export function Dashboard() {
                       {formatDate(t.date)} – {t.type === 'epargne' ? 'Épargne' : t.categoryName}
                     </p>
                   </div>
-                  <SignedAmount cents={signedAmount(t)} positive={signedAmount(t) >= 0} />
+                  <SignedAmount cents={signedAmount(t)} positive={signedAmount(t) >= 0} epargne={t.type === 'epargne'} />
                 </li>
               ))}
             </ul>

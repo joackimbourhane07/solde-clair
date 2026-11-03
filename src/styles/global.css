@@ -94,6 +94,9 @@
   --entree: #187a29; /* 4,7:1 sur le gris de survol, 5,5:1 sur blanc */
   --sortie: #d90000; /* 4,6:1 sur le gris de survol, 5,3:1 sur blanc */
   --entree-encre: #0b2e12; /* texte sur vert vif : 7,7:1 */
+  /* Épargne : en bleu, car cet argent n'est pas dépensé (il reste à vous, mis de côté) */
+  --epargne: #1a62a8; /* 5,4:1 sur le gris de survol */
+  --epargne-vif: var(--dp-color-bleu);
   --sortie-encre: #ffffff; /* texte sur rouge vif (grands chiffres uniquement) : 4:1 */
 
   /* Graphiques : bleu pour la série principale, vert pour la seconde */
@@ -155,6 +158,7 @@
     --on-danger: #191919;
     --entree: #47d45a; /* 6,7:1 et plus sur les fonds sombres */
     --sortie: #ff6b6b; /* 4,7:1 et plus sur les fonds sombres */
+    --epargne: #5aa5ec;
     --serie-1: #5aa5ec;
     --serie-2: #4db6a2;
     --chart-grid: #2a2a2a;
@@ -204,6 +208,7 @@
   --on-danger: #191919;
   --entree: #47d45a;
   --sortie: #ff6b6b;
+  --epargne: #5aa5ec;
   --serie-1: #5aa5ec;
   --serie-2: #4db6a2;
   --chart-grid: #2a2a2a;
@@ -1499,6 +1504,10 @@ textarea.input {
 
 .montant-moins {
   color: var(--sortie);
+}
+
+.montant-epargne {
+  color: var(--epargne);
 }
 
 .alert-list {
@@ -3294,6 +3303,11 @@ ol.rank-list li > span {
 .operation-icone.sens-sortie {
   background: var(--sortie-vif);
   color: var(--sortie-encre);
+}
+
+.operation-icone.sens-epargne {
+  background: var(--epargne-vif);
+  color: #ffffff;
 }
 
 /* Bulles « Opérations » / « À venir » : chacune ouvre son propre onglet */

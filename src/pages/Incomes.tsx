@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { Income } from '../types';
 import { carryOverInto, categoryName, monthTransactions } from '../lib/budget';
@@ -14,6 +15,14 @@ export function Incomes() {
   const [editing, setEditing] = useState<Income | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<Income | null>(null);
   const [showAll, setShowAll] = useState(false);
+  // « Ajouter un revenu » depuis Poksy : #/revenus?ajouter=1 ouvre le formulaire (rien n'est enregistré sans validation)
+  const [params, setParams] = useSearchParams();
+  useEffect(() => {
+    if (params.get('ajouter') === '1') {
+      setEditing('new');
+      setParams({}, { replace: true });
+    }
+  }, [params, setParams]);
 
   const occurrences = useMemo(
     () => monthTransactions(data, month, today).filter((t) => t.type === 'revenu'),
