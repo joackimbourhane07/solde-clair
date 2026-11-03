@@ -92,6 +92,8 @@ export async function problemesDeMiseEnPage(page: Page): Promise<string[]> {
       const texte = Array.from(el.childNodes).some((n) => n.nodeType === 3 && n.textContent?.trim());
       if (!texte) continue;
       const r = el.getBoundingClientRect();
+      // Texte masqué visuellement pour les lecteurs d'écran (1 × 1 px) : pas un défaut d'affichage
+      if (r.width <= 1 && r.height <= 1) continue;
       if (r.width && r.right > vw + 1 && cs.position !== 'fixed') out.push(`texte hors écran : « ${el.textContent?.trim().slice(0, 40)} »`);
       if (el.clientWidth > 0 && el.scrollWidth > el.clientWidth + 1 && cs.overflowX !== 'visible')
         out.push(`texte coupé : « ${el.textContent?.trim().slice(0, 40)} »`);

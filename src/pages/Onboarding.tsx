@@ -83,19 +83,21 @@ function LineRow({
           })
         }
       />
-      {kind === 'income' && (
-        <TextField
-          label="Dernier versement reçu"
-          optional
-          type="date"
-          max={today}
-          value={line.dernier}
-          error={erreurDernier}
-          onChange={(e) => onChange({ ...line, dernier: e.target.value, dernierModifie: true })}
-          hint="Compté tout de suite dans votre solde. Videz le champ s’il n’est pas encore arrivé."
-        />
-      )}
       {onRemove && <IconButton icon="trash" label={`Retirer la ligne ${line.name || ''}`} onClick={onRemove} className="line-remove" />}
+      {kind === 'income' && (
+        <div className="line-row-plein">
+          <TextField
+            label="Dernier versement reçu"
+            optional
+            type="date"
+            max={today}
+            value={line.dernier}
+            error={erreurDernier}
+            onChange={(e) => onChange({ ...line, dernier: e.target.value, dernierModifie: true })}
+            hint="Compté tout de suite dans votre solde. Videz le champ s’il n’est pas encore arrivé."
+          />
+        </div>
+      )}
     </div>
   );
 }

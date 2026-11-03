@@ -3873,3 +3873,14 @@ ol.rank-list li > span {
     transition: none;
   }
 }
+
+/* Configuration : « Dernier versement reçu » sur sa propre ligne, sous les autres champs */
+.line-row-plein {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 760px) {
+  .line-row-plein {
+    grid-column: 1 / span 2;
+  }
+}
