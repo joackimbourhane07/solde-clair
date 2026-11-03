@@ -35,7 +35,7 @@ describe('Poksy : identité et textes', () => {
     expect(PRESENTATION).toBe('Poksy vous aide à comprendre votre budget, simplement.');
     expect(MESSAGE_PREMIERE_VISITE).toBe('Bonjour, je suis Poksy. Une question sur SoldeClair ?');
     expect(MESSAGE_BIENVENUE).toBe(
-      'Bonjour, je suis Poksy 👋\nJe peux vous aider à comprendre votre budget ou à utiliser SoldeClair. Que souhaitez-vous savoir ?',
+      'Bonjour, je suis Poksy.\nJe peux vous aider à comprendre votre budget ou à utiliser SoldeClair. Que souhaitez-vous savoir ?',
     );
     expect(MENTION).toBe('Poksy fonctionne sur votre appareil et ne remplace pas un conseiller financier professionnel.');
     expect(REPONSE_INTROUVABLE).toBe(

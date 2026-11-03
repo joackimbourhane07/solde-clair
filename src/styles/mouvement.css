@@ -1,0 +1,306 @@
+/* ==========================================================================
+   Mouvement et micro-interactions
+   Durées courtes et cohérentes (90 à 300 ms), courbes douces, aucun mouvement permanent.
+   Tout est coupé si l'appareil demande moins d'animations ou si « Animations réduites »
+   est choisi dans les paramètres (voir global.css).
+   ========================================================================== */
+
+:root {
+  --duree-pression: 90ms;
+  --duree-survol: 160ms;
+  --duree-entree: 260ms;
+  --courbe-sortie: cubic-bezier(0.2, 0, 0, 1);
+  --courbe-ressort: cubic-bezier(0.2, 0.9, 0.25, 1.15);
+}
+
+/* ----------------------------- Boutons ---------------------------------- */
+.btn {
+  transition:
+    background-color var(--duree-survol) var(--courbe-sortie),
+    border-color var(--duree-survol) var(--courbe-sortie),
+    color var(--duree-survol) var(--courbe-sortie),
+    box-shadow var(--duree-survol) var(--courbe-sortie),
+    transform var(--duree-survol) var(--courbe-sortie);
+}
+
+@media (hover: hover) {
+  .btn-primaire:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(35, 131, 226, 0.28);
+  }
+
+  .btn-secondaire:hover:not(:disabled),
+  .btn-danger:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+}
+
+/* Pression : le bouton s'enfonce légèrement (retour immédiat, < 100 ms) */
+.btn:active:not(:disabled),
+.chip:active,
+.bottom-link:active,
+.icon-btn:active,
+.btn-icon:active {
+  transform: scale(0.97);
+  transition-duration: var(--duree-pression);
+}
+
+.btn:disabled {
+  box-shadow: none;
+}
+
+/* Puces de choix : changement d'état net */
+.chip {
+  transition:
+    background-color var(--duree-survol) var(--courbe-sortie),
+    color var(--duree-survol) var(--courbe-sortie),
+    transform var(--duree-pression) var(--courbe-sortie);
+}
+
+/* Cases et boutons radio : petite confirmation visuelle */
+input[type='checkbox']:checked,
+input[type='radio']:checked {
+  animation: coche 180ms var(--courbe-ressort);
+}
+
+@keyframes coche {
+  from {
+    transform: scale(0.8);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Champs : le contour du focus apparaît en douceur */
+.input,
+select.input,
+textarea.input {
+  transition:
+    border-color var(--duree-survol) var(--courbe-sortie),
+    box-shadow var(--duree-survol) var(--courbe-sortie);
+}
+
+/* ------------------------- Transitions de page --------------------------- */
+/* Chaque page arrive en glissant légèrement ; les blocs suivent avec un court décalage. */
+.transition-page > .page > * {
+  animation: bloc-entree var(--duree-entree) var(--courbe-sortie) both;
+}
+
+.transition-page > .page > *:nth-child(2) {
+  animation-delay: 30ms;
+}
+
+.transition-page > .page > *:nth-child(3) {
+  animation-delay: 60ms;
+}
+
+.transition-page > .page > *:nth-child(4) {
+  animation-delay: 90ms;
+}
+
+.transition-page > .page > *:nth-child(n + 5) {
+  animation-delay: 120ms;
+}
+
+@keyframes bloc-entree {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ------------------------------ Cartes ----------------------------------- */
+.card,
+.item,
+.objectif-carte {
+  transition:
+    background-color var(--duree-survol) var(--courbe-sortie),
+    box-shadow var(--duree-survol) var(--courbe-sortie);
+}
+
+/* Détails dépliables : ouverture fluide */
+details[open] > .disclosure-body,
+details[open] > div:not(.disclosure-body) {
+  animation: deplier 200ms var(--courbe-sortie);
+}
+
+@keyframes deplier {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --------------------------- Fenêtres ------------------------------------ */
+.modal-backdrop {
+  animation: fondu 180ms ease-out both;
+}
+
+.modal {
+  animation: fenetre-entree 240ms var(--courbe-sortie) both;
+}
+
+.sheet-backdrop {
+  animation: fondu 160ms ease-out both;
+}
+
+.sheet {
+  animation: fenetre-entree 220ms var(--courbe-sortie) both;
+}
+
+@keyframes fondu {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fenetre-entree {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ------------------------- Navigation ------------------------------------ */
+.nav-link {
+  transition:
+    background-color var(--duree-survol) var(--courbe-sortie),
+    color var(--duree-survol) var(--courbe-sortie);
+}
+
+/* Page active (barre du bas) : le trait supérieur se déploie */
+.bottom-link.active::before {
+  animation: trait-actif 220ms var(--courbe-sortie) both;
+}
+
+@keyframes trait-actif {
+  from {
+    transform: scaleX(0.2);
+    opacity: 0;
+  }
+}
+
+/* Bouton central « + » : réaction au survol */
+@media (hover: hover) {
+  .bottom-add:hover .bottom-add-cercle {
+    transform: translateY(-2px);
+  }
+}
+
+.bottom-add-cercle {
+  transition: transform var(--duree-survol) var(--courbe-ressort);
+}
+
+/* ----------------------- Barres et graphiques ---------------------------- */
+/* Les barres se remplissent à l'affichage, puis glissent vers leur nouvelle valeur */
+.progress-fill,
+.hbar-fill {
+  transform-origin: left center;
+  animation: barre-remplir 600ms var(--courbe-sortie) 80ms both;
+  transition: width 400ms var(--courbe-sortie);
+}
+
+@keyframes barre-remplir {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* Courbes : tracées de gauche à droite */
+.chart-plot .line {
+  stroke-dasharray: 2400;
+  animation: courbe-tracer 900ms var(--courbe-sortie) both;
+}
+
+.chart-plot .line-area {
+  animation: fondu 700ms ease-out 200ms both;
+}
+
+@keyframes courbe-tracer {
+  from {
+    stroke-dashoffset: 2400;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Barres verticales : montent depuis l'axe */
+.chart-plot .bar {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: barre-monter 520ms var(--courbe-sortie) both;
+}
+
+@keyframes barre-monter {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* --------------------------- Montants ------------------------------------ */
+/* Un montant mis à jour glisse vers sa nouvelle valeur (voir MontantAnime) et se signale brièvement */
+.montant-anime[data-variation='hausse'] {
+  animation: variation-hausse 700ms ease-out;
+}
+
+.montant-anime[data-variation='baisse'] {
+  animation: variation-baisse 700ms ease-out;
+}
+
+@keyframes variation-hausse {
+  30% {
+    background-color: color-mix(in srgb, var(--entree) 22%, transparent);
+  }
+}
+
+@keyframes variation-baisse {
+  30% {
+    background-color: color-mix(in srgb, var(--sortie) 16%, transparent);
+  }
+}
+
+.montant-anime {
+  border-radius: 6px;
+}
+
+/* --------------------- Apparition au défilement ---------------------------- */
+/* Ajouté par useApparition : le bloc apparaît quand il entre à l'écran (une seule fois) */
+.apparition {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 520ms var(--courbe-sortie),
+    transform 520ms var(--courbe-sortie);
+}
+
+.apparition.visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Sans JavaScript, ou animations réduites : tout est visible tout de suite */
+@media (prefers-reduced-motion: reduce) {
+  .apparition {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+:root[data-mouvement='reduit'] .apparition {
+  opacity: 1;
+  transform: none;
+}

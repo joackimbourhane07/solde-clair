@@ -775,7 +775,6 @@
   font-size: var(--dp-typography-supporting);
 }
 
-
 /* ------------------- Captures de SoldeClair (cadres d'appareils) ------------------- */
 
 .appareil-tel {
@@ -978,7 +977,6 @@
   }
 }
 
-
 /* Petits écrans : un seul téléphone, droit, pour rester lisible */
 @media (max-width: 600px) {
   .duo-tel {
@@ -993,4 +991,389 @@
     width: min(260px, 70vw);
     transform: none;
   }
+}
+
+/* ==========================================================================
+   Démonstrations interactives, galerie, profils, Poksy (série 9)
+   ========================================================================== */
+
+.demo {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: clamp(18px, 4vw, 28px);
+  border-radius: 20px;
+  background: var(--surface);
+  border: var(--dp-border-hairline) solid var(--border);
+  box-shadow: 0 24px 50px -30px rgba(25, 25, 25, 0.35);
+}
+
+.demo-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.demo-mois {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--dp-typography-supporting);
+}
+
+.demo-controle {
+  min-height: 40px;
+}
+
+.demo-phrase {
+  margin: 0;
+  font-size: clamp(1.3rem, 1.05rem + 1vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.demo-valeur {
+  color: var(--entree);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.demo-barre {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.demo-barre span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--brand);
+  transition: width 420ms var(--courbe-sortie, ease-out);
+}
+
+.demo-operations {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 150px;
+}
+
+.demo-operation {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--card);
+  font-variant-numeric: tabular-nums;
+  animation: operation-arrivee 320ms cubic-bezier(0.2, 0.9, 0.25, 1.1) both;
+}
+
+.demo-attente {
+  color: var(--muted);
+  font-size: var(--dp-typography-supporting);
+  animation: none;
+}
+
+@keyframes operation-arrivee {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+}
+
+.demo-libelle {
+  flex: 1;
+  min-width: 0;
+}
+
+.demo-pastille {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #ffffff;
+}
+
+.demo-pastille.sortie {
+  background: var(--sortie-vif);
+  color: #ffffff;
+}
+
+.demo-pastille.entree {
+  background: var(--entree-vif);
+  color: var(--entree-encre);
+}
+
+.demo-petit {
+  margin: 0;
+  font-size: var(--dp-typography-metadata);
+  color: var(--muted);
+}
+
+/* Simulateur */
+.demo-curseur {
+  width: 100%;
+  min-height: 44px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.demo-simu-chiffres {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+}
+
+.demo-simu-chiffres p {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.demo-simu-chiffres strong {
+  color: var(--text);
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.demo-simu-chiffres strong.montant-plus {
+  color: var(--entree);
+}
+
+.demo-simu-chiffres strong.montant-moins {
+  color: var(--sortie);
+}
+
+.demo-verdict {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
+}
+
+.demo-verdict-ok {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.demo-verdict-attention {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.demo-verdict-danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+/* Galerie horizontale : défilement libre avec aimantation, flèches et barre de progression */
+.galerie {
+  margin-top: 24px;
+}
+
+.galerie-piste {
+  padding: 8px 4px 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 16px;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.galerie-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 16px;
+}
+
+.galerie-piste::-webkit-scrollbar {
+  display: none;
+}
+
+.galerie-piste:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: 16px;
+}
+
+.galerie-carte {
+  flex: 0 0 auto;
+  width: min(230px, 62vw);
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.galerie-tel {
+  width: 100%;
+  transition: transform 220ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (hover: hover) {
+  .galerie-carte:hover .galerie-tel {
+    transform: translateY(-6px);
+  }
+}
+
+.galerie-titre {
+  margin: 0;
+  font-weight: 600;
+}
+
+.galerie-controles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.galerie-progression {
+  width: min(220px, 40vw);
+  height: 4px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.galerie-progression span {
+  display: block;
+  height: 100%;
+  background: var(--brand);
+  border-radius: 999px;
+  transition: width 120ms linear;
+}
+
+/* Profils en onglets */
+.profils-interactifs {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profils-onglets {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.profils-onglets .chip {
+  min-height: 44px;
+  padding: 8px 18px;
+}
+
+.profils-panneau {
+  display: grid;
+  gap: 20px;
+  align-items: center;
+  padding: clamp(18px, 4vw, 32px);
+  border-radius: 20px;
+  background: var(--card);
+  animation: panneau-profil 260ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@keyframes panneau-profil {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (min-width: 760px) {
+  .profils-panneau {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 32px;
+  }
+}
+
+.profils-illustration {
+  display: flex;
+  justify-content: center;
+}
+
+.profils-illustration svg {
+  width: min(180px, 50vw);
+  height: auto;
+}
+
+.profils-phrase {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.profils-sous-titre {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: var(--dp-typography-supporting);
+}
+
+/* Poksy : portrait sur un fond vert pâle qui flotte légèrement au défilement */
+.poksy-scene {
+  position: relative;
+  width: min(340px, 78vw);
+  padding: 18px;
+}
+
+.poksy-scene-fond {
+  position: absolute;
+  inset: 8% 4% 0 4%;
+  border-radius: 46% 54% 42% 58% / 52% 44% 56% 48%;
+  background: #dcebdc;
+}
+
+.poksy-scene-photo {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 28px;
+  box-shadow: 0 30px 60px -34px rgba(25, 25, 25, 0.45);
+  transform: rotate(-2deg);
+  transition: transform 260ms cubic-bezier(0.2, 0.9, 0.25, 1.15);
+}
+
+@media (hover: hover) {
+  .poksy-scene:hover .poksy-scene-photo {
+    transform: rotate(0deg) scale(1.02);
+  }
+}
+
+/* Objets décoratifs : la profondeur (translate) est calculée au défilement */
+[data-parallaxe] {
+  will-change: translate;
+}
+
+.accueil-bouton-poksy {
+  align-self: flex-start;
+}
+
+.galerie-attente {
+  aspect-ratio: 1 / 2;
+  border-radius: 34px;
+  background: #ffffff;
 }

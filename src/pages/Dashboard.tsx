@@ -24,6 +24,7 @@ import { Button, Card, MonthSwitcher, Notice, ProgressBar, SignedAmount, Stat } 
 import { ExpenseForm } from '../components/forms';
 import { CategoryBarsChart, LineChart } from '../components/charts/Charts';
 import { Icon } from '../components/Icon';
+import { MontantAnime } from '../components/mouvement';
 
 /** Priorité exprimée en mots (pas seulement par la couleur). */
 const PRIORITES = { 1: 'À traiter maintenant', 2: 'Bientôt', 3: 'Quand vous avez un moment' } as const;
@@ -88,7 +89,15 @@ export function Dashboard() {
   } else if (principal >= 0) {
     headline = (
       <>
-        Il vous reste <V>{short(principal)}</V> pour terminer le mois, soit environ <V>{short(reste.parJour ?? 0)}</V> par jour.
+        Il vous reste{' '}
+        <V>
+          <MontantAnime cents={principal} format={short} brut />
+        </V>{' '}
+        pour terminer le mois, soit environ{' '}
+        <V>
+          <MontantAnime cents={reste.parJour ?? 0} format={short} brut />
+        </V>{' '}
+        par jour.
       </>
     );
     if (s.savingsRemaining > 0 && reste.joursRestants > 0) {
@@ -310,8 +319,11 @@ export function Dashboard() {
           />
           {!plan.progression.reached && (
             <p className="carte-plan-statut">
-              {plan.dansLesTemps ? '✅ Dans les temps' : '⚠️ En retard'} – à épargner : <strong>{fmt(plan.necessaireParMois)}</strong> par mois
-              pendant {plan.moisRestants} mois
+              <span className={`statut-plan ${plan.dansLesTemps ? 'statut-ok' : 'statut-retard'}`}>
+                <Icon name={plan.dansLesTemps ? 'check' : 'alert'} size={16} />
+                {plan.dansLesTemps ? 'Dans les temps' : 'En retard'}
+              </span>{' '}
+              – à épargner : <strong>{fmt(plan.necessaireParMois)}</strong> par mois pendant {plan.moisRestants} mois
               {plan.dansLesTemps ? '' : ` (il manquerait ${fmt(-plan.ecart)})`}.
             </p>
           )}

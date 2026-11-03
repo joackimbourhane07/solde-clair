@@ -54,7 +54,7 @@ describe('objectifs : cartes illustrées interactives', () => {
     expect(carte.querySelector('.illustration-objectif')).toHaveAttribute('aria-hidden', 'true');
     expect(norm(carte.querySelector('.anneau-texte')?.textContent)).toBe('35 %');
     const jalons = within(carte).getByRole('list', { name: 'Étapes de Voyage' });
-    expect(norm(jalons.textContent)).toBe('✓25 % : atteint50 % : pas encore75 % : pas encoreObjectif : pas encore');
+    expect(norm(jalons.textContent)).toBe('25 % : atteint50 % : pas encore75 % : pas encoreObjectif : pas encore');
     expect(within(carte).getByRole('group', { name: 'Versement rapide pour Voyage' })).toBeInTheDocument();
     expect(within(carte).getByRole('slider', { name: /Et si je mettais/ })).toHaveAttribute('type', 'range');
   });

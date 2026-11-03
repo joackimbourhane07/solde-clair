@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { aller, chargerDemo, PAGES, preparer, problemesDeMiseEnPage } from './outils';
+import { aller, chargerDemo, finAnimations, PAGES, preparer, problemesDeMiseEnPage } from './outils';
 
 const FORMATS = [
   { nom: 'petit mobile', viewport: { width: 320, height: 640 }, axe: false },
@@ -11,18 +11,24 @@ const FORMATS = [
 
 for (const format of FORMATS) {
   for (const theme of ['light', 'dark'] as const) {
-    test(`${format.nom}, mode ${theme === 'light' ? 'clair' : 'sombre'} : aucune erreur, aucun débordement${format.axe ? ', accessibilité WCAG AA' : ''}`, async ({ page }) => {
+    test(`${format.nom}, mode ${theme === 'light' ? 'clair' : 'sombre'} : aucune erreur, aucun débordement${format.axe ? ', accessibilité WCAG AA' : ''}`, async ({
+      page,
+    }) => {
       await page.setViewportSize(format.viewport);
       await page.emulateMedia({ colorScheme: theme });
       const erreurs = await preparer(page);
       // Présentation (nouveau visiteur)
       await page.goto('./');
       await expect(page.getByRole('heading', { level: 1, name: 'Votre budget devient enfin clair.' })).toBeVisible();
+      await finAnimations(page);
       if (theme === 'dark') await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
       expect(await problemesDeMiseEnPage(page), 'Mise en page de la présentation').toEqual([]);
       if (format.axe) {
         const res = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
-        expect(res.violations.map((v) => `${v.id} : ${v.help}`), 'Accessibilité de la présentation').toEqual([]);
+        expect(
+          res.violations.map((v) => `${v.id} : ${v.help}`),
+          'Accessibilité de la présentation',
+        ).toEqual([]);
       }
       await chargerDemo(page);
       // Le thème clair est imposé par défaut : on choisit explicitement le thème testé.
@@ -35,7 +41,13 @@ for (const format of FORMATS) {
         expect(await problemesDeMiseEnPage(page), `Mise en page de « ${nom} »`).toEqual([]);
         if (format.axe) {
           const res = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
-          expect(res.violations.map((v) => `${v.id} : ${v.help}`), `Accessibilité de « ${nom} »`).toEqual([]);
+          expect(
+            res.violations.map(
+              (v) =>
+                `${v.id} : ${v.help} (${v.nodes.map((n) => `${n.target.join(' ')} ${n.failureSummary?.split('\n').slice(1, 2).join('')}`).join(', ')})`,
+            ),
+            `Accessibilité de « ${nom} »`,
+          ).toEqual([]);
         }
       }
       expect(erreurs, 'Erreurs dans la console').toEqual([]);
@@ -116,7 +128,11 @@ test('clavier : lien d’évitement en premier, contour de focus visible, fenêt
     const info = await page.evaluate(() => {
       const a = document.activeElement as HTMLElement;
       const cs = getComputedStyle(a);
-      return { nom: (a.getAttribute('aria-label') || a.textContent || a.tagName).trim().slice(0, 30), ok: cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2, fin: a === document.body };
+      return {
+        nom: (a.getAttribute('aria-label') || a.textContent || a.tagName).trim().slice(0, 30),
+        ok: cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) >= 2,
+        fin: a === document.body,
+      };
     });
     if (info.fin) break;
     if (!info.ok) sansContour.push(info.nom);
@@ -147,7 +163,7 @@ test('thèmes : clair par défaut, automatique, sombre', async ({ page }) => {
   // Fond blanc par défaut, même si l'appareil est en mode sombre
   expect(await fond()).toBe(CLAIR);
   await aller(page, 'parametres');
-  await page.getByLabel('Comme mon appareil').check();
+  await page.getByRole('group', { name: 'Thème de l’application' }).getByLabel('Comme mon appareil').check();
   expect(await fond()).toBe(SOMBRE);
   await page.emulateMedia({ colorScheme: 'light' });
   expect(await fond()).toBe(CLAIR);
@@ -169,10 +185,13 @@ test('police IBM Plex Sans chargée localement, chiffres alignés, aucune requê
   await chargerDemo(page);
   await page.evaluate(() => document.fonts.ready);
   expect(await page.evaluate(() => document.fonts.check('500 16px "SoldeClair Plex Sans"'))).toBe(true);
-  const style = await page.locator('.stat-value').first().evaluate((el) => {
-    const cs = getComputedStyle(el);
-    return { police: cs.fontFamily, chiffres: cs.fontVariantNumeric };
-  });
+  const style = await page
+    .locator('.stat-value')
+    .first()
+    .evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { police: cs.fontFamily, chiffres: cs.fontVariantNumeric };
+    });
   expect(style.police).toContain('SoldeClair Plex Sans');
   expect(style.chiffres).toContain('tabular-nums');
   expect(externes).toEqual([]);

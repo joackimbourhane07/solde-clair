@@ -262,12 +262,14 @@ describe('page d’accueil (présentation)', () => {
     const titres = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
     expect(titres).toEqual([
       'L’essentiel, sans complication.',
+      'Faites le tour en cinq écrans.',
       'Sachez ce qu’il vous reste, vraiment.',
       'Anticipez ce qui arrive.',
       'Avancez vers vos projets, pas à pas.',
       'Avant d’acheter, simulez.',
       'Adapté à votre situation.',
       'Vos données restent sur votre appareil.',
+      'Poksy répond à vos questions.',
       'Commencer avec SoldeClair',
     ]);
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
@@ -675,7 +677,7 @@ describe('paramètres et données', () => {
     const user = renderApp(fixture(), '/parametres');
     await user.click(screen.getByLabelText('Mode sombre'));
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
-    await user.click(screen.getByLabelText('Comme mon appareil'));
+    await user.click(within(screen.getByRole('group', { name: 'Thème de l’application' })).getByLabelText('Comme mon appareil'));
     expect(document.documentElement).not.toHaveAttribute('data-theme');
   });
 });

@@ -15,9 +15,6 @@ import {
   PictoApercu,
   PictoDebuter,
   PictoSansBanque,
-  ProfilAlternant,
-  ProfilEtudiant,
-  ProfilSalarie,
 } from '../components/accueil/Illustrations';
 // Vraies captures de SoldeClair (profil de démonstration « Léa, étudiante » : données fictives)
 import captureOrdinateur from '../assets/accueil/ordi-tableau.webp';
@@ -26,10 +23,27 @@ import captureAjout from '../assets/accueil/tel-ajout.webp';
 import captureAVenir from '../assets/accueil/tel-avenir.webp';
 import captureObjectifs from '../assets/accueil/tel-objectifs.webp';
 import captureSimulateur from '../assets/accueil/tel-simulateur.webp';
+import { DemoResteAVivre, DemoSimulateur, GalerieEcrans, ProfilsInteractifs } from '../components/accueil/Demos';
+import { PoksyPortrait } from '../components/poksy/PoksyAvatar';
+import { useApparitions, useParallaxe } from '../components/mouvement';
 import '../styles/accueil.css';
 
-/** Montants fictifs des maquettes (aucune donnée réelle). */
-const N = ' ';
+/** Écrans de la galerie (captures du profil de démonstration, données fictives). */
+const ECRANS = [
+  {
+    src: captureTableau,
+    titre: 'Ce qu’il vous reste',
+    alt: 'Tableau de bord sur téléphone : il vous reste 134 € pour terminer le mois, soit environ 7 € par jour.',
+  },
+  { src: captureAjout, titre: 'Ajouter une dépense', alt: 'Ajout d’une dépense : montant, catégories fréquentes en un geste, description et date.' },
+  { src: captureAVenir, titre: 'Ce qui arrive', alt: 'Carte À venir : prélèvements et revenus prévus avec leurs dates.' },
+  { src: captureObjectifs, titre: 'Vos objectifs', alt: 'Objectif Ordinateur : 310 € sur 900 €, 34 % atteint, reste à épargner et date estimée.' },
+  {
+    src: captureSimulateur,
+    titre: 'Simuler un achat',
+    alt: 'Simulateur : achat de 25 € en loisirs, achat possible avec prudence, solde avant et après.',
+  },
+];
 
 /** Capture dans un cadre de téléphone. */
 function Telephone({ src, alt, className = '', eager = false }: { src: string; alt: string; className?: string; eager?: boolean }) {
@@ -45,7 +59,13 @@ function Logo() {
     <span className="logo">
       <svg viewBox="0 0 64 64" width="30" height="30" aria-hidden="true">
         <rect width="64" height="64" rx="14" fill="currentColor" />
-        <path d="M18 40c3 4 8 6 14 6 8 0 13-4 13-10 0-12-25-7-25-17 0-4 4-7 11-7 5 0 9 2 11 5" fill="none" stroke="var(--logo-ink)" strokeWidth="6" strokeLinecap="round" />
+        <path
+          d="M18 40c3 4 8 6 14 6 8 0 13-4 13-10 0-12-25-7-25-17 0-4 4-7 11-7 5 0 9 2 11 5"
+          fill="none"
+          stroke="var(--logo-ink)"
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
       </svg>
       <span className="logo-text">SoldeClair</span>
     </span>
@@ -121,6 +141,9 @@ export default function Accueil() {
     document.title = 'SoldeClair';
     window.scrollTo(0, 0);
   }, []);
+  // Sections qui apparaissent au défilement et légère profondeur des objets décoratifs
+  useApparitions('.accueil-section, .accueil-cta');
+  useParallaxe();
 
   const commencer = () => navigate(aDesDonnees ? '/' : '/bienvenue');
   const libelleCommencer = aDesDonnees ? 'Accéder à mon tableau de bord' : 'Commencer';
@@ -170,7 +193,8 @@ export default function Accueil() {
             Votre budget devient enfin clair.
           </h1>
           <p className="accueil-chapeau">
-            Découvrez ce qu’il vous reste réellement pour terminer le mois, suivez vos dépenses et avancez vers vos objectifs sans connecter votre banque.
+            Découvrez ce qu’il vous reste réellement pour terminer le mois, suivez vos dépenses et avancez vers vos objectifs sans connecter votre
+            banque.
           </p>
           {aDesProfils ? (
             <ChoixProfils />
@@ -209,6 +233,7 @@ export default function Accueil() {
                   width={1440}
                   height={900}
                   decoding="async"
+                  fetchPriority="high"
                 />
               </div>
               <div className="socle" aria-hidden="true" />
@@ -219,13 +244,13 @@ export default function Accueil() {
               className="vitrine-tel"
               alt="Le même tableau de bord sur téléphone, avec le bouton « + » pour ajouter une dépense au pouce."
             />
-            <div className="vitrine-objet objet-calendrier">
+            <div className="vitrine-objet objet-calendrier" data-parallaxe="0.12">
               <PetitCalendrier />
             </div>
-            <div className="vitrine-objet objet-pieces">
+            <div className="vitrine-objet objet-pieces" data-parallaxe="-0.1">
               <PetitesPieces />
             </div>
-            <div className="vitrine-objet objet-cadenas">
+            <div className="vitrine-objet objet-cadenas" data-parallaxe="0.08">
               <PetitCadenas />
             </div>
           </div>
@@ -256,6 +281,15 @@ export default function Accueil() {
           </ul>
         </section>
 
+        {/* 4 bis. Visite en images : défilement horizontal, sans lecture automatique */}
+        <section className="accueil-section accueil-conteneur" aria-labelledby="titre-galerie">
+          <h2 id="titre-galerie" tabIndex={-1} className="accueil-h2 centre">
+            Faites le tour en cinq écrans.
+          </h2>
+          <p className="accueil-texte centre">Glissez, ou utilisez les flèches. Les données affichées sont fictives.</p>
+          <GalerieEcrans ecrans={ECRANS} />
+        </section>
+
         {/* 5. Reste à vivre */}
         <section className="accueil-section accueil-conteneur accueil-alterne" aria-labelledby="titre-reste">
           <div className="accueil-colonne-texte">
@@ -264,7 +298,8 @@ export default function Accueil() {
               Sachez ce qu’il vous reste, vraiment.
             </h2>
             <p className="accueil-texte">
-              SoldeClair retire de vos revenus vos charges fixes, vos dépenses et votre épargne du mois, puis répartit le reste sur les jours qui restent.
+              SoldeClair retire de vos revenus vos charges fixes, vos dépenses et votre épargne du mois, puis répartit le reste sur les jours qui
+              restent.
             </p>
             <ul className="accueil-liste">
               <li>
@@ -282,28 +317,7 @@ export default function Accueil() {
             <div className="objet-coin objet-coin-haut" aria-hidden="true">
               <PetitCalendrier />
             </div>
-            <div className="maquette" aria-hidden="true">
-              <p className="maquette-mois">Novembre</p>
-              <p className="maquette-phrase">
-                Il vous reste <strong>425{N}€</strong> pour terminer le mois, soit environ <strong>14{N}€</strong> par jour.
-              </p>
-              <p className="maquette-meta">30 jours restants – 62{N}% des revenus déjà dépensés</p>
-              <div className="maquette-barre">
-                <span style={{ width: '62%' }} />
-              </div>
-              <div className="maquette-calcul">
-                <span>Revenus</span>
-                <span>1{N}450,00{N}€</span>
-                <span>Charges fixes</span>
-                <span>− 690,00{N}€</span>
-                <span>Dépenses</span>
-                <span>− 215,00{N}€</span>
-                <span>Épargne</span>
-                <span>− 120,00{N}€</span>
-                <span className="fort">Disponible</span>
-                <span className="fort">425,00{N}€</span>
-              </div>
-            </div>
+            <DemoResteAVivre />
           </div>
         </section>
 
@@ -330,8 +344,16 @@ export default function Accueil() {
             </ol>
           </div>
           <div className="accueil-colonne-visuel visuel-tel duo-tel">
-            <Telephone src={captureAjout} className="tel-arriere" alt="Ajout d’une dépense : montant, catégories fréquentes en un geste, description et date." />
-            <Telephone src={captureAVenir} className="tel-avant" alt="Carte « À venir » : « Dans les 7 prochains jours : 1 charge prévue », prélèvements et revenus prévus avec leurs dates." />
+            <Telephone
+              src={captureAjout}
+              className="tel-arriere"
+              alt="Ajout d’une dépense : montant, catégories fréquentes en un geste, description et date."
+            />
+            <Telephone
+              src={captureAVenir}
+              className="tel-avant"
+              alt="Carte « À venir » : « Dans les 7 prochains jours : 1 charge prévue », prélèvements et revenus prévus avec leurs dates."
+            />
             <div className="objet-coin objet-coin-bas" aria-hidden="true">
               <PetitTicket />
             </div>
@@ -361,7 +383,10 @@ export default function Accueil() {
             </ul>
           </div>
           <div className="accueil-colonne-visuel visuel-tel">
-            <Telephone src={captureObjectifs} alt="Objectif « Ordinateur » : 310 € sur 900 €, « Vous avez atteint 34 % de votre objectif », reste à épargner et date estimée." />
+            <Telephone
+              src={captureObjectifs}
+              alt="Objectif « Ordinateur » : 310 € sur 900 €, « Vous avez atteint 34 % de votre objectif », reste à épargner et date estimée."
+            />
             <div className="objet-coin objet-coin-bas grand" aria-hidden="true">
               <IllustrationBocal />
             </div>
@@ -376,7 +401,8 @@ export default function Accueil() {
               Avant d’acheter, simulez.
             </h2>
             <p className="accueil-texte">
-              Indiquez un prix : SoldeClair montre l’effet sur votre mois, sur votre épargne et sur vos objectifs. Rien n’est enregistré tant que vous ne le décidez pas.
+              Indiquez un prix : SoldeClair montre l’effet sur votre mois, sur votre épargne et sur vos objectifs. Rien n’est enregistré tant que vous
+              ne le décidez pas.
             </p>
             <ul className="accueil-liste">
               <li>
@@ -391,8 +417,8 @@ export default function Accueil() {
             </ul>
           </div>
           <div className="accueil-colonne-visuel visuel-tel">
-            <Telephone src={captureSimulateur} alt="Simulateur : achat de 25 € en loisirs, « Achat possible avec prudence », solde avant et après l’achat." />
-            <div className="objet-coin objet-coin-bas grand" aria-hidden="true">
+            <DemoSimulateur />
+            <div className="objet-coin objet-coin-bas grand" aria-hidden="true" data-parallaxe="0.08">
               <IllustrationBalance />
             </div>
           </div>
@@ -403,25 +429,10 @@ export default function Accueil() {
           <h2 id="titre-profils" tabIndex={-1} className="accueil-h2 centre">
             Adapté à votre situation.
           </h2>
-          <p className="accueil-texte centre">Les catégories proposées changent selon votre profil. Vous pouvez tout modifier ensuite.</p>
-          <ul className="accueil-profils">
-            <li className="accueil-carte">
-              <ProfilEtudiant />
-              <h3>Étudiant(e)</h3>
-              <p>Bourse, aide au logement, petits jobs, frais d’inscription : l’essentiel est prêt.</p>
-            </li>
-            <li className="accueil-carte">
-              <ProfilAlternant />
-              <h3>Alternant(e)</h3>
-              <p>Salaire d’alternance, transports, premier logement : un budget qui suit votre rythme.</p>
-            </li>
-            <li className="accueil-carte">
-              <ProfilSalarie />
-              <h3>Salarié(e)</h3>
-              <p>Salaire, loyer ou crédit, épargne de précaution : une vue claire de chaque mois.</p>
-            </li>
-          </ul>
-          <p className="accueil-texte centre petit">Indépendant(e) ou autre situation ? SoldeClair s’adapte aussi.</p>
+          <p className="accueil-texte centre">
+            SoldeClair met en avant ce qui compte pour votre situation. Choisissez un profil pour voir la différence.
+          </p>
+          <ProfilsInteractifs />
         </section>
 
         {/* 10. Confidentialité */}
@@ -451,6 +462,44 @@ export default function Accueil() {
           </div>
           <div className="accueil-colonne-visuel centre">
             <IllustrationConfidentialite />
+          </div>
+        </section>
+
+        {/* 10 bis. Poksy, le guide */}
+        <section id="poksy" className="accueil-section accueil-conteneur accueil-alterne inverse" aria-labelledby="titre-poksy">
+          <div className="accueil-colonne-texte">
+            <p className="accueil-etiquette">Votre guide</p>
+            <h2 id="titre-poksy" tabIndex={-1} className="accueil-h2">
+              Poksy répond à vos questions.
+            </h2>
+            <p className="accueil-texte">
+              Poksy, c’est un vrai chat… et le guide de SoldeClair. Il explique vos chiffres avec des mots simples et propose une astuce de temps en
+              temps, sans jamais insister.
+            </p>
+            <ul className="accueil-liste">
+              <li>
+                <Icon name="check" size={18} /> Des réponses immédiates, préparées à l’avance
+              </li>
+              <li>
+                <Icon name="check" size={18} /> Tout se passe sur votre appareil, sans intelligence artificielle en ligne
+              </li>
+              <li>
+                <Icon name="check" size={18} /> Des astuces discrètes, que vous pouvez couper d’un geste
+              </li>
+            </ul>
+            <button
+              type="button"
+              className="btn btn-primaire accueil-bouton-poksy"
+              onClick={() => window.dispatchEvent(new Event('soldeclair:ouvrir-poksy'))}
+            >
+              Poser une question à Poksy
+            </button>
+          </div>
+          <div className="accueil-colonne-visuel centre">
+            <div className="poksy-scene">
+              <div className="poksy-scene-fond" aria-hidden="true" data-parallaxe="-0.05" />
+              <PoksyPortrait className="poksy-scene-photo" />
+            </div>
           </div>
         </section>
 
@@ -552,7 +601,8 @@ export default function Accueil() {
           </div>
         </div>
         <p className="accueil-conteneur accueil-pied-bas">
-          <Icon name="lock" size={14} /> Version de test : vos données restent dans ce navigateur, sur cet appareil. SoldeClair donne des repères budgétaires, pas des conseils financiers.
+          <Icon name="lock" size={14} /> Version de test : vos données restent dans ce navigateur, sur cet appareil. SoldeClair donne des repères
+          budgétaires, pas des conseils financiers.
         </p>
       </footer>
       {/* Poksy aussi sur la page d'accueil : questions sur SoldeClair, même sans profil */}

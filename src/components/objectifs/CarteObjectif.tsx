@@ -1,3 +1,4 @@
+import { Icon } from '../Icon';
 import { useId, useState } from 'react';
 import { useApp } from '../../state/AppState';
 import { progressionObjectif, soldesSupports } from '../../lib/plan';
@@ -64,7 +65,12 @@ function SimulationMensuelle({ g }: { g: SavingsGoal }) {
       {sim && (
         <p className="objectif-simulation-resultat" aria-live="polite">
           Objectif atteint en <strong>{monthLabel(monthOf(sim.estimatedDate))}</strong> (dans {sim.monthsToReach} mois)
-          {sim.avantLaDate === true && <span className="objectif-ok"> – avant la date souhaitée ✓</span>}
+          {sim.avantLaDate === true && (
+            <span className="objectif-ok">
+              {' '}
+              – avant la date souhaitée <Icon name="check" size={16} className="icone-texte" />
+            </span>
+          )}
           {sim.avantLaDate === false && <span className="objectif-tard"> – après la date souhaitée ({formatDate(g.targetDate!)})</span>}
         </p>
       )}
@@ -135,7 +141,11 @@ export function CarteObjectif({
             </h3>
             <p className="goal-meta">
               <span className={`tag tag-${g.priority}`}>{PRIORITY_LABELS[g.priority]}</span>
-              {p.reached && <span className="tag tag-ok">✓ Objectif atteint</span>}
+              {p.reached && (
+                <span className="tag tag-ok">
+                  <Icon name="check" size={14} className="icone-texte" /> Objectif atteint
+                </span>
+              )}
               {p.dateExceeded && <span className="tag tag-alerte">Date dépassée</span>}
             </p>
             {g.description && <p className="muted">{g.description}</p>}
@@ -154,7 +164,7 @@ export function CarteObjectif({
               return (
                 <li key={j} className={atteint ? 'jalon-atteint' : ''}>
                   <span className="jalon-point" aria-hidden="true">
-                    {atteint ? '✓' : ''}
+                    {atteint && <Icon name="check" size={12} />}
                   </span>
                   <span>{j === 100 ? 'Objectif' : `${j} %`}</span>
                   <span className="sr-only">{atteint ? ' : atteint' : ' : pas encore'}</span>
@@ -166,7 +176,8 @@ export function CarteObjectif({
 
         {p.reached ? (
           <p className="objectif-bravo">
-            <span aria-hidden="true">🎉 </span>Objectif atteint&nbsp;! Bravo, {fmt(g.target)} sont prêts pour «&nbsp;{g.name}&nbsp;».
+            <Icon name="sparkle" size={20} className="icone-texte objectif-bravo-icone" />
+            Objectif atteint&nbsp;! Bravo, {fmt(g.target)} sont prêts pour «&nbsp;{g.name}&nbsp;».
           </p>
         ) : (
           <p className="goal-step">

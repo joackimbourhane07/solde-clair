@@ -109,7 +109,7 @@ export function Onboarding() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
-  const amountOf = (v: string) => (v.trim() ? parseAmount(v) ?? 0 : 0);
+  const amountOf = (v: string) => (v.trim() ? (parseAmount(v) ?? 0) : 0);
 
   const validate = (): boolean => {
     const errs: Record<string, string | null> = {};
@@ -183,7 +183,13 @@ export function Onboarding() {
           <span className="logo">
             <svg viewBox="0 0 64 64" width="32" height="32" aria-hidden="true">
               <rect width="64" height="64" rx="14" fill="currentColor" />
-              <path d="M18 40c3 4 8 6 14 6 8 0 13-4 13-10 0-12-25-7-25-17 0-4 4-7 11-7 5 0 9 2 11 5" fill="none" stroke="var(--logo-ink)" strokeWidth="6" strokeLinecap="round" />
+              <path
+                d="M18 40c3 4 8 6 14 6 8 0 13-4 13-10 0-12-25-7-25-17 0-4 4-7 11-7 5 0 9 2 11 5"
+                fill="none"
+                stroke="var(--logo-ink)"
+                strokeWidth="6"
+                strokeLinecap="round"
+              />
             </svg>
             <span className="logo-text">SoldeClair</span>
           </span>
@@ -226,7 +232,7 @@ export function Onboarding() {
           <ol className="stepper" aria-label="Étapes de la configuration">
             {STEPS.map((s, i) => (
               <li key={s} className={i === step ? 'step-current' : i < step ? 'step-done' : ''} aria-current={i === step ? 'step' : undefined}>
-                <span className="step-num">{i < step ? '✓' : i + 1}</span>
+                <span className="step-num">{i < step ? <Icon name="check" size={14} /> : i + 1}</span>
                 <span className="step-label">{s}</span>
               </li>
             ))}
@@ -260,16 +266,19 @@ export function Onboarding() {
                     <p>Quelques questions pour préparer votre budget. Comptez environ deux minutes.</p>
                     <p className="muted">
                       Vous préférez d’abord découvrir ?{' '}
-                      <button
-                        type="button"
-                        className="lien-bouton"
-                        onClick={() => document.getElementById('alt-titre')?.focus()}
-                      >
+                      <button type="button" className="lien-bouton" onClick={() => document.getElementById('alt-titre')?.focus()}>
                         Essayer avec un profil de démonstration
                       </button>
                     </p>
                     <div className="form-grid">
-                      <TextField label="Prénom ou pseudonyme" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} maxLength={40} autoComplete="nickname" />
+                      <TextField
+                        label="Prénom ou pseudonyme"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        error={errors.name}
+                        maxLength={40}
+                        autoComplete="nickname"
+                      />
                       <SelectField label="Devise" value={currency} onChange={(e) => setCurrency(e.target.value)}>
                         {CURRENCIES.map((c) => (
                           <option key={c.code} value={c.code}>
@@ -362,10 +371,36 @@ export function Onboarding() {
                     />
                     <h2 className="subhead">Objectif d’épargne à long terme (facultatif)</h2>
                     <div className="form-grid">
-                      <TextField label="Nom de l’objectif" optional value={goalName} onChange={(e) => setGoalName(e.target.value)} placeholder="Ex. : fonds d’urgence" maxLength={60} />
-                      <MoneyField label="Montant visé" value={goalTarget} onChange={(e) => setGoalTarget(e.target.value)} error={errors.goalTarget} disabled={!goalName.trim()} />
-                      <MoneyField label="Déjà mis de côté" value={goalInitial} onChange={(e) => setGoalInitial(e.target.value)} error={errors.goalInitial} disabled={!goalName.trim()} />
-                      <TextField label="Date souhaitée" optional type="date" value={goalDate} onChange={(e) => setGoalDate(e.target.value)} disabled={!goalName.trim()} />
+                      <TextField
+                        label="Nom de l’objectif"
+                        optional
+                        value={goalName}
+                        onChange={(e) => setGoalName(e.target.value)}
+                        placeholder="Ex. : fonds d’urgence"
+                        maxLength={60}
+                      />
+                      <MoneyField
+                        label="Montant visé"
+                        value={goalTarget}
+                        onChange={(e) => setGoalTarget(e.target.value)}
+                        error={errors.goalTarget}
+                        disabled={!goalName.trim()}
+                      />
+                      <MoneyField
+                        label="Déjà mis de côté"
+                        value={goalInitial}
+                        onChange={(e) => setGoalInitial(e.target.value)}
+                        error={errors.goalInitial}
+                        disabled={!goalName.trim()}
+                      />
+                      <TextField
+                        label="Date souhaitée"
+                        optional
+                        type="date"
+                        value={goalDate}
+                        onChange={(e) => setGoalDate(e.target.value)}
+                        disabled={!goalName.trim()}
+                      />
                     </div>
                   </>
                 )}
@@ -373,7 +408,8 @@ export function Onboarding() {
                 {step === 4 && (
                   <>
                     <p>
-                      Catégories proposées pour un profil <strong>{PROFILE_LABELS[type].toLowerCase()}</strong>. Décochez celles qui ne vous concernent pas.
+                      Catégories proposées pour un profil <strong>{PROFILE_LABELS[type].toLowerCase()}</strong>. Décochez celles qui ne vous
+                      concernent pas.
                     </p>
                     {kinds.map((k) => (
                       <fieldset key={k} className="fieldset">
@@ -403,14 +439,23 @@ export function Onboarding() {
                       </fieldset>
                     ))}
                     <div className="form-row">
-                      <SelectField label="Type" value={custom.kind} onChange={(e) => setCustom({ ...custom, kind: e.target.value as typeof custom.kind })}>
+                      <SelectField
+                        label="Type"
+                        value={custom.kind}
+                        onChange={(e) => setCustom({ ...custom, kind: e.target.value as typeof custom.kind })}
+                      >
                         {kinds.map((k) => (
                           <option key={k} value={k}>
                             {kindLabel[k]}
                           </option>
                         ))}
                       </SelectField>
-                      <TextField label="Nouvelle catégorie" value={custom.name} onChange={(e) => setCustom({ ...custom, name: e.target.value })} maxLength={60} />
+                      <TextField
+                        label="Nouvelle catégorie"
+                        value={custom.name}
+                        onChange={(e) => setCustom({ ...custom, name: e.target.value })}
+                        maxLength={60}
+                      />
                       <div className="form-actions">
                         <Button
                           icon="plus"

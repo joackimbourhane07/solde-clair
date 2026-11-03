@@ -959,8 +959,20 @@ strong {
 }
 
 .stat-negatif .stat-value::before {
-  content: '⚠ ';
-  font-size: 0.85em;
+  /* Pictogramme « attention » en SVG (pas de symbole emoji) */
+  content: '';
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  margin-right: 0.25em;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4 2.5 20h19L12 4Zm0 6v4.5m0 3h.01'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4 2.5 20h19L12 4Zm0 6v4.5m0 3h.01'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.icone-texte {
+  display: inline-block;
+  vertical-align: -0.15em;
 }
 
 .savings-target {
@@ -1708,7 +1720,7 @@ ol.rank-list li > span {
   font-weight: 500;
 }
 
-.toast span {
+.toast > span:not(.toast-poksy) {
   flex: 1;
 }
 
@@ -2617,11 +2629,23 @@ ol.rank-list li > span {
 }
 
 /* Réduction des animations si demandé par l'utilisateur. */
+/* Moins d'animations : demandé par l'appareil, ou choisi dans les paramètres (« Animations réduites ») */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     transition: none !important;
     animation: none !important;
+    scroll-behavior: auto !important;
   }
+}
+
+:root[data-mouvement='reduit'] *,
+:root[data-mouvement='reduit'] *::before,
+:root[data-mouvement='reduit'] *::after {
+  transition: none !important;
+  animation: none !important;
+  scroll-behavior: auto !important;
 }
 
 /* Mode contraste forcé (Windows) : les barres restent visibles. */
