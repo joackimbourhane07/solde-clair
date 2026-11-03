@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../state/AppState';
+import { progressionObjectif } from '../lib/plan';
 import type { SavingsDeposit, SavingsGoal } from '../types';
-import { GOAL_EXAMPLES, goalProgress, sortGoals, themeFromName } from '../lib/goals';
+import { GOAL_EXAMPLES, sortGoals, themeFromName } from '../lib/goals';
 import { savingsBalanceByMonth } from '../lib/budget';
 import { defaultDateFor, formatDate, monthLabel, monthLabelShort, monthOf } from '../lib/dates';
 import { IllustrationObjectif } from '../components/objectifs/IllustrationObjectif';
@@ -69,7 +70,7 @@ export function Goals() {
             detail={target > 0 ? `Objectif mensuel : ${fmt(target)} (${Math.round((savedThisMonth * 100) / target)}\u00a0%)` : undefined}
           />
           <Stat label="Total épargné" value={fmt(totalSaved)} tone="epargne" detail="Montants initiaux + versements" />
-          <Stat label="Objectifs en cours" value={String(goals.filter((g) => !goalProgress(g, data.savings, today).reached).length)} />
+          <Stat label="Objectifs en cours" value={String(goals.filter((g) => !progressionObjectif(data, g, today).reached).length)} />
         </div>
       </section>
 

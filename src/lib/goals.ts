@@ -38,7 +38,14 @@ export interface GoalProgress {
   dateExceeded: boolean;
 }
 
-export function goalCurrent(goal: SavingsGoal, deposits: SavingsDeposit[]): Cents {
+/**
+ * Montant atteint : si l'objectif suit des supports d'épargne (et que leurs soldes sont fournis), c'est leur total ;
+ * sinon le montant de départ plus les versements.
+ */
+export function goalCurrent(goal: SavingsGoal, deposits: SavingsDeposit[], soldesSupports?: Map<string, Cents>): Cents {
+  if (goal.supportIds && goal.supportIds.length > 0 && soldesSupports) {
+    return sum(goal.supportIds.map((id) => soldesSupports.get(id) ?? 0));
+  }
   return goal.initialAmount + sum(deposits.filter((d) => d.goalId === goal.id).map((d) => d.amount));
 }
 
@@ -52,8 +59,8 @@ export function monthsUntil(targetDate: ISODate, today: ISODate): number {
   return Math.max(1, monthDiff(monthOf(today), monthOf(targetDate)));
 }
 
-export function goalProgress(goal: SavingsGoal, deposits: SavingsDeposit[], today: ISODate): GoalProgress {
-  const current = goalCurrent(goal, deposits);
+export function goalProgress(goal: SavingsGoal, deposits: SavingsDeposit[], today: ISODate, soldesSupports?: Map<string, Cents>): GoalProgress {
+  const current = goalCurrent(goal, deposits, soldesSupports);
   const remaining = Math.max(0, goal.target - current);
   const reached = goal.target > 0 && remaining === 0;
   const pct = goal.target > 0 ? Math.min(100, Math.floor((current * 100) / goal.target)) : 0;
@@ -154,8 +161,14 @@ export interface SimulationMensuelle {
 }
 
 /** « Et si je mettais X € par mois ? » : date d'arrivée avec ce montant mensuel. */
-export function simulerContribution(goal: SavingsGoal, deposits: SavingsDeposit[], today: ISODate, mensuel: Cents): SimulationMensuelle | null {
-  const { remaining } = goalProgress(goal, deposits, today);
+export function simulerContribution(
+  goal: SavingsGoal,
+  deposits: SavingsDeposit[],
+  today: ISODate,
+  mensuel: Cents,
+  soldesSupports?: Map<string, Cents>,
+): SimulationMensuelle | null {
+  const { remaining } = goalProgress(goal, deposits, today, soldesSupports);
   if (mensuel <= 0) return null;
   const monthsToReach = Math.ceil(remaining / mensuel);
   const estimatedDate = addMonthsToDate(today, monthsToReach);

@@ -1,18 +1,12 @@
 import { useMemo, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../state/AppState';
-import {
-  carryOverEnabled,
-  dailyBalanceSeries,
-  monthAlerts,
-  monthSummary,
-  monthTransactions,
-  signedAmount,
-  spendingByCategory,
-} from '../lib/budget';
+import { objectifPrincipal, progressionObjectif, projection, totauxEpargne } from '../lib/plan';
+import { reperesPourVous, sousTitreProfil } from '../lib/profil';
+import { carryOverEnabled, dailyBalanceSeries, monthAlerts, monthSummary, monthTransactions, signedAmount, spendingByCategory } from '../lib/budget';
 import { balanceForecast } from '../lib/forecast';
 import { accountBalance, JOURS_A_VENIR_ACCUEIL, operationsAVenir, resteAVivre, usesCarteRestaurant } from '../lib/accounts';
-import { goalProgress, sortGoals } from '../lib/goals';
+import { sortGoals } from '../lib/goals';
 import { allLimitsRespected, MAX_ACTIONS, suggestedActions } from '../lib/actions';
 import { dayHeader, defaultDateFor, formatDate, lastDay, monthOf, ofMonth, parseISO, relativeDay } from '../lib/dates';
 import { divideCents } from '../lib/money';
@@ -55,7 +49,9 @@ export function Dashboard() {
   const principal = s.period === 'courant' ? reste.solde : s.period === 'passe' ? soldeFinMois : s.available;
   const signe = (c: number) => (c < 0 ? `− ${fmt(-c)}` : fmt(c));
   // Les montants de la phrase principale sont mis en valeur (vert s'ils sont positifs, rouge sinon).
-  const V = ({ children }: { children: ReactNode }) => <span className={`valeur ${principal < 0 ? 'montant-moins' : 'montant-plus'}`}>{children}</span>;
+  const V = ({ children }: { children: ReactNode }) => (
+    <span className={`valeur ${principal < 0 ? 'montant-moins' : 'montant-plus'}`}>{children}</span>
+  );
   let headline: ReactNode;
   let subline: string | null = null;
   if (s.period === 'passe') {
@@ -99,7 +95,8 @@ export function Dashboard() {
         Votre solde est de <V>− {over(-principal)}</V> aujourd’hui.
       </>
     );
-    subline = 'Les revenus prévus s’ajouteront le jour de leur arrivée. Si votre banque affiche un autre montant, ajustez le solde dans « Mon compte ».';
+    subline =
+      'Les revenus prévus s’ajouteront le jour de leur arrivée. Si votre banque affiche un autre montant, ajustez le solde dans « Mon compte ».';
   }
 
   const visibles = actions.slice(0, MAX_ACTIONS);
@@ -109,11 +106,19 @@ export function Dashboard() {
   const objectifs = useMemo(
     () =>
       sortGoals(data.goals)
-        .map((g) => ({ g, p: goalProgress(g, data.savings, today) }))
+        .map((g) => ({ g, p: progressionObjectif(data, g, today) }))
         .filter(({ p }) => !p.reached)
         .slice(0, 3),
     [data.goals, data.savings, today],
   );
+  // Résumé de « Mon plan d'épargne » et repères selon le profil
+  const plan = useMemo(() => {
+    const o = objectifPrincipal(data, today);
+    return o ? projection(data, o, today) : null;
+  }, [data, today]);
+  const epargneTotale = useMemo(() => totauxEpargne(data, today), [data, today]);
+  const reperes = useMemo(() => reperesPourVous(data, today).slice(0, 2), [data, today]);
+  const sousTitre = sousTitreProfil(data);
   const avecCarte = usesCarteRestaurant(data);
   const soldeCompte = useMemo(() => (avecCarte ? accountBalance(data, 'compte', today, today) : 0), [data, today, avecCarte]);
   const soldeCarte = useMemo(() => (avecCarte ? accountBalance(data, 'carte-restaurant', today, today) : 0), [data, today, avecCarte]);
@@ -122,7 +127,10 @@ export function Dashboard() {
     <div className="page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">{PROFILE_LABELS[profile.type]}</p>
+          <p className="eyebrow">
+            {PROFILE_LABELS[profile.type]}
+            {sousTitre && ` – ${sousTitre}`}
+          </p>
           <h1>Bonjour {profile.name}</h1>
         </div>
         <MonthSwitcher />
@@ -153,7 +161,17 @@ export function Dashboard() {
           max={s.income}
           label="Part des revenus déjà dépensée"
           valueText={s.budgetUsedPct === null ? 'Aucun revenu' : `${s.budgetUsedPct} % des revenus dépensés`}
-          level={s.budgetUsedPct === null ? 'sans' : s.budgetUsedPct > 100 ? 'depasse' : s.budgetUsedPct >= 90 ? 'alerte' : s.budgetUsedPct >= 75 ? 'attention' : 'ok'}
+          level={
+            s.budgetUsedPct === null
+              ? 'sans'
+              : s.budgetUsedPct > 100
+                ? 'depasse'
+                : s.budgetUsedPct >= 90
+                  ? 'alerte'
+                  : s.budgetUsedPct >= 75
+                    ? 'attention'
+                    : 'ok'
+          }
         />
         {/* Aide contextuelle : le calcul avec les chiffres réels du mois */}
         <details className="disclosure">
@@ -234,9 +252,8 @@ export function Dashboard() {
                 </dl>
                 {s.dailyRemaining !== null && (
                   <p>
-                    Divisé par {s.daysRemaining} jour{s.daysRemaining > 1 ? 's' : ''} restant{s.daysRemaining > 1 ? 's' : ''} (aujourd’hui
-                    inclus), cela fait environ {fmt(s.dailyRemaining)} par jour. Les revenus et charges prévus plus tard dans le mois sont déjà
-                    comptés.
+                    Divisé par {s.daysRemaining} jour{s.daysRemaining > 1 ? 's' : ''} restant{s.daysRemaining > 1 ? 's' : ''} (aujourd’hui inclus),
+                    cela fait environ {fmt(s.dailyRemaining)} par jour. Les revenus et charges prévus plus tard dans le mois sont déjà comptés.
                   </p>
                 )}
               </>
@@ -245,9 +262,68 @@ export function Dashboard() {
         </details>
       </section>
 
+      {/* Mon objectif : résumé de « Mon plan d'épargne » */}
+      {plan && courant && (
+        <section className="card carte-plan" aria-labelledby="carte-plan-titre">
+          <div className="card-header">
+            <h2 id="carte-plan-titre" className="card-title">
+              Mon objectif : {plan.objectif.name}
+            </h2>
+            <div className="card-actions">
+              <Link to="/plan" className="link">
+                Mon plan
+              </Link>
+            </div>
+          </div>
+          <p className="carte-plan-phrase">
+            <strong className="valeur montant-epargne">{fmt(plan.progression.current)}</strong> sur {fmt(plan.objectif.target)} (
+            {Math.round(plan.progression.pct)} %)
+            {epargneTotale.bloquee > 0 && <span className="muted"> – dont {fmt(epargneTotale.disponible)} disponibles</span>}
+          </p>
+          <ProgressBar
+            value={plan.progression.current}
+            max={plan.objectif.target}
+            level="objectif"
+            label={`Avancement de l’objectif ${plan.objectif.name}`}
+            valueText={`${Math.round(plan.progression.pct)} %`}
+          />
+          {!plan.progression.reached && (
+            <p className="carte-plan-statut">
+              {plan.dansLesTemps ? '✅ Dans les temps' : '⚠️ En retard'} – à épargner : <strong>{fmt(plan.necessaireParMois)}</strong> par mois
+              pendant {plan.moisRestants} mois
+              {plan.dansLesTemps ? '' : ` (il manquerait ${fmt(-plan.ecart)})`}.
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* Repères selon le profil (fin de contrat, été sans bourse, réserve…) */}
+      {reperes.length > 0 && courant && (
+        <section className="reperes-accueil" aria-label="Repères pour vous">
+          {reperes.map((r) => (
+            <div key={r.id} className="repere repere-accueil">
+              <p className="repere-titre">{r.titre}</p>
+              <p className="repere-texte">{r.texte}</p>
+              {r.lien && (
+                <Link to={r.lien.to} className="link">
+                  {r.lien.label}
+                </Link>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
       <div className="dashboard-grid">
-        {/* 3. À venir : charges et revenus attendus */}
-        <Card title="À venir" actions={<Link to="/compte?vue=a-venir" className="link">Tout voir</Link>}>
+        {/* 3. À venir : charges et revenus prévus */}
+        <Card
+          title="À venir"
+          actions={
+            <Link to="/compte?vue=a-venir" className="link">
+              Tout voir
+            </Link>
+          }
+        >
           <p className="upcoming-summary">
             {prochaines.length === 0
               ? `Rien de prévu dans les ${JOURS_A_VENIR_ACCUEIL} prochains jours.`
@@ -261,7 +337,7 @@ export function Dashboard() {
                     <p className="tx-label">{t.label}</p>
                     <p className="tx-meta">
                       {t.date < today ? `Prévu ${dayHeader(t.date, today).toLocaleLowerCase('fr')}, pas encore payé` : relativeDay(t.date, today)} –{' '}
-                      {t.type === 'revenu' ? 'Revenu attendu' : t.categoryName}
+                      {t.type === 'revenu' ? 'Revenu prévu' : t.categoryName}
                     </p>
                   </div>
                   <SignedAmount cents={Math.abs(signedAmount(t))} positive={signedAmount(t) >= 0} epargne={t.type === 'epargne'} />
@@ -272,7 +348,14 @@ export function Dashboard() {
         </Card>
 
         {/* 4. Revenus et dépenses du mois */}
-        <Card title={`Ce mois-ci`} actions={<Link to="/historique" className="link">Tout l’historique</Link>}>
+        <Card
+          title={`Ce mois-ci`}
+          actions={
+            <Link to="/historique" className="link">
+              Tout l’historique
+            </Link>
+          }
+        >
           <div className="stats-grid stats-duo">
             <Stat label="Revenus" value={fmt(s.income)} tone="entree" />
             <Stat label="Total des dépenses" value={fmt(s.totalExpenses)} tone="sortie" detail="Charges fixes + dépenses variables" />
@@ -282,8 +365,14 @@ export function Dashboard() {
               <Icon name="wallet" size={16} />
               <span>
                 Soldes aujourd’hui : compte bancaire{' '}
-                <strong className={soldeCompte < 0 ? 'montant-moins' : 'montant-plus'}>{soldeCompte < 0 ? `− ${fmt(-soldeCompte)}` : fmt(soldeCompte)}</strong>, carte
-                restaurant <strong className={soldeCarte < 0 ? 'montant-moins' : 'montant-plus'}>{soldeCarte < 0 ? `− ${fmt(-soldeCarte)}` : fmt(soldeCarte)}</strong>.{' '}
+                <strong className={soldeCompte < 0 ? 'montant-moins' : 'montant-plus'}>
+                  {soldeCompte < 0 ? `− ${fmt(-soldeCompte)}` : fmt(soldeCompte)}
+                </strong>
+                , carte restaurant{' '}
+                <strong className={soldeCarte < 0 ? 'montant-moins' : 'montant-plus'}>
+                  {soldeCarte < 0 ? `− ${fmt(-soldeCarte)}` : fmt(soldeCarte)}
+                </strong>
+                .{' '}
                 <Link to="/compte" className="link">
                   Mon compte
                 </Link>
@@ -310,14 +399,24 @@ export function Dashboard() {
         </Card>
 
         {/* 5. Objectif d'épargne du mois */}
-        <Card title="Épargne du mois" actions={<Link to="/objectifs" className="link">Mes objectifs</Link>}>
+        <Card
+          title="Épargne du mois"
+          actions={
+            <Link to="/objectifs" className="link">
+              Mes objectifs
+            </Link>
+          }
+        >
           {s.savingsTarget > 0 ? (
             <div className="savings-target">
               <p className="epargne-ligne">
                 <span>
                   <strong>{fmt(s.saved)}</strong> mis de côté sur {fmt(s.savingsTarget)}
                 </span>
-                <span className="epargne-pct">{epargnePct}{'\u00a0'}%</span>
+                <span className="epargne-pct">
+                  {epargnePct}
+                  {'\u00a0'}%
+                </span>
               </p>
               <ProgressBar
                 value={s.saved}
@@ -341,7 +440,10 @@ export function Dashboard() {
                 <li key={g.id}>
                   <p className="epargne-ligne">
                     <span className="objectif-nom">{g.name}</span>
-                    <span className="epargne-pct">{p.pct}{'\u00a0'}%</span>
+                    <span className="epargne-pct">
+                      {p.pct}
+                      {'\u00a0'}%
+                    </span>
                   </p>
                   <ProgressBar value={p.current} max={g.target} level="objectif" label={`Objectif ${g.name}`} valueText={`${p.pct}\u00a0% atteint`} />
                   <p className="muted petit-texte">
@@ -373,7 +475,12 @@ export function Dashboard() {
                       <Link to={a.to} className="btn btn-secondaire btn-small">
                         {a.cta}
                       </Link>
-                      <Button variant="discret" className="btn-small" onClick={() => dispatch({ type: 'dismissAction', id: a.id })} aria-label={`Ignorer : ${a.title}`}>
+                      <Button
+                        variant="discret"
+                        className="btn-small"
+                        onClick={() => dispatch({ type: 'dismissAction', id: a.id })}
+                        aria-label={`Ignorer : ${a.title}`}
+                      >
                         Ignorer
                       </Button>
                     </div>
@@ -480,12 +587,27 @@ export function Dashboard() {
             )}
             <Stat label="Charges fixes" value={fmt(s.fixed)} tone="sortie" detail={`${fmt(s.fixedUpcoming)} encore à venir`} />
             <Stat label="Dépenses variables" value={fmt(s.variable)} tone="sortie" />
-            <Stat label="Bilan du mois" value={fmt(s.available)} tone={s.available < 0 ? 'negatif' : 'positif'} detail="Revenus − dépenses − épargne du mois, report compris" />
-            <Stat label="Épargné ce mois" value={fmt(s.saved)} detail={s.savingsTarget > 0 ? `Objectif du mois : ${fmt(s.savingsTarget)}` : 'Pas d’objectif mensuel'} />
+            <Stat
+              label="Bilan du mois"
+              value={fmt(s.available)}
+              tone={s.available < 0 ? 'negatif' : 'positif'}
+              detail="Revenus − dépenses − épargne du mois, report compris"
+            />
+            <Stat
+              label="Épargné ce mois"
+              value={fmt(s.saved)}
+              detail={s.savingsTarget > 0 ? `Objectif du mois : ${fmt(s.savingsTarget)}` : 'Pas d’objectif mensuel'}
+            />
             <Stat
               label="Reste à vivre par jour"
               value={(courant ? reste.parJour : s.dailyRemaining) === null ? '—' : fmt((courant ? reste.parJour : s.dailyRemaining)!)}
-              tone={(courant ? reste.parJour : s.dailyRemaining) === null ? undefined : (courant ? reste.parJour : s.dailyRemaining)! < 0 ? 'negatif' : 'positif'}
+              tone={
+                (courant ? reste.parJour : s.dailyRemaining) === null
+                  ? undefined
+                  : (courant ? reste.parJour : s.dailyRemaining)! < 0
+                    ? 'negatif'
+                    : 'positif'
+              }
               detail={`${s.daysRemaining} jour(s) restant(s)`}
             />
             <Stat

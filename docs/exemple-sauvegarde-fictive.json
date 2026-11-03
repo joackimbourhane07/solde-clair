@@ -1,0 +1,224 @@
+{
+  "application": "SoldeClair",
+  "exporteLe": "2026-11-03",
+  "donnees": {
+    "version": 1,
+    "profile": {
+      "name": "Alex",
+      "type": "alternant",
+      "currency": "EUR",
+      "monthlySavingsTarget": 40000,
+      "variableEstimate": 15000,
+      "createdAt": "2026-11-03",
+      "birthDate": "2006-04-10",
+      "situation": {
+        "formation": "BTS, 2e année",
+        "employeur": "Entreprise Exemple",
+        "debut": "2025-09-01",
+        "fin": "2027-08-31",
+        "territoire": "Département fictif (000)"
+      }
+    },
+    "settings": { "theme": "light", "appearanceVersion": 2, "presetsVersion": 3 },
+    "categories": [
+      { "id": "cat-salaire", "name": "Salaire", "kind": "income", "budget": null },
+      { "id": "cat-carte-resto", "name": "Carte restaurant", "kind": "income", "budget": null },
+      { "id": "cat-primes", "name": "Primes", "kind": "income", "budget": null },
+      { "id": "cat-famille", "name": "Participation au foyer", "kind": "fixed", "budget": null },
+      { "id": "cat-courant", "name": "Dépenses personnelles", "kind": "variable", "budget": 15000 },
+      { "id": "cat-voyage", "name": "Voyage", "kind": "variable", "budget": null }
+    ],
+    "incomes": [
+      {
+        "id": "rev-salaire",
+        "name": "Salaire d’apprenti",
+        "amount": 72000,
+        "date": "2026-11-05",
+        "categoryId": "cat-salaire",
+        "recurring": true,
+        "frequency": "mensuel",
+        "endDate": "2027-08-31",
+        "note": "Montant net versé",
+        "account": "compte",
+        "details": [
+          { "label": "Salaire de base (brut)", "amount": 78000 },
+          { "label": "Cotisations", "amount": -1200 },
+          { "label": "Titres-restaurant (part salarié)", "amount": -8000 },
+          { "label": "Indemnité transport", "amount": 3200 }
+        ]
+      },
+      {
+        "id": "rev-titres-resto",
+        "name": "Titres-restaurant",
+        "amount": 20000,
+        "date": "2026-11-05",
+        "categoryId": "cat-carte-resto",
+        "recurring": true,
+        "frequency": "mensuel",
+        "endDate": "2027-08-31",
+        "note": "Pouvoir d’achat alimentaire (avantage en nature)",
+        "account": "carte-restaurant"
+      },
+      {
+        "id": "rev-prime-recue",
+        "name": "Prime exceptionnelle",
+        "amount": 50000,
+        "date": "2026-10-15",
+        "categoryId": "cat-primes",
+        "recurring": false,
+        "frequency": null,
+        "endDate": null,
+        "note": "Reçue",
+        "account": "compte"
+      },
+      {
+        "id": "rev-13e-mois",
+        "name": "13e mois",
+        "amount": 70000,
+        "date": "2026-12-15",
+        "categoryId": "cat-primes",
+        "recurring": false,
+        "frequency": null,
+        "endDate": null,
+        "note": "Montant estimé",
+        "account": "compte",
+        "certitude": "attendu",
+        "inOptimistic": true
+      },
+      {
+        "id": "rev-solde-prime",
+        "name": "Solde de prime",
+        "amount": 0,
+        "date": "2027-03-15",
+        "categoryId": "cat-primes",
+        "recurring": false,
+        "frequency": null,
+        "endDate": null,
+        "note": "Montant encore inconnu",
+        "account": "compte",
+        "certitude": "attendu",
+        "amountUnknown": true
+      },
+      {
+        "id": "rev-solde-tout-compte",
+        "name": "Solde de tout compte",
+        "amount": 30000,
+        "amountMax": 60000,
+        "date": "2027-08-31",
+        "categoryId": "cat-primes",
+        "recurring": false,
+        "frequency": null,
+        "endDate": null,
+        "note": "Fourchette estimée",
+        "account": "compte",
+        "certitude": "attendu",
+        "inOptimistic": true
+      }
+    ],
+    "fixedCharges": [
+      {
+        "id": "chg-foyer",
+        "name": "Participation au foyer",
+        "amount": 12000,
+        "date": "2026-11-01",
+        "categoryId": "cat-famille",
+        "frequency": "mensuel",
+        "endDate": null,
+        "note": "",
+        "status": {}
+      }
+    ],
+    "expenses": [
+      {
+        "id": "dep-hebergement",
+        "amount": 25000,
+        "categoryId": "cat-voyage",
+        "date": "2026-12-30",
+        "description": "Voyage : hébergement",
+        "paymentMethod": "Prélèvement",
+        "exceptional": true
+      },
+      {
+        "id": "dep-sur-place",
+        "amount": 30000,
+        "categoryId": "cat-voyage",
+        "date": "2027-01-05",
+        "description": "Voyage : budget sur place",
+        "paymentMethod": "Carte bancaire",
+        "exceptional": true
+      }
+    ],
+    "goals": [
+      {
+        "id": "obj-fin-contrat",
+        "name": "Épargne de fin de contrat",
+        "description": "Tous supports confondus",
+        "target": 600000,
+        "initialAmount": 0,
+        "targetDate": "2027-08-31",
+        "priority": "haute",
+        "monthlyContribution": 30000,
+        "createdAt": "2026-11-03",
+        "supportIds": ["sup-pel", "sup-livret-a", "sup-compte"]
+      }
+    ],
+    "savings": [],
+    "adjustments": [],
+    "supports": [
+      {
+        "id": "sup-pel",
+        "name": "PEL",
+        "kind": "pel",
+        "balance": 200000,
+        "balanceDate": "2026-11-03",
+        "rate": 1.75,
+        "liquidity": "bloque",
+        "blockedUntil": "2029-01-01",
+        "withdrawalCloses": true,
+        "ceiling": 6120000,
+        "target": 330000,
+        "note": "Un retrait clôture le plan"
+      },
+      {
+        "id": "sup-livret-a",
+        "name": "Livret A",
+        "kind": "livret-a",
+        "balance": 30000,
+        "balanceDate": "2026-11-03",
+        "rate": 1.7,
+        "liquidity": "immediate",
+        "blockedUntil": null,
+        "withdrawalCloses": false,
+        "ceiling": 2295000,
+        "target": 150000,
+        "note": ""
+      },
+      {
+        "id": "sup-compte",
+        "name": "Compte courant (non affecté)",
+        "kind": "compte-courant",
+        "balance": 60000,
+        "balanceDate": "2026-11-03",
+        "rate": 0,
+        "liquidity": "immediate",
+        "blockedUntil": null,
+        "withdrawalCloses": false,
+        "ceiling": null,
+        "target": null,
+        "note": ""
+      }
+    ],
+    "holds": [
+      {
+        "id": "blq-depot",
+        "label": "Dépôt de garantie",
+        "amount": 15000,
+        "start": "2027-01-04",
+        "end": "2027-01-14",
+        "account": "compte",
+        "returned": false,
+        "note": "Rendu après le séjour"
+      }
+    ]
+  }
+}

@@ -12,6 +12,11 @@ import type {
   SavingsDeposit,
   SavingsGoal,
   GoalTheme,
+  IncomeDetail,
+  ProfileSituation,
+  SavingsSupport,
+  SupportKind,
+  TemporaryHold,
 } from '../types';
 import { earliestDate, signedAmount, transactionsInRange } from './budget';
 import { isValidISODate, lastDay, monthOf } from './dates';
@@ -47,6 +52,8 @@ export function emptyData(): AppData {
     goals: [],
     savings: [],
     adjustments: [],
+    supports: [],
+    holds: [],
   };
 }
 
@@ -133,6 +140,45 @@ export function saveData(data: AppData, id: string = PREMIER_PROFIL): boolean {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/* Point de départ : état de référence enregistré sur l'appareil               */
+/* -------------------------------------------------------------------------- */
+
+/** Clé du point de départ d'un profil (jamais envoyé ailleurs que dans ce navigateur). */
+export const departKey = (id: string = PREMIER_PROFIL) => `soldeclair:depart:v1:${id}`;
+
+/** Enregistre l'état actuel comme point de départ (« Réinitialiser aux données par défaut » y revient). */
+export function saveDepart(data: AppData, today: ISODate, id: string = PREMIER_PROFIL): boolean {
+  try {
+    localStorage.setItem(departKey(id), JSON.stringify({ enregistreLe: today, donnees: data }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Lit le point de départ d'un profil, ou null s'il n'existe pas ou est illisible. */
+export function loadDepart(id: string = PREMIER_PROFIL): { enregistreLe: ISODate | null; data: AppData } | null {
+  try {
+    const raw = localStorage.getItem(departKey(id));
+    if (!raw) return null;
+    const json = JSON.parse(raw) as { enregistreLe?: unknown };
+    const result = validateData(json);
+    if (!result.ok) return null;
+    return { enregistreLe: isValidISODate(json.enregistreLe) ? json.enregistreLe : null, data: result.data };
+  } catch {
+    return null;
+  }
+}
+
+export function clearDepart(id: string = PREMIER_PROFIL): void {
+  try {
+    localStorage.removeItem(departKey(id));
+  } catch {
+    /* rien à faire */
+  }
+}
+
 export function clearData(id: string = PREMIER_PROFIL): void {
   try {
     localStorage.removeItem(dataKey(id));
@@ -173,6 +219,40 @@ function checkId(v: unknown, label: string, index: number): string {
 }
 
 /** Vérifie et nettoie des données (sauvegarde importée ou contenu du navigateur). */
+const SUPPORT_KINDS_LISTE: SupportKind[] = [
+  'livret-a',
+  'ldds',
+  'livret-jeune',
+  'lep',
+  'pel',
+  'cel',
+  'assurance-vie',
+  'pea',
+  'epargne-salariale',
+  'compte-courant',
+  'autre',
+];
+
+function lireSituation(r: Record<string, unknown>): ProfileSituation {
+  const texte = (v: unknown) => (typeof v === 'string' && v.trim() ? v.slice(0, 100) : undefined);
+  const situation: ProfileSituation = {};
+  if (texte(r.formation)) situation.formation = texte(r.formation);
+  if (texte(r.employeur)) situation.employeur = texte(r.employeur);
+  if (texte(r.territoire)) situation.territoire = texte(r.territoire);
+  if (isValidISODate(r.debut)) situation.debut = r.debut;
+  if (isValidISODate(r.fin)) situation.fin = r.fin;
+  return situation;
+}
+
+function lireDetails(lignes: unknown[]): IncomeDetail[] {
+  return lignes
+    .filter(
+      (l): l is Record<string, unknown> => isObj(l) && typeof l.label === 'string' && typeof l.amount === 'number' && Number.isSafeInteger(l.amount),
+    )
+    .slice(0, 30)
+    .map((l) => ({ label: (l.label as string).slice(0, 80), amount: l.amount as number }));
+}
+
 export function validateData(input: unknown): ValidationResult {
   try {
     if (!isObj(input)) fail('Le fichier ne contient pas une sauvegarde SoldeClair.');
@@ -191,6 +271,8 @@ export function validateData(input: unknown): ValidationResult {
         monthlySavingsTarget: isAmount(p.monthlySavingsTarget) ? p.monthlySavingsTarget : 0,
         variableEstimate: isAmount(p.variableEstimate) ? p.variableEstimate : 0,
         createdAt: isValidISODate(p.createdAt) ? p.createdAt : '2026-01-01',
+        ...(isValidISODate(p.birthDate) ? { birthDate: p.birthDate } : {}),
+        ...(isObj(p.situation) ? { situation: lireSituation(p.situation) } : {}),
       };
     }
 
@@ -201,8 +283,7 @@ export function validateData(input: unknown): ValidationResult {
     if (settingsIn.appearanceVersion !== APPEARANCE_VERSION && theme === 'dark') theme = 'light';
 
     const categories: Category[] = checkArray(root.categories, 'catégories').map((c, i) => {
-      if (!isObj(c) || !isStr(c.name) || !['income', 'fixed', 'variable'].includes(c.kind as string))
-        fail(`Catégorie n° ${i + 1} invalide.`);
+      if (!isObj(c) || !isStr(c.name) || !['income', 'fixed', 'variable'].includes(c.kind as string)) fail(`Catégorie n° ${i + 1} invalide.`);
       return {
         id: checkId(c.id, 'Catégorie', i),
         name: c.name.slice(0, 60),
@@ -226,6 +307,11 @@ export function validateData(input: unknown): ValidationResult {
         endDate: (r.endDate as ISODate | null | undefined) ?? null,
         note: str(r.note),
         ...(COMPTES.includes(r.account as AccountId) ? { account: r.account as AccountId } : {}),
+        ...(r.certitude === 'attendu' ? { certitude: 'attendu' as const } : {}),
+        ...(isAmount(r.amountMax) ? { amountMax: r.amountMax } : {}),
+        ...(r.amountUnknown === true ? { amountUnknown: true } : {}),
+        ...(r.inOptimistic === true ? { inOptimistic: true } : {}),
+        ...(Array.isArray(r.details) ? { details: lireDetails(r.details) } : {}),
       };
     });
 
@@ -260,6 +346,7 @@ export function validateData(input: unknown): ValidationResult {
         date: r.date,
         description: str(r.description),
         paymentMethod: str(r.paymentMethod),
+        ...(r.exceptional === true ? { exceptional: true } : {}),
       };
     });
 
@@ -277,6 +364,7 @@ export function validateData(input: unknown): ValidationResult {
         monthlyContribution: isAmount(r.monthlyContribution) ? r.monthlyContribution : 0,
         createdAt: isValidISODate(r.createdAt) ? r.createdAt : '2026-01-01',
         ...(GOAL_THEMES.includes(r.theme as GoalTheme) ? { theme: r.theme as GoalTheme } : {}),
+        ...(Array.isArray(r.supportIds) ? { supportIds: r.supportIds.filter((x): x is string => typeof x === 'string').slice(0, 30) } : {}),
       };
     });
 
@@ -287,6 +375,42 @@ export function validateData(input: unknown): ValidationResult {
         goalId: isStr(r.goalId) ? r.goalId : null,
         amount: r.amount,
         date: r.date,
+        note: str(r.note),
+        ...(isStr(r.supportId) ? { supportId: r.supportId } : {}),
+      };
+    });
+
+    // Supports d'épargne et sommes bloquées (absents des sauvegardes plus anciennes)
+    const supports: SavingsSupport[] = (Array.isArray(root.supports) ? root.supports : []).map((r, i) => {
+      if (!isObj(r) || !isStr(r.name) || !isAmount(r.balance) || !isValidISODate(r.balanceDate))
+        fail(`Support d’épargne n° ${i + 1} invalide (nom, solde ou date).`);
+      const taux = typeof r.rate === 'number' && Number.isFinite(r.rate) && r.rate >= 0 && r.rate <= 50 ? Math.round(r.rate * 1000) / 1000 : 0;
+      return {
+        id: checkId(r.id, 'Support', i),
+        name: r.name.slice(0, 60),
+        kind: (SUPPORT_KINDS_LISTE.includes(r.kind as SupportKind) ? r.kind : 'autre') as SupportKind,
+        balance: r.balance,
+        balanceDate: r.balanceDate,
+        rate: taux,
+        liquidity: r.liquidity === 'bloque' ? 'bloque' : 'immediate',
+        blockedUntil: isValidISODate(r.blockedUntil) ? r.blockedUntil : null,
+        withdrawalCloses: r.withdrawalCloses === true,
+        ceiling: isAmount(r.ceiling) ? r.ceiling : null,
+        target: isAmount(r.target) ? r.target : null,
+        note: str(r.note),
+      };
+    });
+    const holds: TemporaryHold[] = (Array.isArray(root.holds) ? root.holds : []).map((r, i) => {
+      if (!isObj(r) || !isStr(r.label) || !isAmount(r.amount) || !isValidISODate(r.start) || !isOptDate(r.end))
+        fail(`Somme bloquée n° ${i + 1} invalide.`);
+      return {
+        id: checkId(r.id, 'Somme bloquée', i),
+        label: r.label.slice(0, 100),
+        amount: r.amount,
+        start: r.start,
+        end: (r.end as ISODate | null | undefined) ?? null,
+        account: COMPTES.includes(r.account as AccountId) ? (r.account as AccountId) : 'compte',
+        returned: r.returned === true,
         note: str(r.note),
       };
     });
@@ -332,6 +456,9 @@ export function validateData(input: unknown): ValidationResult {
         goals,
         savings,
         adjustments,
+        // Absents des sauvegardes plus anciennes : on ne les ajoute pas (une restauration retrouve l'état exact)
+        ...(Array.isArray(root.supports) ? { supports } : {}),
+        ...(Array.isArray(root.holds) ? { holds } : {}),
       },
     };
   } catch (e) {
@@ -359,7 +486,13 @@ export function exportJSON(data: AppData, today: ISODate): string {
   return JSON.stringify({ application: 'SoldeClair', exporteLe: today, donnees: data }, null, 2);
 }
 
-const TYPE_LABELS = { revenu: 'Revenu', charge: 'Charge fixe', depense: 'Dépense variable', epargne: 'Épargne', ajustement: 'Ajustement du solde' } as const;
+const TYPE_LABELS = {
+  revenu: 'Revenu',
+  charge: 'Charge fixe',
+  depense: 'Dépense variable',
+  epargne: 'Épargne',
+  ajustement: 'Ajustement du solde',
+} as const;
 
 function csvCell(value: string): string {
   // Neutralise les formules (protection contre l'injection dans les tableurs),

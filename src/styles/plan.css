@@ -1,0 +1,321 @@
+/* ==========================================================================
+   « Mon plan d'épargne », carte d'accueil, repères selon le profil, formulaires associés
+   ========================================================================== */
+
+.petit {
+  font-size: var(--dp-typography-metadata);
+}
+
+.stats-trio {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+@media (min-width: 600px) {
+  .stats-trio {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.plan-objectif-phrase,
+.carte-plan-phrase {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+}
+
+.plan-objectif-phrase .valeur,
+.carte-plan-phrase .valeur {
+  font-family: var(--font-data);
+  font-size: 1.35rem;
+}
+
+.plan-stats {
+  margin: 14px 0;
+}
+
+.carte-plan-statut {
+  margin: 10px 0 0;
+  font-size: var(--dp-typography-supporting);
+}
+
+/* Repères selon le profil */
+.reperes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+@media (min-width: 900px) {
+  .reperes {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+}
+
+.repere {
+  padding: 12px 14px;
+  border-radius: var(--dp-radius-control);
+  background: var(--fill-doux);
+  border-left: 4px solid var(--brand);
+}
+
+.repere-titre {
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+
+.repere-texte {
+  margin: 0 0 6px;
+  font-size: var(--dp-typography-supporting);
+  line-height: 1.5;
+}
+
+.reperes-accueil {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+@media (min-width: 900px) {
+  .reperes-accueil {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.carte-plan {
+  margin-top: 16px;
+}
+
+/* Supports d'épargne */
+.supports,
+.attendus,
+.blocages {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+@media (min-width: 900px) {
+  .supports {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.support,
+.attendu,
+.blocage {
+  padding: 12px 14px;
+  border-radius: var(--dp-radius-control);
+  border: var(--dp-border-hairline) solid var(--border);
+  background: var(--surface);
+}
+
+.support-tete,
+.attendu-tete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.support-nom,
+.attendu-nom,
+.blocage-nom {
+  margin: 0;
+  font-weight: 600;
+}
+
+.support-solde,
+.attendu-montant {
+  margin: 0;
+  font-family: var(--font-data);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.support-infos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 6px 0;
+  font-size: var(--dp-typography-supporting);
+  color: var(--muted);
+}
+
+.support-cible {
+  margin-top: 8px;
+}
+
+.support-actions,
+.attendu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.blocage {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.blocage-rendu {
+  opacity: 0.7;
+}
+
+.tag-attendu {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+/* Projection */
+.table-projection th[scope='row'] {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.table-projection .ligne-courante {
+  background: var(--fill-doux);
+}
+
+.cellule-detail {
+  display: block;
+  font-size: var(--dp-typography-metadata);
+  color: var(--muted);
+  white-space: normal;
+}
+
+.cellule-notes {
+  min-width: 220px;
+  font-size: var(--dp-typography-metadata);
+  color: var(--text-2, var(--muted));
+}
+
+/* Bilan du mois */
+.bilan-comparaison {
+  margin: 0 0 8px;
+  font-size: var(--dp-typography-supporting);
+}
+
+/* Formulaire de revenu : détail du bulletin de paie */
+.detail-revenu {
+  display: grid;
+  gap: 8px;
+}
+
+.detail-revenu-ligne {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px 8px;
+  align-items: end;
+  padding-bottom: 8px;
+  border-bottom: var(--dp-border-hairline) solid var(--border);
+}
+
+@media (min-width: 600px) {
+  .detail-revenu-ligne {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
+  }
+}
+
+.liste-cases {
+  display: grid;
+  gap: 4px;
+}
+
+/* Mon compte : somme bloquée comprise dans le solde */
+.solde-bloque {
+  margin: 4px 0 0;
+  font-size: var(--dp-typography-supporting);
+  color: var(--muted);
+}
+
+/* Projection : liste dépliable sur téléphone, tableau à partir de 700 px */
+.projection-mobile {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+  border-top: var(--dp-border-hairline) solid var(--border);
+}
+
+.projection-mobile > li {
+  border-bottom: var(--dp-border-hairline) solid var(--border);
+}
+
+.projection-mobile > li.ligne-courante {
+  background: var(--fill-doux);
+}
+
+.projection-mobile summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 6px;
+  cursor: pointer;
+}
+
+.projection-mobile .num {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.projection-cumul {
+  min-width: 96px;
+  text-align: right;
+  font-weight: 600;
+}
+
+.projection-detail {
+  margin: 0 6px 8px;
+}
+
+.projection-mobile details > p {
+  margin: 0 6px 10px;
+}
+
+.projection-tableau {
+  display: none;
+}
+
+@media (min-width: 1200px) {
+  .projection-mobile {
+    display: none;
+  }
+
+  .projection-tableau {
+    display: block;
+  }
+}
+
+.projection-entete {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 96px;
+  gap: 12px;
+  margin: 12px 0 0;
+  padding: 0 6px 4px;
+  font-size: var(--dp-typography-metadata);
+  color: var(--muted);
+  text-align: right;
+}
+
+.projection-entete span:first-child {
+  text-align: left;
+}
+
+@media (min-width: 1200px) {
+  .projection-entete {
+    display: none;
+  }
+}

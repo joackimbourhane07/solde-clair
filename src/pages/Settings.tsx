@@ -1,14 +1,28 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { AppData, Category, CategoryKind, ProfileType, ThemeChoice } from '../types';
 import { CURRENCIES, centsToInput } from '../lib/money';
-import { dayDiff, formatDate } from '../lib/dates';
+import { dayDiff, formatDate, isValidISODate } from '../lib/dates';
 import { isDuplicateName, KIND_LABELS, makeCategory, PROFILE_LABELS } from '../lib/categories';
 import { buildDemoData, DEMO_PROFILES, type DemoProfile } from '../lib/demo';
-import { clearData, downloadFile, exportCSV, exportJSON, parseBackup } from '../lib/storage';
+import { clearData, clearDepart, downloadFile, exportCSV, exportJSON, loadDepart, parseBackup, saveDepart } from '../lib/storage';
+import { LIBELLES_SITUATION } from '../lib/profil';
+import { age } from '../lib/plan';
 import { JOUR_BASCULE_DEFAUT, jourBascule } from '../lib/budget';
-import { Button, Card, CheckboxField, ConfirmDialog, IconButton, Modal, MoneyField, Notice, PageHeader, SelectField, TextField } from '../components/ui';
+import {
+  Button,
+  Card,
+  CheckboxField,
+  ConfirmDialog,
+  IconButton,
+  Modal,
+  MoneyField,
+  Notice,
+  PageHeader,
+  SelectField,
+  TextField,
+} from '../components/ui';
 import { checkAmount } from '../components/forms';
 import { Icon } from '../components/Icon';
 
@@ -20,18 +34,53 @@ function ProfileSection() {
   const [currency, setCurrency] = useState(p.currency);
   const [target, setTarget] = useState(centsToInput(p.monthlySavingsTarget));
   const [estimate, setEstimate] = useState(centsToInput(p.variableEstimate));
+  const [birthDate, setBirthDate] = useState(p.birthDate ?? '');
+  const [formation, setFormation] = useState(p.situation?.formation ?? '');
+  const [employeur, setEmployeur] = useState(p.situation?.employeur ?? '');
+  const [debut, setDebut] = useState(p.situation?.debut ?? '');
+  const [fin, setFin] = useState(p.situation?.fin ?? '');
+  const [territoire, setTerritoire] = useState(p.situation?.territoire ?? '');
   const [errors, setErrors] = useState<Record<string, string | null>>({});
+  // Les libellés suivent la situation choisie (contrat d'alternance, études, emploi, activité)
+  const L = LIBELLES_SITUATION[type];
+  const { today } = useApp();
+  const ageAnnees = age(birthDate || null, today);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const [t, tErr] = checkAmount(target, { allowZero: true, required: false });
     const [v, vErr] = checkAmount(estimate, { allowZero: true, required: false });
-    const errs = { name: name.trim() ? null : 'Indiquez un prénom ou un pseudonyme.', target: tErr, estimate: vErr };
+    const dateInvalide = (d: string) => (d && !isValidISODate(d) ? 'Date invalide.' : null);
+    const errs = {
+      name: name.trim() ? null : 'Indiquez un prénom ou un pseudonyme.',
+      target: tErr,
+      estimate: vErr,
+      birthDate: dateInvalide(birthDate) ?? (birthDate && birthDate > today ? 'La date de naissance est dans le futur.' : null),
+      debut: dateInvalide(debut),
+      fin: dateInvalide(fin) ?? (debut && fin && fin < debut ? 'La date de fin doit suivre la date de début.' : null),
+    };
     setErrors(errs);
     if (Object.values(errs).some(Boolean)) return;
+    const situation = {
+      ...(formation.trim() ? { formation: formation.trim() } : {}),
+      ...(employeur.trim() ? { employeur: employeur.trim() } : {}),
+      ...(debut ? { debut } : {}),
+      ...(fin ? { fin } : {}),
+      ...(territoire.trim() ? { territoire: territoire.trim() } : {}),
+    };
+    const { situation: _ancienne, birthDate: _ancienneDate, ...reste } = p;
     dispatch({
       type: 'setProfile',
-      profile: { ...p, name: name.trim(), type, currency, monthlySavingsTarget: t ?? 0, variableEstimate: v ?? 0 },
+      profile: {
+        ...reste,
+        name: name.trim(),
+        type,
+        currency,
+        monthlySavingsTarget: t ?? 0,
+        variableEstimate: v ?? 0,
+        ...(birthDate ? { birthDate } : {}),
+        ...(Object.keys(situation).length > 0 ? { situation } : {}),
+      },
     });
     notify('Profil enregistré.');
   };
@@ -70,7 +119,47 @@ function ProfileSection() {
             error={errors.estimate}
             hint="Utilisée pour la prévision de fin de mois si aucune limite par catégorie n’est fixée."
           />
+          <TextField
+            label="Date de naissance"
+            optional
+            type="date"
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
+            error={errors.birthDate}
+            hint={
+              ageAnnees !== null
+                ? `${ageAnnees} ans : utile pour le Livret Jeune et le salaire d’apprenti.`
+                : 'Facultative : sert au Livret Jeune et au salaire d’apprenti. Elle reste sur cet appareil.'
+            }
+          />
         </div>
+        <fieldset className="fieldset">
+          <legend>{L.titre} (facultatif)</legend>
+          <p className="field-hint">
+            Ces informations adaptent les repères affichés (fin de contrat, revalorisation, été sans bourse…). Elles restent sur cet appareil.
+          </p>
+          <div className="form-grid">
+            <TextField
+              label={L.formation}
+              optional
+              value={formation}
+              onChange={(e) => setFormation(e.target.value)}
+              maxLength={80}
+              placeholder={L.exempleFormation}
+            />
+            <TextField label={L.employeur} optional value={employeur} onChange={(e) => setEmployeur(e.target.value)} maxLength={80} />
+            <TextField label={L.debut} optional type="date" value={debut} onChange={(e) => setDebut(e.target.value)} error={errors.debut} />
+            <TextField label={L.fin} optional type="date" value={fin} onChange={(e) => setFin(e.target.value)} error={errors.fin} />
+            <TextField
+              label="Territoire ou département"
+              optional
+              value={territoire}
+              onChange={(e) => setTerritoire(e.target.value)}
+              maxLength={60}
+              placeholder="Ex. : Gironde (33)"
+            />
+          </div>
+        </fieldset>
         <div className="form-actions">
           <button type="submit" className="btn btn-primaire">
             <span>Enregistrer le profil</span>
@@ -94,7 +183,9 @@ function CalculSection() {
         checked={actif}
         onChange={(e) => {
           dispatch({ type: 'setCarryOver', value: e.target.checked });
-          notify(e.target.checked ? 'Report activé : le reste de chaque mois passe au suivant.' : 'Report désactivé : chaque mois est calculé à part.');
+          notify(
+            e.target.checked ? 'Report activé : le reste de chaque mois passe au suivant.' : 'Report désactivé : chaque mois est calculé à part.',
+          );
         }}
       />
       <CheckboxField
@@ -203,7 +294,14 @@ function CategoriesSection() {
     data.expenses.filter((x) => x.categoryId === c.id).length;
 
   return (
-    <Card title="Catégories" actions={<Button icon="plus" className="btn-small" onClick={() => setEditing('new')}>Ajouter</Button>}>
+    <Card
+      title="Catégories"
+      actions={
+        <Button icon="plus" className="btn-small" onClick={() => setEditing('new')}>
+          Ajouter
+        </Button>
+      }
+    >
       <div className="tabs" role="tablist" aria-label="Type de catégorie">
         {(['income', 'fixed', 'variable'] as CategoryKind[]).map((k) => (
           <button key={k} type="button" role="tab" aria-selected={kind === k} className="tab" onClick={() => setKind(k)}>
@@ -258,11 +356,11 @@ function readFileText(file: File): Promise<string> {
   });
 }
 
-type PartieDonnees = 'export' | 'import' | 'demo' | 'reset';
+type PartieDonnees = 'export' | 'import' | 'depart' | 'demo' | 'reset';
 
 export function DataSection({
   compact = false,
-  parts = compact ? ['import', 'demo'] : ['export', 'import', 'demo', 'reset'],
+  parts = compact ? ['import', 'demo'] : ['export', 'import', 'depart', 'demo', 'reset'],
 }: {
   compact?: boolean;
   parts?: PartieDonnees[];
@@ -275,6 +373,10 @@ export function DataSection({
   const [confirmDemo, setConfirmDemo] = useState(false);
   const [resetStep, setResetStep] = useState<0 | 1 | 2>(0);
   const [resetText, setResetText] = useState('');
+  const [departVersion, setDepartVersion] = useState(0);
+  const [retourDepart, setRetourDepart] = useState<0 | 1 | 2>(0);
+  const [retourTexte, setRetourTexte] = useState('');
+  const depart = useMemo(() => loadDepart(profilActif), [profilActif, departVersion]);
   const hasData = !!data.profile;
 
   const onFile = async (file: File | undefined) => {
@@ -307,7 +409,10 @@ export function DataSection({
   const applyImport = (imported: AppData) => {
     dispatch({ type: 'replace', data: imported });
     setPendingImport(null);
-    notify('Sauvegarde importée avec succès.');
+    // Le fichier importé devient le point de départ (« Réinitialiser aux données par défaut » y revient)
+    const enregistre = saveDepart(imported, today, profilActif);
+    setDepartVersion((v) => v + 1);
+    notify(enregistre ? 'Sauvegarde importée : elle devient votre point de départ.' : 'Sauvegarde importée avec succès.');
     navigate('/');
   };
 
@@ -365,14 +470,41 @@ export function DataSection({
           <label className="btn btn-secondaire file-button">
             <Icon name="upload" size={18} />
             <span>Choisir un fichier JSON</span>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="application/json,.json"
-              className="sr-only"
-              onChange={(e) => void onFile(e.target.files?.[0])}
-            />
+            <input ref={fileRef} type="file" accept="application/json,.json" className="sr-only" onChange={(e) => void onFile(e.target.files?.[0])} />
           </label>
+        </Card>
+      )}
+
+      {parts.includes('depart') && hasData && (
+        <Card title="Point de départ">
+          <p className="muted">
+            Un état de référence enregistré sur cet appareil (par exemple vos données du début de mois). Le bouton « Réinitialiser » y revient si vous
+            vous êtes trompé. Il est créé automatiquement à chaque import.
+          </p>
+          <p className="backup-status">
+            Point de départ :{' '}
+            <strong>
+              {depart ? (depart.enregistreLe ? `enregistré le ${formatDate(depart.enregistreLe)}` : 'enregistré') : 'aucun pour l’instant'}
+            </strong>
+          </p>
+          <div className="button-row">
+            <Button
+              icon="check"
+              onClick={() => {
+                const ok = saveDepart(data, today, profilActif);
+                setDepartVersion((v) => v + 1);
+                notify(
+                  ok ? 'État actuel enregistré comme point de départ.' : 'Impossible d’enregistrer sur cet appareil (stockage plein ou bloqué).',
+                  ok ? 'succes' : 'erreur',
+                );
+              }}
+            >
+              Enregistrer l’état actuel comme point de départ
+            </Button>
+            <Button variant="secondaire" icon="history" disabled={!depart} onClick={() => setRetourDepart(1)}>
+              Réinitialiser aux données par défaut
+            </Button>
+          </div>
         </Card>
       )}
 
@@ -427,6 +559,45 @@ export function DataSection({
           onConfirm={loadDemo}
         />
       )}
+      {retourDepart === 1 && depart && (
+        <ConfirmDialog
+          title="Revenir au point de départ ?"
+          message={`Toutes les modifications faites depuis le point de départ${depart.enregistreLe ? ` du ${formatDate(depart.enregistreLe)}` : ''} seront perdues. Pensez à télécharger une sauvegarde avant si besoin.`}
+          confirmLabel="Continuer"
+          onCancel={() => setRetourDepart(0)}
+          onConfirm={() => {
+            setRetourTexte('');
+            setRetourDepart(2);
+          }}
+        />
+      )}
+      {retourDepart === 2 && depart && (
+        <ConfirmDialog
+          title="Dernière confirmation"
+          message={
+            <p>
+              Pour confirmer, tapez <strong>RÉINITIALISER</strong> ci-dessous.
+            </p>
+          }
+          confirmLabel="Revenir au point de départ"
+          confirmDisabled={
+            retourTexte
+              .trim()
+              .toUpperCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '') !== 'REINITIALISER'
+          }
+          onCancel={() => setRetourDepart(0)}
+          onConfirm={() => {
+            dispatch({ type: 'replace', data: { ...depart.data, settings: { ...depart.data.settings, theme: data.settings.theme } } });
+            setRetourDepart(0);
+            notify('Données revenues au point de départ.');
+            navigate('/');
+          }}
+        >
+          <TextField label="Confirmation" value={retourTexte} onChange={(e) => setRetourTexte(e.target.value)} autoComplete="off" />
+        </ConfirmDialog>
+      )}
       {resetStep === 1 && (
         <ConfirmDialog
           title="Effacer toutes les données ?"
@@ -452,6 +623,7 @@ export function DataSection({
           onCancel={() => setResetStep(0)}
           onConfirm={() => {
             clearData(profilActif);
+            clearDepart(profilActif);
             dispatch({ type: 'reset' });
             setResetStep(0);
             notify('Toutes les données ont été effacées.');
@@ -479,8 +651,8 @@ function InstallSection() {
             <li>Touchez le bouton Partager (le carré avec une flèche), puis « Sur l’écran d’accueil ».</li>
             <li>Laissez activée l’option qui ouvre le site comme une app web, puis touchez « Ajouter ».</li>
             <li>
-              Ouvrez SoldeClair depuis la nouvelle icône. L’application installée a sa propre mémoire : si elle est vide, choisissez
-              « Importer une sauvegarde » et sélectionnez le fichier enregistré à l’étape 1.
+              Ouvrez SoldeClair depuis la nouvelle icône. L’application installée a sa propre mémoire : si elle est vide, choisissez « Importer une
+              sauvegarde » et sélectionnez le fichier enregistré à l’étape 1.
             </li>
           </ol>
         </div>
@@ -504,12 +676,12 @@ export function SettingsPage() {
     <div className="page">
       <PageHeader title="Paramètres" description="Sauvegarde, profil, apparence et catégories." />
       <Notice>
-        <strong>Confidentialité :</strong> SoldeClair fonctionne sans compte et sans serveur. Vos données sont enregistrées uniquement
-        dans ce navigateur, sur cet appareil. Aucune coordonnée bancaire n’est demandée. Pensez à exporter une sauvegarde régulièrement :
-        vider les données du navigateur efface aussi celles de SoldeClair.
+        <strong>Confidentialité :</strong> SoldeClair fonctionne sans compte et sans serveur. Vos données sont enregistrées uniquement dans ce
+        navigateur, sur cet appareil. Aucune coordonnée bancaire n’est demandée. Pensez à exporter une sauvegarde régulièrement : vider les données du
+        navigateur efface aussi celles de SoldeClair.
       </Notice>
       {/* La sauvegarde d'abord : avec un stockage local, c'est la protection principale des données. */}
-      <DataSection parts={['export', 'import']} />
+      <DataSection parts={['export', 'import', 'depart']} />
       <InstallSection />
       <ProfileSection />
       <CalculSection />

@@ -7,3 +7,8 @@ coverage
 *.tsbuildinfo
 test-results
 playwright-report
+
+# Données budgétaires réelles : jamais dans le dépôt (le site est public)
+mes-donnees/
+*donnees-reelles*.json
+soldeclair-sauvegarde-*.json

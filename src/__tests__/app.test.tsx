@@ -884,10 +884,11 @@ describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
   it('revenus : le cumul de toutes les sources, puis compte bancaire et carte restaurant à part', () => {
     renderApp(avecCarte(), '/revenus');
     const stat = (label: string) => norm(screen.getByText(label).parentElement!.textContent);
-    expect(stat('Revenus de novembre 2026')).toContain('1 880,50 €');
-    expect(stat('Revenus de novembre 2026')).toContain('Toutes les sources');
-    expect(stat('Sur le compte bancaire')).toContain('1 700,50 €');
-    expect(stat('Sur la carte restaurant')).toContain('180,00 €');
+    expect(stat('Total des ressources')).toContain('1 880,50 €');
+    expect(stat('Revenus encaissés de novembre 2026')).toContain('1 700,50 €');
+    expect(stat('Revenus encaissés de novembre 2026')).toContain('Sur le compte bancaire');
+    expect(stat('Pouvoir d’achat alimentaire')).toContain('180,00 €');
+    expect(stat('Pouvoir d’achat alimentaire')).toContain('avantage en nature');
   });
 
   it('revenu : « Versé sur » se règle tout seul sur la carte restaurant pour cette catégorie', async () => {

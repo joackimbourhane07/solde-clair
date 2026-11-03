@@ -43,7 +43,7 @@ describe('Poksy : identité et textes', () => {
     );
   });
 
-  it('les neuf boutons d’action prévus, qui ouvrent seulement une page ou un formulaire', () => {
+  it('les dix boutons d’action prévus, qui ouvrent seulement une page ou un formulaire', () => {
     expect(Object.values(ACTION_LABELS)).toEqual([
       'Ajouter une dépense',
       'Ajouter un revenu',
@@ -54,6 +54,7 @@ describe('Poksy : identité et textes', () => {
       'Voir mes budgets',
       'Exporter une sauvegarde',
       'Ouvrir les paramètres',
+      'Ouvrir Mon plan d’épargne',
     ]);
     for (const route of Object.values(ACTION_ROUTES)) expect(route).toMatch(/^\/[a-z]*(\?[a-z]+=1)?$/);
   });
@@ -71,12 +72,13 @@ describe('Poksy : questions proposées', () => {
     ]);
   });
 
-  it('« Voir plus de questions » : sept rubriques et toutes les questions demandées', () => {
+  it('« Voir plus de questions » : huit rubriques et toutes les questions demandées', () => {
     expect(RUBRIQUES.map((r) => `${r.titre} (${r.questions.length})`)).toEqual([
       'Mon compte (5)',
       'Revenus et dépenses (6)',
       'Budget (6)',
       'Épargne (4)',
+      'Mon plan et ma situation (10)',
       'Simulateur (4)',
       'Confidentialité (7)',
       'Utilisation du site (6)',

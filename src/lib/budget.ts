@@ -113,6 +113,8 @@ function mouvementsDuMois(data: AppData, month: MonthKey, today: ISODate, budget
   // Avec la règle, un revenu de la fin du mois précédent compte ce mois-ci, et ceux de la fin de ce mois au suivant.
   const moisSources = jour === null ? [month] : [addMonths(month, -1), month];
   for (const inc of data.incomes) {
+    // Un revenu attendu (incertain) n'est compté nulle part tant qu'il n'est pas confirmé.
+    if (inc.certitude === 'attendu') continue;
     const dates = moisSources.flatMap((m) =>
       inc.recurring && inc.frequency
         ? occurrencesInMonth(inc.date, inc.frequency, m, inc.endDate)
