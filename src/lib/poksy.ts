@@ -345,7 +345,7 @@ export const FICHES: Fiche[] = [
     id: 'fin-de-mois',
     question: 'Pourquoi un revenu compte-t-il pour le mois suivant ?',
     reponse:
-      'Un revenu reçu à partir du 20 sert au mois suivant : un salaire ou une prime de fin octobre apparaît dans les revenus de novembre. « Mon compte » le montre toujours à sa vraie date. Vous pouvez changer ce jour ou désactiver la règle dans les paramètres.',
+      'Un revenu reçu à partir du 20 sert au mois suivant : un salaire ou une prime de fin octobre apparaît dans les revenus de novembre. « Mon compte » le montre toujours à sa vraie date. Si votre salaire récurrent commence à la prochaine paie (le 28 novembre par exemple), indiquez aussi le « Dernier versement déjà reçu » (le 28 octobre) dans le formulaire du revenu : novembre aura bien son salaire. Vous pouvez changer ce jour ou désactiver la règle dans les paramètres.',
     action: 'parametres',
     motsCles: [
       'mois suivant',
@@ -356,6 +356,9 @@ export const FICHES: Fiche[] = [
       'n apparait pas',
       'pas dans les revenus',
       'paye en fin de mois',
+      'dernier versement',
+      'aucun revenu ce mois',
+      'salaire pas compte',
     ],
   },
   {

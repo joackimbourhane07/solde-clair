@@ -231,3 +231,64 @@ describe('profil et point de départ', () => {
     expect(stored().supports).toHaveLength(2);
   });
 });
+
+describe('salaire de fin de mois : dernier versement déjà reçu', () => {
+  /** Salaire saisi à partir du 28 novembre : avec la règle du 20, novembre n'a pas de salaire. */
+  function salaireFinDeMois(avecSoldeReel: boolean): AppData {
+    const d = fixture();
+    d.incomes = [
+      {
+        id: 'i-sal',
+        name: 'Salaire',
+        amount: 70000,
+        date: '2026-11-28',
+        categoryId: 'c-sal',
+        recurring: true,
+        frequency: 'mensuel',
+        endDate: null,
+        note: '',
+      },
+    ];
+    d.adjustments = avecSoldeReel ? [{ id: 'a1', account: 'compte', date: '2026-11-05', amount: 50000, note: '' }] : [];
+    return d;
+  }
+
+  it('l’accueil le signale ; indiquer le 28 octobre fait compter le salaire pour novembre', async () => {
+    const user = renderApp(salaireFinDeMois(false), '/');
+    const alerte = screen.getByText(/commence le 28 nov\. 2026|commence le 28/).closest('.notice')!;
+    await user.click(within(alerte as HTMLElement).getByRole('link', { name: 'Indiquer le dernier versement reçu' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Dernier versement : Salaire' });
+    await user.type(within(dialog).getByLabelText(/^Dernier versement déjà reçu/), '2026-10-28');
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer les modifications' }));
+    expect(stored().incomes[0].date).toBe('2026-10-28');
+    expect(stored().adjustments).toHaveLength(0);
+    // Novembre a maintenant son salaire : plus d'alerte
+    expect(screen.queryByRole('button', { name: 'Indiquer le dernier versement reçu' })).not.toBeInTheDocument();
+    const stat = (label: string) => norm(screen.getByText(label).parentElement!.textContent);
+    expect(stat('Revenus de novembre 2026')).toContain('700,00 €');
+  });
+
+  it('solde réel déjà indiqué après ce versement : une correction évite de le compter deux fois', async () => {
+    const user = renderApp(salaireFinDeMois(true), '/revenus');
+    const soldeAvant = norm(document.querySelector('.app')?.textContent).length; // la page est affichée
+    expect(soldeAvant).toBeGreaterThan(0);
+    await user.click(screen.getByRole('button', { name: 'Indiquer le dernier versement reçu' }));
+    const dialog = screen.getByRole('dialog', { name: 'Dernier versement : Salaire' });
+    await user.type(within(dialog).getByLabelText(/^Dernier versement déjà reçu/), '2026-10-28');
+    expect(within(dialog).getByLabelText(/comprend déjà ce versement/)).toBeChecked();
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer les modifications' }));
+    const d = stored();
+    expect(d.incomes[0].date).toBe('2026-10-28');
+    expect(d.adjustments.find((a) => a.id !== 'a1')).toMatchObject({ amount: -70000, date: '2026-11-05', account: 'compte' });
+  });
+
+  it('refuse un dernier versement dans le futur ou après le prochain', async () => {
+    const user = renderApp(salaireFinDeMois(false), '/revenus');
+    await user.click(screen.getByRole('button', { name: 'Indiquer le dernier versement reçu' }));
+    const dialog = screen.getByRole('dialog', { name: 'Dernier versement : Salaire' });
+    await user.type(within(dialog).getByLabelText(/^Dernier versement déjà reçu/), '2026-11-20');
+    await user.click(within(dialog).getByRole('button', { name: 'Enregistrer les modifications' }));
+    expect(within(dialog).getByText('Le dernier versement reçu doit être aujourd’hui ou avant.')).toBeInTheDocument();
+    expect(stored()?.incomes[0].date ?? '2026-11-28').toBe('2026-11-28');
+  });
+});
