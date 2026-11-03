@@ -181,9 +181,9 @@ export function CarteObjectif({
           </p>
         ) : (
           <p className="goal-step">
-            {p.pct > 0 ? `Vous avez atteint ${p.pct} % de votre objectif.` : 'Votre objectif commence ici.'}{' '}
+            {p.pct > 0 ? `Tu as atteint ${p.pct} % de ton objectif.` : 'Ton objectif commence ici.'}{' '}
             {verseCeMois > 0
-              ? `Ce mois-ci, vous avez déjà mis ${fmt(verseCeMois)} de côté pour cet objectif.`
+              ? `Ce mois-ci, tu as déjà mis ${fmt(verseCeMois)} de côté pour cet objectif.`
               : etape > 0
                 ? `Prochaine étape : mettre ${fmt(etape)} de côté ce mois-ci.`
                 : ''}
@@ -246,7 +246,7 @@ export function CarteObjectif({
                   <span className="goal-sub">dans {p.monthsToReach} mois</span>
                 </>
               ) : (
-                'Indiquez une contribution mensuelle'
+                'Indique une contribution mensuelle'
               )}
             </dd>
           </div>
@@ -254,11 +254,11 @@ export function CarteObjectif({
         {p.onTrack === false && !p.reached && (
           <Notice tone="attention">
             {p.dateExceeded
-              ? 'La date souhaitée est dépassée. Vous pouvez la repousser.'
-              : `Pour tenir la date, prévoyez ${fmt(p.monthlyNeeded ?? 0)} par mois au lieu de ${fmt(g.monthlyContribution)}.`}
+              ? 'La date souhaitée est dépassée. Tu peux la repousser.'
+              : `Pour tenir la date, prévois ${fmt(p.monthlyNeeded ?? 0)} par mois au lieu de ${fmt(g.monthlyContribution)}.`}
           </Notice>
         )}
-        {p.onTrack === true && !p.reached && <Notice tone="succes">Votre contribution permet d’atteindre l’objectif à temps.</Notice>}
+        {p.onTrack === true && !p.reached && <Notice tone="succes">Ta contribution permet d’atteindre l’objectif à temps.</Notice>}
       </div>
 
       <div className="objectif-pied">

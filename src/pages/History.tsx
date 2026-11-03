@@ -43,7 +43,13 @@ function Puces<T extends string>({ label, options, value, onChange }: { label: s
       </p>
       <div className="chips" role="group" aria-labelledby={`puces-${label}`}>
         {options.map(([v, l]) => (
-          <button key={v || 'tous'} type="button" className={`chip chip-petit ${value === v ? 'chip-on' : ''}`} aria-pressed={value === v} onClick={() => onChange(v)}>
+          <button
+            key={v || 'tous'}
+            type="button"
+            className={`chip chip-petit ${value === v ? 'chip-on' : ''}`}
+            aria-pressed={value === v}
+            onClick={() => onChange(v)}
+          >
             {l}
           </button>
         ))}
@@ -77,10 +83,7 @@ function Transactions() {
   const [start, end] =
     mode === 'mois' ? [firstDay(month), lastDay(month)] : mode === 'plage' ? [from, to] : [earliestDate(data, today), lastDay(monthOf(today))];
 
-  const all = useMemo(
-    () => (start && end && !rangeError ? transactionsInRange(data, start, end, today) : []),
-    [data, start, end, today, rangeError],
-  );
+  const all = useMemo(() => (start && end && !rangeError ? transactionsInRange(data, start, end, today) : []), [data, start, end, today, rangeError]);
   const filtered = all
     .filter((t) => (type ? t.type === type : true))
     .filter((t) => (category ? t.categoryId === category : true))
@@ -106,7 +109,13 @@ function Transactions() {
       <Card>
         <div className="filters">
           {/* La recherche d'abord : c'est l'action la plus courante, visible sans défiler sur mobile. */}
-          <TextField label="Rechercher" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Libellé, catégorie, note…" />
+          <TextField
+            label="Rechercher"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Libellé, catégorie, note…"
+          />
           <SelectField label="Catégorie" value={category} onChange={(e) => setCategory(e.target.value)}>
             <option value="">Toutes les catégories</option>
             {(['income', 'fixed', 'variable'] as const).map((kind) => (
@@ -136,9 +145,7 @@ function Transactions() {
         {mode === 'mois' && <MonthSwitcher />}
         {filtresActifs > 0 && (
           <div className="filtres-actifs">
-            <span className="tag tag-filtre">
-              {filtresActifs === 1 ? '1 filtre actif' : `${filtresActifs} filtres actifs`}
-            </span>
+            <span className="tag tag-filtre">{filtresActifs === 1 ? '1 filtre actif' : `${filtresActifs} filtres actifs`}</span>
             <Button variant="discret" className="btn-small" icon="close" onClick={effacerFiltres}>
               Effacer les filtres
             </Button>
@@ -208,11 +215,7 @@ function Report() {
     { label: 'Solde final', cur: s.available, prev: p.available, delta: r.delta.available, goodWhenUp: true, sens: 'solde' },
   ];
   const couleur = (sens: (typeof rows)[number]['sens'], v: Cents) =>
-    sens === 'epargne'
-      ? 'montant-epargne'
-      : sens === 'entree' || (sens === 'solde' && v >= 0)
-        ? 'montant-plus'
-        : 'montant-moins';
+    sens === 'epargne' ? 'montant-epargne' : sens === 'entree' || (sens === 'solde' && v >= 0) ? 'montant-plus' : 'montant-moins';
 
   return (
     <>
@@ -292,7 +295,8 @@ function Report() {
                     <Icon name="stop" size={16} /> {l.category.name}
                   </span>
                   <strong>
-                    +{fmt(-(l.remaining ?? 0))} ({l.pct}{'\u00a0'}%)
+                    +{fmt(-(l.remaining ?? 0))} ({l.pct}
+                    {'\u00a0'}%)
                   </strong>
                 </li>
               ))}
@@ -309,10 +313,7 @@ function Report() {
           />
         </Card>
         <Card>
-          <CategoryBarsChart
-            title="Répartition de toutes les dépenses"
-            items={spendingByCategory(data, month, today, ['charge', 'depense'])}
-          />
+          <CategoryBarsChart title="Répartition de toutes les dépenses" items={spendingByCategory(data, month, today, ['charge', 'depense'])} />
         </Card>
       </div>
     </>
@@ -329,7 +330,7 @@ export function History() {
     <div className="page">
       <PageHeader
         title="Historique et bilan"
-        description="Retrouvez tous vos mouvements et comparez vos mois."
+        description="Tous tes mouvements, mois par mois."
         actions={
           <Button
             icon="download"

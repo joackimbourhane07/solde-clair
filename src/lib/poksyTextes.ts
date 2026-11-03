@@ -11,15 +11,16 @@ export interface MessagePoksy {
   auteur: 'poksy' | 'vous';
   texte: string;
   action?: PoksyAction;
+  /** Fiche de la réponse : sert à proposer les questions suivantes. */
+  ficheId?: string;
 }
 
-export const MESSAGE_BIENVENUE =
-  'Bonjour, je suis Poksy.\nJe peux vous aider à comprendre votre budget ou à utiliser SoldeClair. Que souhaitez-vous savoir ?';
+export const MESSAGE_BIENVENUE = 'Bonjour, je suis Poksy.\nJe peux t’aider à comprendre ton budget ou à utiliser SoldeClair. Que veux-tu savoir ?';
 
 export const MESSAGE_PREMIERE_VISITE = 'Bonjour, je suis Poksy. Une question sur SoldeClair ?';
 
 /** Sous-titre de la bulle d'accueil. */
-export const DETAIL_PREMIERE_VISITE = 'Je vous explique vos chiffres en quelques secondes. Tout reste sur votre appareil.';
+export const DETAIL_PREMIERE_VISITE = 'Je t’explique tes chiffres en quelques secondes. Tout reste sur ton appareil.';
 
 /** Astuce proposée une seule fois sur certaines pages (jamais plus d'une par visite, désactivable). */
 export interface AstucePoksy {
@@ -31,27 +32,27 @@ export interface AstucePoksy {
 
 export const ASTUCES_PAR_PAGE: Record<string, AstucePoksy> = {
   '/compte': {
-    texte: 'Votre solde ne correspond pas à celui de votre banque ? Il se recale en quelques secondes.',
+    texte: 'Ton solde ne correspond pas à celui de ta banque ? Il se recale en quelques secondes.',
     question: 'Comment ajuster mon solde ?',
     ficheId: 'ajuster-solde',
   },
   '/budgets': {
-    texte: 'Des alertes à 75 %, 90 % et 100 % vous préviennent avant de dépasser une limite.',
+    texte: 'Des alertes à 75 %, 90 % et 100 % te préviennent avant de dépasser une limite.',
     question: 'Que signifient les alertes à 75 %, 90 % et 100 % ?',
     ficheId: 'alertes',
   },
   '/plan': {
-    texte: 'Épargne totale ou épargne disponible : je vous explique la différence en une phrase.',
+    texte: 'Épargne totale ou épargne disponible : je t’explique la différence en une phrase.',
     question: 'Épargne totale ou épargne disponible ?',
     ficheId: 'epargne-totale-disponible',
   },
   '/objectifs': {
-    texte: 'Je calcule combien mettre de côté chaque mois pour tenir la date de votre objectif.',
+    texte: 'Je calcule combien mettre de côté chaque mois pour tenir la date de ton objectif.',
     question: 'Comment est calculé le montant mensuel nécessaire ?',
     ficheId: 'mensuel-necessaire',
   },
   '/simulateur': {
-    texte: 'Avant un achat, le simulateur montre ce qu’il vous resterait, jour par jour.',
+    texte: 'Avant un achat, le simulateur montre ce qu’il te resterait, jour par jour.',
     question: 'À quoi sert le simulateur d’achat ?',
     ficheId: 'simulateur-but',
   },

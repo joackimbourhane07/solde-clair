@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Icon } from './Icon';
 import { Modal, Toasts } from './ui';
-import { ExpenseForm } from './forms';
+import { DepositForm, ExpenseForm, IncomeForm } from './forms';
+import { usesIzly } from '../lib/accounts';
 import { defaultDateFor } from '../lib/dates';
 import { useApp } from '../state/AppState';
 import { Poksy } from './poksy/Poksy';
@@ -64,8 +65,54 @@ function MasquerMontants({ compact = false }: { compact?: boolean }) {
   );
 }
 
-export function Layout({ children }: { children: ReactNode }) {
+type TypeAjout = 'depense' | 'izly' | 'revenu' | 'epargne';
+
+/**
+ * Fenêtre du bouton « + » : « Que veux-tu ajouter ? ». La dépense est choisie d'office (action la plus
+ * fréquente) ; Izly, revenu et épargne sont à un geste. Bottom sheet sur téléphone.
+ */
+function AjoutRapide({ onClose }: { onClose: () => void }) {
   const { data, month, today } = useApp();
+  const [type, setType] = useState<TypeAjout>('depense');
+  const proposerIzly = usesIzly(data) || data.profile?.type === 'etudiant' || data.profile?.type === 'alternant';
+  const onglets: [TypeAjout, string, string][] = [
+    ['depense', 'Dépense', 'expense'],
+    ...(proposerIzly ? ([['izly', 'Izly', 'campus']] as [TypeAjout, string, string][]) : []),
+    ['revenu', 'Revenu', 'income'],
+    ['epargne', 'Épargne', 'piggy'],
+  ];
+  const date = defaultDateFor(month, today);
+  return (
+    <Modal title="Ajouter" onClose={onClose}>
+      <div className="ajout-types" role="tablist" aria-label="Que veux-tu ajouter ?">
+        {onglets.map(([v, libelle, icone]) => (
+          <button
+            key={v}
+            type="button"
+            role="tab"
+            id={`ajout-${v}`}
+            aria-selected={type === v}
+            aria-controls="ajout-panneau"
+            className={`ajout-type ${type === v ? 'ajout-type-actif' : ''}`}
+            onClick={() => setType(v)}
+          >
+            <Icon name={icone} size={18} />
+            {libelle}
+          </button>
+        ))}
+      </div>
+      <div id="ajout-panneau" role="tabpanel" aria-labelledby={`ajout-${type}`} key={type} className="ajout-panneau">
+        {type === 'depense' && <ExpenseForm defaultDate={date} onDone={onClose} onCancel={onClose} />}
+        {type === 'izly' && <ExpenseForm izly defaultDate={date} onDone={onClose} onCancel={onClose} />}
+        {type === 'revenu' && <IncomeForm defaultDate={date} onDone={onClose} onCancel={onClose} />}
+        {type === 'epargne' && <DepositForm defaultDate={date} onDone={onClose} onCancel={onClose} />}
+      </div>
+    </Modal>
+  );
+}
+
+export function Layout({ children }: { children: ReactNode }) {
+  const { data } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   // Ajout rapide d'une dépense depuis n'importe quelle page
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
@@ -124,7 +171,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className="sidebar-foot">
           <MasquerMontants />
           <p className="sidebar-privacy">
-            <Icon name="lock" size={16} /> Vos données restent sur cet appareil.
+            <Icon name="lock" size={16} /> Tes données restent sur cet appareil.
           </p>
         </div>
       </aside>
@@ -145,8 +192,7 @@ export function Layout({ children }: { children: ReactNode }) {
         <footer className="app-footer">
           <Icon name="lock" size={16} />
           <p>
-            Vos données restent dans ce navigateur, sur cet appareil : elles ne sont ni envoyées sur Internet ni partagées avec d’autres personnes.
-            Pensez à faire une sauvegarde dans les paramètres.{' '}
+            Tes données restent sur cet appareil. Rien n’est envoyé. Pense à faire une sauvegarde.{' '}
             <Link to="/presentation" className="link">
               Voir la présentation de SoldeClair
             </Link>
@@ -214,11 +260,7 @@ export function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
       )}
-      {ajoutOuvert && (
-        <Modal title="Nouvelle dépense" onClose={() => setAjoutOuvert(false)}>
-          <ExpenseForm defaultDate={defaultDateFor(month, today)} onDone={() => setAjoutOuvert(false)} onCancel={() => setAjoutOuvert(false)} />
-        </Modal>
-      )}
+      {ajoutOuvert && <AjoutRapide onClose={() => setAjoutOuvert(false)} />}
       <Toasts />
     </div>
   );

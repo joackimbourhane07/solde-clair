@@ -33,14 +33,14 @@ describe('configuration initiale', () => {
 
     // Prénom obligatoire
     await user.click(screen.getByRole('button', { name: /Continuer/ }));
-    expect(screen.getByText('Indiquez un prénom ou un pseudonyme.')).toBeInTheDocument();
+    expect(screen.getByText('Indique un prénom ou un pseudonyme.')).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Prénom ou pseudonyme'), 'Sam');
     await user.click(screen.getByLabelText('Alternant(e)'));
     await user.click(screen.getByRole('button', { name: /Continuer/ }));
 
     // Revenus
-    expect(screen.getByRole('heading', { name: 'Vos revenus mensuels' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Tes revenus mensuels' })).toBeInTheDocument();
     await user.type(screen.getAllByLabelText('Montant mensuel')[0], '1200');
     await user.click(screen.getByRole('button', { name: /Continuer/ }));
 
@@ -54,7 +54,7 @@ describe('configuration initiale', () => {
     await user.click(screen.getByRole('button', { name: /Continuer/ }));
 
     // Dépenses et épargne
-    await user.type(screen.getByLabelText('Estimation de vos dépenses variables par mois'), '300');
+    await user.type(screen.getByLabelText('Estimation de tes dépenses variables par mois'), '300');
     await user.type(screen.getByLabelText('Objectif d’épargne mensuel'), '100');
     await user.click(screen.getByRole('button', { name: /Continuer/ }));
 
@@ -68,9 +68,7 @@ describe('configuration initiale', () => {
 
     expect(await screen.findByRole('heading', { name: 'Bonjour Sam' })).toBeInTheDocument();
     // 1200 − 450 = 750 € disponibles sur 19 jours → 39 € par jour
-    expect(norm(screen.getByText(/Il vous reste/).textContent)).toBe(
-      'Il vous reste 750 € pour terminer le mois, soit environ 39 € par jour.',
-    );
+    expect(norm(screen.getByText(/Il te reste/).textContent)).toBe('Il te reste 750 € pour terminer le mois, soit environ 39 € par jour.');
     await waitFor(() => expect(stored()?.profile?.name).toBe('Sam'));
   });
 
@@ -86,14 +84,12 @@ describe('tableau de bord', () => {
   it('affiche le reste à vivre (le solde de « Mon compte ») et les chiffres clés', () => {
     renderApp();
     // Solde de « Mon compte » : 2 590,52 € ; 19 jours restants → 136,34 € par jour
-    expect(norm(screen.getByText(/Il vous reste/).textContent)).toBe(
-      'Il vous reste 2 590 € pour terminer le mois, soit environ 136 € par jour.',
-    );
+    expect(norm(screen.getByText(/Il te reste/).textContent)).toBe('Il te reste 2 590 € pour terminer le mois, soit environ 136 € par jour.');
     // Le bilan du mois (budget) reste dans « Détail du mois »
     const stat = screen.getByText('Bilan du mois').parentElement!;
     expect(norm(stat.textContent)).toContain('821,51 €');
     // La limite dépassée devient une action dans « À faire »
-    expect(screen.getByText('Votre budget « Alimentation » est dépassé de 8,00 €.', { normalizer: norm })).toBeInTheDocument();
+    expect(screen.getByText('Ton budget « Alimentation » est dépassé de 8,00 €.', { normalizer: norm })).toBeInTheDocument();
   });
 
   it('ajout rapide d’une dépense, totaux mis à jour et sauvegardés', async () => {
@@ -107,7 +103,7 @@ describe('tableau de bord', () => {
     expect(await screen.findByText('Dépense de 21,51 € enregistrée.', { normalizer: norm })).toBeInTheDocument();
     expect(norm(screen.getByText('Bilan du mois').parentElement!.textContent)).toContain('800,00 €');
     // 2 590,52 − 21,51 = 2 569,01 € ÷ 19 jours
-    expect(norm(screen.getByText(/Il vous reste/).textContent)).toBe('Il vous reste 2 569 € pour terminer le mois, soit environ 135 € par jour.');
+    expect(norm(screen.getByText(/Il te reste/).textContent)).toBe('Il te reste 2 569 € pour terminer le mois, soit environ 135 € par jour.');
     await waitFor(() => expect(stored().expenses.some((e) => e.description === 'Pharmacie' && e.amount === 2151)).toBe(true));
   });
 
@@ -115,7 +111,7 @@ describe('tableau de bord', () => {
     const user = renderApp();
     const form = screen.getByRole('form', { name: 'Ajout rapide d’une dépense' });
     await user.click(within(form).getByRole('button', { name: 'Ajouter la dépense' }));
-    expect(within(form).getByText('Indiquez un montant, par exemple 12,50.')).toBeInTheDocument();
+    expect(within(form).getByText('Indique un montant, par exemple 12,50.')).toBeInTheDocument();
     await user.type(within(form).getByLabelText('Montant'), '0');
     await user.click(within(form).getByRole('button', { name: 'Ajouter la dépense' }));
     expect(within(form).getByText('Le montant doit être supérieur à 0.')).toBeInTheDocument();
@@ -128,7 +124,7 @@ describe('tableau de bord', () => {
     await user.click(screen.getByRole('button', { name: 'Mois précédent' }));
     expect(screen.getByText('Octobre 2026')).toBeInTheDocument();
     // Solde de « Mon compte » au 31 octobre
-    expect(norm(screen.getByText(/Mois terminé :/).textContent)).toBe('Mois terminé : il vous restait 1 753,02 € à la fin du mois.');
+    expect(norm(screen.getByText(/Mois terminé :/).textContent)).toBe('Mois terminé : il te restait 1 753,02 € à la fin du mois.');
     await user.click(screen.getByRole('button', { name: 'Mois en cours' }));
     expect(screen.getByText('Novembre 2026')).toBeInTheDocument();
   });
@@ -185,7 +181,7 @@ describe('améliorations de simplicité (recherche et audit)', () => {
     expect(norm(calcul.textContent)).toContain('− Épargne versée150,00 €');
     expect(norm(calcul.textContent)).toContain('= Solde de « Mon compte » aujourd’hui2 590,52 €');
     expect(norm(screen.getByText(/Divisé par 19 jours restants/).textContent)).toContain('environ 136,34 € par jour');
-    expect(norm(screen.getByText(/Divisé par 19 jours restants/).textContent)).toContain('depuis votre première saisie (15 mars 2026)');
+    expect(norm(screen.getByText(/Divisé par 19 jours restants/).textContent)).toContain('depuis ta première saisie (15 mars 2026)');
     // Une seule carte principale : la phrase, les repères et le calcul (plus de panneau qui répète les montants)
     expect(document.querySelector('.hero-figure')).toBeNull();
     expect(screen.getByText(/46 % des revenus déjà dépensés/)).toBeInTheDocument();
@@ -196,10 +192,10 @@ describe('améliorations de simplicité (recherche et audit)', () => {
     const titres = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
     expect(titres.indexOf('Sauvegarder mes données')).toBeLessThan(titres.indexOf('Mon profil'));
     expect(screen.getByText('aucune pour l’instant')).toBeInTheDocument();
-    expect(screen.getByText(/Pensez à télécharger une sauvegarde complète/)).toBeInTheDocument();
+    expect(screen.getByText(/Télécharge une sauvegarde complète/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Sauvegarde complète (JSON)' }));
     expect(screen.getByText('le 12 nov. 2026')).toBeInTheDocument();
-    expect(screen.queryByText(/Pensez à télécharger une sauvegarde complète/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Télécharge une sauvegarde complète/)).not.toBeInTheDocument();
     await waitFor(() => expect(stored().settings.lastBackup).toBe(TODAY));
   });
 
@@ -257,19 +253,19 @@ describe('améliorations de simplicité (recherche et audit)', () => {
 describe('page d’accueil (présentation)', () => {
   it('nouveau visiteur : la présentation d’abord, puis la configuration avec « Commencer »', async () => {
     const user = renderApp(emptyData());
-    expect(await screen.findByRole('heading', { level: 1, name: 'Votre budget devient enfin clair.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Ton budget devient enfin clair.' })).toBeInTheDocument();
     // Les grandes sections, dans l'ordre prévu
     const titres = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
     expect(titres).toEqual([
       'L’essentiel, sans complication.',
-      'Faites le tour en cinq écrans.',
-      'Sachez ce qu’il vous reste, vraiment.',
-      'Anticipez ce qui arrive.',
-      'Avancez vers vos projets, pas à pas.',
-      'Avant d’acheter, simulez.',
-      'Adapté à votre situation.',
-      'Vos données restent sur votre appareil.',
-      'Poksy répond à vos questions.',
+      'Fais le tour en cinq écrans.',
+      'Sache ce qu’il te reste, vraiment.',
+      'Anticipe ce qui arrive.',
+      'Avance vers tes projets, pas à pas.',
+      'Avant d’acheter, simule.',
+      'Adapté à ta situation.',
+      'Tes données restent sur ton appareil.',
+      'Poksy répond à tes questions.',
       'Commencer avec SoldeClair',
     ]);
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
@@ -346,7 +342,9 @@ describe('retours de la propriétaire : report, catégories, messages', () => {
     await user.type(date, '2026-10-26');
     await user.click(within(dialog).getByRole('button', { name: 'Ajouter le revenu' }));
     // Règle du 20 (par défaut) : la prime du 26 octobre compte pour novembre
-    expect(await screen.findByText('Revenu enregistré. Reçu à partir du 20 : il compte pour novembre 2026.', { normalizer: norm })).toBeInTheDocument();
+    expect(
+      await screen.findByText('Revenu enregistré. Reçu à partir du 20 : il compte pour novembre 2026.', { normalizer: norm }),
+    ).toBeInTheDocument();
     expect(norm(screen.getByText(/Les revenus reçus à partir du 20/).textContent)).toContain('Prime (26 oct. 2026) est compté ici');
     expect(norm(screen.getByText('Revenus de novembre 2026').parentElement!.textContent)).toContain('2 700,50 €');
   });
@@ -365,7 +363,9 @@ describe('retours de la propriétaire : report, catégories, messages', () => {
     await user.type(date, '2026-10-26');
     await user.click(within(dialog).getByRole('button', { name: 'Ajouter le revenu' }));
     expect(
-      await screen.findByText('Revenu enregistré. Mois concerné : octobre 2026. Le reste de ce mois est reporté sur les suivants.', { normalizer: norm }),
+      await screen.findByText('Revenu enregistré. Mois concerné : octobre 2026. Le reste de ce mois est reporté sur les suivants.', {
+        normalizer: norm,
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Reste des mois précédents/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Voir octobre 2026' }));
@@ -383,8 +383,8 @@ describe('retours de la propriétaire : report, catégories, messages', () => {
   it('tableau de bord : le solde cumule déjà tout ; le report reste dans « Détail du mois »', () => {
     renderApp(avecReport());
     // Même phrase qu'avec le report désactivé : c'est le solde de « Mon compte »
-    expect(norm(screen.getByText(/Il vous reste/).textContent)).toContain('Il vous reste 2 590 €');
-    expect(document.body.textContent).not.toContain('compté dans votre disponible');
+    expect(norm(screen.getByText(/Il te reste/).textContent)).toContain('Il te reste 2 590 €');
+    expect(document.body.textContent).not.toContain('compté dans ton disponible');
     const detail = screen.getByText('Détail du mois').closest('details')!;
     expect(norm(within(detail).getByText('Report des mois précédents').parentElement!.textContent)).toContain('1 753,02 €');
     expect(norm(within(detail).getByText('Bilan du mois').parentElement!.textContent)).toContain('2 574,53 €');
@@ -406,11 +406,11 @@ describe('retours de la propriétaire : report, catégories, messages', () => {
     await user.click(screen.getAllByRole('button', { name: 'Ajouter une charge' })[0]);
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByLabelText('Catégorie')).toHaveValue('__nouvelle__');
-    expect(within(dialog).getByText('Aucune catégorie de ce type pour l’instant : créez-la ici.')).toBeInTheDocument();
+    expect(within(dialog).getByText('Aucune catégorie de ce type pour l’instant : crée-la ici.')).toBeInTheDocument();
     await user.type(within(dialog).getByLabelText('Nom'), 'Loyer');
     await user.type(within(dialog).getByLabelText('Montant'), '221');
     await user.click(within(dialog).getByRole('button', { name: 'Ajouter la charge' }));
-    expect(within(dialog).getByText('Indiquez le nom de la nouvelle catégorie.')).toBeInTheDocument();
+    expect(within(dialog).getByText('Indique le nom de la nouvelle catégorie.')).toBeInTheDocument();
     await user.type(within(dialog).getByLabelText('Nom de la nouvelle catégorie'), 'Logement');
     await user.click(within(dialog).getByRole('button', { name: 'Ajouter la charge' }));
     await waitFor(() => {
@@ -436,7 +436,9 @@ describe('identité claire et améliorations v2', () => {
     const d = fixture();
     d.fixedCharges = d.fixedCharges.map((c) => (c.id === 'f-tel' ? { ...c, date: '2026-09-14' } : c));
     renderApp(d);
-    expect(norm(screen.getByText(/Dans les 3 prochains jours/).textContent)).toBe('Dans les 3 prochains jours : 1 opération prévue, pas encore comptée dans votre solde.');
+    expect(norm(screen.getByText(/Dans les 3 prochains jours/).textContent)).toBe(
+      'Dans les 3 prochains jours : 1 opération prévue, pas encore comptée dans ton solde.',
+    );
     expect(screen.getByText(/Dans 2 jours – Téléphone/)).toBeInTheDocument();
   });
 
@@ -458,7 +460,9 @@ describe('identité claire et améliorations v2', () => {
   it('objectifs : pourcentage atteint et prochaine petite étape', () => {
     renderApp(fixture(), '/objectifs');
     // 200 € de départ + 100 € (novembre) + 50 € (octobre) = 350 € sur 1 000 €
-    expect(screen.getByText(norm('Vous avez atteint 35\u00a0% de votre objectif. Ce mois-ci, vous avez déjà mis 100,00\u00a0€ de côté pour cet objectif.'))).toBeInTheDocument();
+    expect(
+      screen.getByText(norm('Tu as atteint 35\u00a0% de ton objectif. Ce mois-ci, tu as déjà mis 100,00\u00a0€ de côté pour cet objectif.')),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ajouter un versement' })).toHaveClass('btn-secondaire');
   });
 });
@@ -470,7 +474,7 @@ describe('améliorations validées : ajout rapide, raccourcis, discrétion, simp
     // barre latérale (ordinateur) et bouton central (mobile)
     expect(boutons.length).toBe(2);
     await user.click(boutons[1]);
-    const dialog = screen.getByRole('dialog', { name: 'Nouvelle dépense' });
+    const dialog = screen.getByRole('dialog', { name: 'Ajouter' });
     await user.type(within(dialog).getByLabelText('Montant'), '6,50');
     await user.click(within(dialog).getByRole('button', { name: 'Ajouter la dépense' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -498,7 +502,7 @@ describe('améliorations validées : ajout rapide, raccourcis, discrétion, simp
     const user = renderApp();
     const [bouton] = screen.getAllByRole('button', { name: 'Masquer les montants' });
     await user.click(bouton);
-    expect(norm(screen.getByText(/Il vous reste/).textContent)).toBe('Il vous reste ••• € pour terminer le mois, soit environ ••• € par jour.');
+    expect(norm(screen.getByText(/Il te reste/).textContent)).toBe('Il te reste ••• € pour terminer le mois, soit environ ••• € par jour.');
     expect(norm(screen.getByText('Bilan du mois').parentElement!.textContent)).toContain('••• €');
     expect(document.body.textContent).not.toMatch(/821,51|2 590|2 590/);
     expect(screen.getAllByRole('button', { name: 'Afficher les montants' })[0]).toHaveAttribute('aria-pressed', 'true');
@@ -516,7 +520,9 @@ describe('améliorations validées : ajout rapide, raccourcis, discrétion, simp
     const horsDetail = Array.from(document.querySelectorAll('.stat-label')).filter((e) => !e.closest('.detail-mois'));
     expect(horsDetail.map((e) => e.textContent)).toEqual(['Revenus', 'Total des dépenses']);
     // Un seul graphique visible
-    expect(Array.from(document.querySelectorAll('.chart, .hbar-list, figure')).filter((e) => !e.closest('.detail-mois')).length).toBeLessThanOrEqual(1);
+    expect(Array.from(document.querySelectorAll('.chart, .hbar-list, figure')).filter((e) => !e.closest('.detail-mois')).length).toBeLessThanOrEqual(
+      1,
+    );
     const detail = screen.getByText('Détail du mois').closest('details')!;
     expect(detail).not.toHaveAttribute('open');
     expect(Array.from(detail.querySelectorAll('.stat-label')).map((e) => e.textContent)).toEqual([
@@ -533,8 +539,8 @@ describe('améliorations validées : ajout rapide, raccourcis, discrétion, simp
     const user = renderApp();
     const carte = screen.getByRole('heading', { name: 'À faire' }).closest('section, .card')!;
     expect(within(carte as HTMLElement).getAllByRole('listitem')).toHaveLength(3);
-    await user.click(screen.getByRole('button', { name: /^Ignorer : Faites une sauvegarde/ }));
-    expect(screen.queryByText('Faites une sauvegarde de vos données.')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^Ignorer : Fais une sauvegarde/ }));
+    expect(screen.queryByText('Fais une sauvegarde de tes données.')).not.toBeInTheDocument();
     await waitFor(() => expect(stored().settings.dismissedActions).toEqual(['sauvegarde:2026-11']));
   });
 
@@ -542,11 +548,15 @@ describe('améliorations validées : ajout rapide, raccourcis, discrétion, simp
     renderApp();
     const carte = screen.getByRole('heading', { name: 'Estimation des 30 prochains jours' }).closest('.card')! as HTMLElement;
     expect(within(carte).getByText('Estimation')).toBeInTheDocument();
-    expect(Array.from(carte.querySelectorAll('.prevision-points dt')).map((e) => e.textContent)).toEqual(['Dans 7 jours', 'Dans 15 jours', 'Dans 30 jours']);
+    expect(Array.from(carte.querySelectorAll('.prevision-points dt')).map((e) => e.textContent)).toEqual([
+      'Dans 7 jours',
+      'Dans 15 jours',
+      'Dans 30 jours',
+    ]);
     // Départ : le solde de « Mon compte » (2 590,52 €), moins 9,83 € de dépenses courantes par jour
     expect(norm(carte.querySelector('.prevision-points')!.textContent)).toContain('2 521,71 €');
     expect(norm(carte.querySelector('.prevision-phrase')!.textContent)).toBe(
-      'Si tout se passe comme prévu, il vous resterait environ 3 179 € dans 30 jours.',
+      'Si tout se passe comme prévu, il te resterait environ 3 179 € dans 30 jours.',
     );
   });
 
@@ -629,7 +639,7 @@ describe('simulateur', () => {
     expect(screen.getByText('Situation confortable')).toBeInTheDocument();
     expect(norm(screen.getByText('Solde aujourd’hui').parentElement!.textContent)).toContain('2 590,52 €');
     expect(norm(screen.getByText('Solde restant après l’achat').parentElement!.textContent)).toContain('2 490,52 €');
-    expect(screen.getByText(/pas un conseil financier/)).toBeInTheDocument();
+    expect(screen.getByText(/Pas un conseil financier/)).toBeInTheDocument();
   });
 });
 
@@ -659,7 +669,7 @@ describe('paramètres et données', () => {
     expect(confirmBtn).toBeEnabled();
     await user.click(confirmBtn);
     // Après l'effacement : retour à la présentation, comme un nouveau visiteur
-    expect(await screen.findByRole('heading', { level: 1, name: 'Votre budget devient enfin clair.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Ton budget devient enfin clair.' })).toBeInTheDocument();
     await waitFor(() => expect(localStorage.getItem(STORAGE_KEY)).toBeNull());
   });
 
@@ -700,7 +710,7 @@ describe('historique et bilan', () => {
     const user = renderApp(fixture(), '/budgets');
     const alim = screen.getByRole('heading', { name: 'Alimentation' }).closest('.card')! as HTMLElement;
     expect(norm(alim.querySelector('.budget-phrase')!.textContent)).toBe('58,00 € dépensés sur 50,00 €, dépassement de 8,00 €');
-    expect(within(alim).getByText(/Vous pouvez consulter les dépenses concernées ou ajuster cette limite pour le mois/)).toBeInTheDocument();
+    expect(within(alim).getByText(/Tu peux consulter les dépenses concernées ou ajuster cette limite pour le mois/)).toBeInTheDocument();
     const loisirs = screen.getByRole('heading', { name: 'Loisirs' }).closest('.card')! as HTMLElement;
     expect(norm(loisirs.querySelector('.budget-phrase')!.textContent)).toBe('60,00 € dépensés sur 80,00 € (75 %), il reste 20,00 €');
     // « Voir les dépenses » ouvre la liste filtrée sur la catégorie
@@ -721,7 +731,17 @@ describe('historique et bilan', () => {
 function avecCarte(): AppData {
   const d = fixture();
   d.categories.push({ id: 'c-cr', name: 'Carte restaurant', kind: 'income', budget: null });
-  d.incomes.push({ id: 'i-cr', name: 'Titres-restaurant', amount: 18000, date: '2026-11-01', categoryId: 'c-cr', recurring: true, frequency: 'mensuel', endDate: null, note: '' });
+  d.incomes.push({
+    id: 'i-cr',
+    name: 'Titres-restaurant',
+    amount: 18000,
+    date: '2026-11-01',
+    categoryId: 'c-cr',
+    recurring: true,
+    frequency: 'mensuel',
+    endDate: null,
+    note: '',
+  });
   d.expenses.push({ id: 'e-cr', amount: 980, categoryId: 'c-alim', date: '2026-11-11', description: 'Déjeuner', paymentMethod: 'Carte restaurant' });
   return d;
 }
@@ -779,7 +799,7 @@ describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
 
   it('solde : explication et bouton tant qu’aucun solde réel n’est indiqué ; jamais « -0,00 € »', async () => {
     const user = renderApp(fixture(), '/compte');
-    expect(screen.getByText(/SoldeClair part de 0 € et ajoute chaque revenu le jour où il est versé/, { normalizer: norm })).toBeInTheDocument();
+    expect(screen.getByText(/Le solde part de 0 €. Indique une fois le montant affiché par ta banque/, { normalizer: norm })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Indiquer mon solde réel' }));
     const dialog = screen.getByRole('dialog', { name: 'Ajuster le solde' });
     await user.clear(within(dialog).getByLabelText('Solde réel – Compte bancaire'));
@@ -838,7 +858,6 @@ describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
     expect(document.querySelector('.hero-text .valeur')).toHaveClass('montant-plus');
   });
 
-
   it('« Ajuster le solde » : le solde réel est enregistré, l’ajustement se supprime', async () => {
     const user = renderApp(fixture(), '/compte');
     await user.click(screen.getByRole('button', { name: 'Ajuster le solde' }));
@@ -871,7 +890,11 @@ describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
   it('carte restaurant : soldes séparés et filtre par compte', async () => {
     const user = renderApp(avecCarte(), '/compte');
     const choix = screen.getByRole('group', { name: 'Compte affiché' });
-    expect(within(choix).getAllByRole('button').map((b) => b.textContent)).toEqual(['Tout', 'Compte bancaire', 'Carte restaurant']);
+    expect(
+      within(choix)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Tout', 'Compte bancaire', 'Carte restaurant']);
     const detail = document.querySelector('.solde-detail')!;
     expect(norm(detail.textContent)).toContain('Compte bancaire2 590,52 €');
     expect(norm(detail.textContent)).toContain('Carte restaurant170,20 €');
@@ -906,14 +929,16 @@ describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
   it('dépense : « Carte restaurant » parmi les moyens de paiement', async () => {
     const user = renderApp(fixture(), '/depenses');
     await user.click(screen.getAllByRole('button', { name: 'Ajouter une dépense' })[0]);
-    const options = within(within(screen.getByRole('dialog')).getByLabelText(/Moyen de paiement/)).getAllByRole('option').map((o) => o.textContent);
+    const options = within(within(screen.getByRole('dialog')).getByLabelText(/Moyen de paiement/))
+      .getAllByRole('option')
+      .map((o) => o.textContent);
     expect(options).toEqual(expect.arrayContaining(['Carte bancaire', 'Carte restaurant', 'Espèces']));
   });
 
   it('tableau de bord : épargne du mois en pourcentage et objectifs en cours', () => {
     renderApp();
     // 100 € épargnés sur 150 € → 67 %
-    expect(screen.getByText(norm('67 % de l’objectif du mois : il vous manque 50,00 €.'), { normalizer: norm })).toBeInTheDocument();
+    expect(screen.getByText(norm('67 % de l’objectif du mois : il te manque 50,00 €.'), { normalizer: norm })).toBeInTheDocument();
     const objectifs = screen.getByRole('list', { name: 'Objectifs en cours' });
     expect(norm(objectifs.textContent)).toContain('Voyage');
     expect(norm(objectifs.textContent)).toContain('35 %');
@@ -928,13 +953,31 @@ describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
 
   it('navigation : « Mon compte » dans le menu, « Compte » dans la barre du bas', () => {
     renderApp();
-    expect(within(screen.getByRole('complementary', { name: 'Navigation principale' })).getByRole('link', { name: /Mon compte/ })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('complementary', { name: 'Navigation principale' })).getByRole('link', { name: /Mon compte/ }),
+    ).toBeInTheDocument();
     const bas = screen.getByRole('navigation', { name: 'Navigation principale (mobile)' });
-    expect(within(bas).getAllByRole('link').map((l) => l.textContent)).toEqual(['Accueil', 'Compte', 'Budgets']);
+    expect(
+      within(bas)
+        .getAllByRole('link')
+        .map((l) => l.textContent),
+    ).toEqual(['Accueil', 'Compte', 'Budgets']);
   });
 
   it('aucun séparateur « · » dans l’interface', () => {
-    const pages = ['/', '/compte', '/revenus', '/depenses', '/charges', '/budgets', '/objectifs', '/simulateur', '/historique', '/parametres', '/presentation'];
+    const pages = [
+      '/',
+      '/compte',
+      '/revenus',
+      '/depenses',
+      '/charges',
+      '/budgets',
+      '/objectifs',
+      '/simulateur',
+      '/historique',
+      '/parametres',
+      '/presentation',
+    ];
     for (const page of pages) {
       renderApp(avecCarte(), page);
       expect(document.body.textContent, page).not.toContain('·');

@@ -446,3 +446,130 @@ details[open] > div:not(.disclosure-body) {
 .etape-onboarding {
   animation: bloc-entree 240ms var(--courbe-sortie) both;
 }
+
+/* Fenêtre « + » : choix du type d'ajout */
+.ajout-types {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.ajout-types::-webkit-scrollbar {
+  display: none;
+}
+
+.ajout-type {
+  flex: 1 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--fill-doux);
+  color: var(--fill-doux-texte);
+  font: inherit;
+  font-weight: 600;
+  font-size: var(--dp-typography-supporting);
+  cursor: pointer;
+  transition:
+    background-color var(--duree-survol) var(--courbe-sortie),
+    color var(--duree-survol) var(--courbe-sortie),
+    transform var(--duree-pression) var(--courbe-sortie);
+}
+
+.ajout-type:active {
+  transform: scale(0.97);
+}
+
+.ajout-type-actif {
+  background: var(--primary);
+  color: var(--primary-ink);
+}
+
+.ajout-type:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.ajout-panneau {
+  animation: bloc-entree 180ms var(--courbe-sortie) both;
+}
+
+.chips-campus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  grid-column: 1 / -1;
+}
+
+.izly-mention {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin: 2px 0 0;
+}
+
+/* Izly : résumé du mois et étiquette (couleur secondaire violette, jamais seule : icône et mot) */
+.carte-izly {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--dp-radius-panel);
+  background: var(--izly-fond);
+}
+
+.carte-izly-icone {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--izly);
+  color: #ffffff;
+}
+
+.carte-izly-titre {
+  margin: 0 0 2px;
+  font-size: 1rem;
+}
+
+.carte-izly-chiffres {
+  margin: 0;
+}
+
+.tag-izly {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+  background: var(--izly-fond);
+  color: var(--izly-texte);
+}
+
+:root {
+  --izly: #6b4fbb;
+  --izly-fond: #f1edfa;
+  --izly-texte: #553c9a;
+}
+
+:root[data-theme='dark'] {
+  --izly: #8f75e0;
+  --izly-fond: #2a2440;
+  --izly-texte: #c9b8ff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --izly: #8f75e0;
+    --izly-fond: #2a2440;
+    --izly-texte: #c9b8ff;
+  }
+}

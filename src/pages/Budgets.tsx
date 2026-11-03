@@ -33,7 +33,7 @@ function BudgetEditor({ line, onClose }: { line: CategoryBudgetLine | 'new'; onC
     const [cents, amountError] = checkAmount(amount, { allowZero: true, required: false });
     const trimmed = name.trim();
     const nameError = !trimmed
-      ? 'Indiquez un nom de catégorie.'
+      ? 'Indique un nom de catégorie.'
       : isDuplicateName(data.categories, 'variable', trimmed, isNew ? undefined : line.category.id)
         ? 'Une catégorie porte déjà ce nom.'
         : null;
@@ -55,7 +55,7 @@ function BudgetEditor({ line, onClose }: { line: CategoryBudgetLine | 'new'; onC
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           error={errors.amount}
-          hint="Laissez vide ou à 0 pour ne pas fixer de limite."
+          hint="Laisse vide ou à 0 pour ne pas fixer de limite."
         />
         <div className="form-actions">
           <Button onClick={onClose}>Annuler</Button>
@@ -119,7 +119,7 @@ export function Budgets() {
     <div className="page">
       <PageHeader
         title="Budgets par catégorie"
-        description="Fixez une limite mensuelle pour chaque type de dépense et suivez où vous en êtes."
+        description="Une limite par catégorie, chaque mois."
         actions={
           <Button variant="primaire" icon="plus" onClick={() => setEditing('new')}>
             Nouvelle catégorie
@@ -183,8 +183,8 @@ export function Budgets() {
                   <DepensesDeLaCategorie categoryId={l.category.id} />
                   {l.level === 'depasse' && (
                     <p className="budget-conseil">
-                      Votre budget {l.category.name.toLocaleLowerCase('fr')} est dépassé. Vous pouvez consulter les dépenses concernées ou ajuster
-                      cette limite pour le mois.{' '}
+                      Ton budget {l.category.name.toLocaleLowerCase('fr')} est dépassé. Tu peux consulter les dépenses concernées ou ajuster cette
+                      limite pour le mois.{' '}
                       <Link to={`/depenses?categorie=${l.category.id}`} className="link">
                         Voir les dépenses
                       </Link>
@@ -200,8 +200,8 @@ export function Budgets() {
         <Card title={`Catégories sans limite (${sansLimite.length})`}>
           <p className="muted">
             {avecLimite.length === 0
-              ? 'Fixez une limite pour suivre une catégorie de près : sa barre de progression apparaîtra ici.'
-              : 'Ces catégories sont suivies sans plafond. Fixez une limite pour voir leur barre de progression.'}
+              ? 'Fixe une limite pour suivre une catégorie de près : sa barre de progression apparaîtra ici.'
+              : 'Ces catégories sont suivies sans plafond. Fixe une limite pour voir leur barre de progression.'}
           </p>
           <ul className="sans-limite-liste">
             {sansLimite.map((l) => (

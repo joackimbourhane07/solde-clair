@@ -9,7 +9,7 @@ import { addDays, dayDiff, formatDate, monthOf } from './dates';
  */
 export interface BudgetAction {
   id: string;
-  /** 1 = à traiter maintenant, 2 = bientôt, 3 = quand vous avez un moment. */
+  /** 1 = à traiter maintenant, 2 = bientôt, 3 = quand tu as un moment. */
   priority: 1 | 2 | 3;
   title: string;
   detail: string;
@@ -38,8 +38,8 @@ export function suggestedActions(data: AppData, today: ISODate, fmt: (c: Cents) 
       actions.push({
         id: `limite:${line.category.id}:${month}`,
         priority: 1,
-        title: `Votre budget « ${nom} » est dépassé de ${fmt(-(line.remaining ?? 0))}.`,
-        detail: 'Vous pouvez consulter les dépenses concernées ou ajuster cette limite pour le mois.',
+        title: `Ton budget « ${nom} » est dépassé de ${fmt(-(line.remaining ?? 0))}.`,
+        detail: 'Tu peux consulter les dépenses concernées ou ajuster cette limite pour le mois.',
         cta: 'Ajuster la limite',
         to: '/budgets',
       });
@@ -63,8 +63,8 @@ export function suggestedActions(data: AppData, today: ISODate, fmt: (c: Cents) 
       title: `À ce rythme, il pourrait manquer environ ${fmt(-s.forecastEndBalance)} à la fin du mois.`,
       detail:
         s.dailyRemaining !== null && s.dailyRemaining > 0
-          ? `Pour finir à l’équilibre, visez environ ${fmt(s.dailyRemaining)} par jour.`
-          : 'Regardez les dépenses qui peuvent attendre le mois prochain.',
+          ? `Pour finir à l’équilibre, vise environ ${fmt(s.dailyRemaining)} par jour.`
+          : 'Regarde les dépenses qui peuvent attendre le mois prochain.',
       cta: 'Voir mes dépenses',
       to: '/depenses',
     });
@@ -78,7 +78,7 @@ export function suggestedActions(data: AppData, today: ISODate, fmt: (c: Cents) 
       id: `charge:${imminent.key}`,
       priority: 2,
       title: `Prélèvement « ${imminent.label} » ${quand} : ${fmt(imminent.amount)}.`,
-      detail: 'Vérifiez que le montant est prévu sur votre compte, puis marquez-le comme payé.',
+      detail: 'Vérifie que le montant est prévu sur ton compte, puis marque-le comme payé.',
       cta: 'Voir mes charges',
       to: '/charges',
     });
@@ -96,7 +96,7 @@ export function suggestedActions(data: AppData, today: ISODate, fmt: (c: Cents) 
         id: `inhabituelle:${e.id}`,
         priority: 2,
         title: `Dépense inhabituelle : ${e.description ? `« ${e.description} »` : 'une dépense'} de ${fmt(e.amount)}.`,
-        detail: `Le ${formatDate(e.date)}, environ ${Math.round(e.amount / Math.max(med, 1))} fois plus que d’habitude dans cette catégorie. Vérifiez qu’elle est correcte.`,
+        detail: `Le ${formatDate(e.date)}, environ ${Math.round(e.amount / Math.max(med, 1))} fois plus que d’habitude dans cette catégorie. Vérifie qu’elle est correcte.`,
         cta: 'Vérifier',
         to: '/depenses',
       });
@@ -109,8 +109,8 @@ export function suggestedActions(data: AppData, today: ISODate, fmt: (c: Cents) 
     actions.push({
       id: `epargne:${month}`,
       priority: 3,
-      title: `Il vous manque ${fmt(s.savingsTarget - s.saved)} pour respecter votre objectif d’épargne du mois.`,
-      detail: s.saved > 0 ? `Vous avez déjà mis ${fmt(s.saved)} de côté : c’est un bon début.` : 'Même un petit versement compte.',
+      title: `Il te manque ${fmt(s.savingsTarget - s.saved)} pour respecter ton objectif d’épargne du mois.`,
+      detail: s.saved > 0 ? `Tu as déjà mis ${fmt(s.saved)} de côté : c’est un bon début.` : 'Même un petit versement compte.',
       cta: 'Ajouter un versement',
       to: '/objectifs',
     });
@@ -122,7 +122,7 @@ export function suggestedActions(data: AppData, today: ISODate, fmt: (c: Cents) 
     actions.push({
       id: `sauvegarde:${month}`,
       priority: 3,
-      title: 'Faites une sauvegarde de vos données.',
+      title: 'Fais une sauvegarde de tes données.',
       detail: derniere ? `Dernière sauvegarde le ${formatDate(derniere)}.` : 'Elle permet de tout retrouver si le navigateur est effacé.',
       cta: 'Sauvegarder',
       to: '/parametres',

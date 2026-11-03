@@ -29,6 +29,16 @@ export function chargeStatus(charge: FixedCharge, date: ISODate, today: ISODate)
 /* -------------------------------------------------------------------------- */
 
 /** Reconnaît la carte restaurant / les titres-restaurant dans un nom (catégorie, revenu, moyen de paiement). */
+/** Paiement Izly (porte-monnaie CROUS) : reconnu par son nom. Suivi manuel, aucun accès au compte Izly. */
+export function isIzly(nom: string): boolean {
+  return /\bizly\b/i.test(nom);
+}
+
+/** Compte débité par un moyen de paiement. */
+export function compteDuPaiement(moyen: string): AccountId {
+  return isIzly(moyen) ? 'izly' : isCarteRestaurant(moyen) ? 'carte-restaurant' : 'compte';
+}
+
 export function isCarteRestaurant(nom: string): boolean {
   // « Restaurants » (catégorie de dépenses) ne doit pas être confondu avec la carte restaurant.
   return /(?:cartes?|titres?|tickets?|ch[eè]ques?)[- ]?(?:rest(?:o|aurant)s?|d[ée]jeuners?)\b|swile|edenred|pluxee|sodexo|up d[ée]j|bimpli|apetiz|conecs/i.test(
@@ -149,7 +159,7 @@ function mouvementsDuMois(data: AppData, month: MonthKey, today: ISODate, budget
       amount: ex.amount,
       note: '',
       paymentMethod: ex.paymentMethod,
-      account: isCarteRestaurant(ex.paymentMethod) ? 'carte-restaurant' : 'compte',
+      account: compteDuPaiement(ex.paymentMethod),
     });
   }
 
@@ -177,9 +187,9 @@ function mouvementsDuMois(data: AppData, month: MonthKey, today: ISODate, budget
       sourceId: a.id,
       type: 'ajustement',
       date: a.date,
-      label: 'Ajustement du solde',
+      label: a.recharge ? 'Recharge Izly' : 'Ajustement du solde',
       categoryId: null,
-      categoryName: a.account === 'carte-restaurant' ? 'Carte restaurant' : 'Compte bancaire',
+      categoryName: a.account === 'carte-restaurant' ? 'Carte restaurant' : a.account === 'izly' ? 'Izly' : 'Compte bancaire',
       amount: a.amount,
       note: a.note,
       paymentMethod: '',
@@ -519,28 +529,28 @@ export function monthAlerts(data: AppData, month: MonthKey, today: ISODate, fmt:
   if (s.available < 0) {
     alerts.push({
       level: 'danger',
-      message: `Vos dépenses dépassent vos revenus de ${fmt(-s.available)} ce mois-ci.`,
+      message: `Tes dépenses dépassent tes revenus de ${fmt(-s.available)} ce mois-ci.`,
     });
   } else if (s.period !== 'passe' && s.forecastEndBalance < 0) {
     // Formulation qui propose une action plutôt qu'un simple constat.
     const piste =
-      s.dailyRemaining !== null && s.dailyRemaining > 0 ? ` Pour finir le mois à l’équilibre, visez environ ${fmt(s.dailyRemaining)} par jour.` : '';
+      s.dailyRemaining !== null && s.dailyRemaining > 0 ? ` Pour finir le mois à l’équilibre, vise environ ${fmt(s.dailyRemaining)} par jour.` : '';
     alerts.push({
       level: 'attention',
-      message: `${s.forecastBasis === 'rythme' ? 'Si vos dépenses gardent le même rythme' : 'D’après vos budgets'}, il pourrait manquer environ ${fmt(-s.forecastEndBalance)} à la fin du mois.${piste}`,
+      message: `${s.forecastBasis === 'rythme' ? 'Si tes dépenses gardent le même rythme' : 'D’après tes budgets'}, il pourrait manquer environ ${fmt(-s.forecastEndBalance)} à la fin du mois.${piste}`,
     });
   }
   if (s.period !== 'passe' && s.savingsRemaining > 0 && s.available < s.savingsRemaining) {
     alerts.push({
       level: 'attention',
-      message: `Votre objectif d’épargne du mois (${fmt(s.savingsTarget)}) risque de ne pas être atteint : il reste ${fmt(s.savingsRemaining)} à mettre de côté.`,
+      message: `Ton objectif d’épargne du mois (${fmt(s.savingsTarget)}) risque de ne pas être atteint : il reste ${fmt(s.savingsRemaining)} à mettre de côté.`,
     });
   }
   for (const line of categoryBudgets(data, month)) {
     if (line.level === 'depasse') {
       alerts.push({
         level: 'danger',
-        message: `Budget « ${line.category.name} » dépassé de ${fmt(-(line.remaining ?? 0))}. Vous pouvez ajuster la limite si elle était trop basse.`,
+        message: `Budget « ${line.category.name} » dépassé de ${fmt(-(line.remaining ?? 0))}. Tu peux ajuster la limite si elle était trop basse.`,
       });
     } else if (line.level === 'alerte') {
       alerts.push({

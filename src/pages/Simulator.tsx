@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { useApp } from '../state/AppState';
 import { simulatePurchase, VERDICT_LABELS } from '../lib/simulator';
 import { parseAmount } from '../lib/money';
-import { monthOf, ofMonth } from '../lib/dates';
 import { BUDGET_LEVEL_LABELS } from '../lib/budget';
 import { Card, CategoryOptions, MoneyField, Notice, PageHeader, SelectField, Stat } from '../components/ui';
 import { Icon } from '../components/Icon';
@@ -24,10 +23,7 @@ export function Simulator() {
 
   return (
     <div className="page">
-      <PageHeader
-        title="Simulateur d’achat"
-        description={`Avant de craquer, regardez l’effet d’un achat sur votre budget ${ofMonth(monthOf(today))}.`}
-      />
+      <PageHeader title="Simulateur d’achat" description="Teste un achat avant de payer." />
       <Card title="Achat envisagé">
         <form className="form-row" onSubmit={(e) => e.preventDefault()} noValidate>
           <MoneyField label="Montant de l’achat" value={amount} onChange={(e) => setAmount(e.target.value)} error={error} />
@@ -39,7 +35,7 @@ export function Simulator() {
       </Card>
 
       {!result ? (
-        <p className="muted">Saisissez un montant pour voir le résultat. Rien n’est enregistré : c’est une simple simulation.</p>
+        <p className="muted">Saisis un montant pour voir le résultat. Rien n’est enregistré : c’est une simple simulation.</p>
       ) : (
         <div aria-live="polite" className="stack">
           <section className={`verdict verdict-${result.verdict}`} aria-label="Appréciation">
@@ -56,11 +52,7 @@ export function Simulator() {
 
           <div className="stats-grid">
             <Stat label="Solde aujourd’hui" value={fmt(result.availableBefore)} detail="Le solde de « Mon compte »" />
-            <Stat
-              label="Solde restant après l’achat"
-              value={fmt(result.availableAfter)}
-              tone={result.availableAfter < 0 ? 'negatif' : 'positif'}
-            />
+            <Stat label="Solde restant après l’achat" value={fmt(result.availableAfter)} tone={result.availableAfter < 0 ? 'negatif' : 'positif'} />
             <Stat label="Reste à vivre par jour avant" value={result.dailyBefore === null ? '—' : fmt(result.dailyBefore)} />
             <Stat
               label="Nouveau reste à vivre par jour"
@@ -87,7 +79,7 @@ export function Simulator() {
             </Card>
             <Card title="Impact sur la catégorie" headingLevel={2}>
               {!result.category ? (
-                <p className="muted">Choisissez une catégorie pour vérifier son budget.</p>
+                <p className="muted">Choisis une catégorie pour vérifier son budget.</p>
               ) : result.category.budget === null ? (
                 <p className="muted">
                   Pas de limite pour « {result.category.name} ». Dépensé après l’achat : {fmt(result.category.spentAfter)}.
@@ -104,7 +96,7 @@ export function Simulator() {
             </Card>
           </div>
 
-          <Card title="Impact sur vos objectifs d’épargne">
+          <Card title="Impact sur tes objectifs d’épargne">
             {result.goals.length === 0 ? (
               <p className="muted">Aucun objectif en cours.</p>
             ) : (
@@ -128,10 +120,7 @@ export function Simulator() {
         </div>
       )}
 
-      <Notice>
-        Cette appréciation est une simple indication budgétaire calculée à partir de vos saisies. Ce n’est pas un conseil financier
-        professionnel.
-      </Notice>
+      <Notice>Simple indication tirée de tes saisies. Pas un conseil financier.</Notice>
     </div>
   );
 }

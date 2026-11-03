@@ -196,7 +196,7 @@ export type ValidationResult = { ok: true; data: AppData } | { ok: false; error:
 const FREQUENCIES: Frequency[] = ['hebdomadaire', 'mensuel', 'trimestriel', 'semestriel', 'annuel'];
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isStr = (v: unknown): v is string => typeof v === 'string';
-const COMPTES: AccountId[] = ['compte', 'carte-restaurant'];
+const COMPTES: AccountId[] = ['compte', 'carte-restaurant', 'izly'];
 const isAmount = (v: unknown): v is number => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0;
 const isOptDate = (v: unknown) => v === null || v === undefined || isValidISODate(v);
 const str = (v: unknown) => (isStr(v) ? v.slice(0, 500) : '');
@@ -426,7 +426,15 @@ export function validateData(input: unknown): ValidationResult {
         !COMPTES.includes(r.account as AccountId)
       )
         fail(`Ajustement de solde n° ${i + 1} invalide.`);
-      return { id: checkId(r.id, 'Ajustement', i), account: r.account as AccountId, date: r.date, amount: r.amount, note: str(r.note) };
+      return {
+        id: checkId(r.id, 'Ajustement', i),
+        account: r.account as AccountId,
+        date: r.date,
+        amount: r.amount,
+        note: str(r.note),
+        ...(r.recharge === true ? { recharge: true } : {}),
+        ...(typeof r.lien === 'string' && r.lien ? { lien: r.lien.slice(0, 60) } : {}),
+      };
     });
 
     return {
@@ -522,7 +530,7 @@ export function exportCSV(data: AppData, today: ISODate): string {
       centsToInput(signed),
       t.status === 'paye' ? 'Payé' : t.status === 'a_venir' ? 'À venir' : '',
       t.paymentMethod,
-      t.account === 'carte-restaurant' ? 'Carte restaurant' : 'Compte bancaire',
+      t.account === 'carte-restaurant' ? 'Carte restaurant' : t.account === 'izly' ? 'Izly' : 'Compte bancaire',
       t.note,
     ]
       .map(csvCell)

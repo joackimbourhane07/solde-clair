@@ -50,7 +50,7 @@ export function balanceForecast(data: AppData, today: ISODate, horizons: number[
   const passes = monthTransactions(data, month, today).filter((t) => t.date <= today);
   // Disponible du jour : report des mois précédents (s'il est actif) + mouvements du mois jusqu'à aujourd'hui
   const carryOver = carryOverInto(data, month, today);
-  // Point de départ : le solde de « Mon compte » (comme « Il vous reste » du tableau de bord),
+  // Point de départ : le solde de « Mon compte » (comme « Il te reste » du tableau de bord),
   // moins les charges passées pas encore payées (elles restent à prélever).
   const enRetard = transactionsInRange(data, earliestDate(data, today), today, today).filter((t) => t.type === 'charge' && t.status === 'a_venir');
   const start = resteAVivre(data, today).solde - sum(enRetard.map((t) => t.amount));

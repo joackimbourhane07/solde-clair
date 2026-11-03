@@ -213,7 +213,7 @@ export function IncomeExpenseChart({ title, points }: { title: string; points: {
           width={width}
           height={height}
           role="img"
-          aria-label={`${title}. Utilisez les flèches pour parcourir les mois.`}
+          aria-label={`${title}. Utilise les flèches pour parcourir les mois.`}
           tabIndex={0}
           onKeyDown={onKeyDown}
           onBlur={() => setActive(null)}
@@ -324,7 +324,7 @@ export function LineChart({
             width={width}
             height={height}
             role="img"
-            aria-label={`${title}. Dernière valeur : ${last ? fmt(last.value) : ''}. Utilisez les flèches pour parcourir les points.`}
+            aria-label={`${title}. Dernière valeur : ${last ? fmt(last.value) : ''}. Utilise les flèches pour parcourir les points.`}
             tabIndex={0}
             onKeyDown={onKeyDown}
             onPointerMove={onMove}

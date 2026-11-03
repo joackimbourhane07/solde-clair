@@ -69,7 +69,7 @@ export function IllustrationPrincipale() {
         <path d="M400 102c1.5 2 4 3 7 3 4 0 6.5-2 6.5-5 0-6-12.5-3.5-12.5-8.5 0-2 2-3.5 5.5-3.5 2.5 0 4.5 1 5.5 2.5" className="il-trait-blanc" />
         <rect x="424" y="90" width="58" height="10" rx="5" className="il-gris" />
         <text x="398" y="146" className="il-texte il-texte-petit">
-          Il vous reste
+          Il te reste
         </text>
         <text x="396" y="192" className="il-texte il-texte-montant">
           425 €

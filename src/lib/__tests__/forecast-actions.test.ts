@@ -54,9 +54,9 @@ describe('actions utiles du tableau de bord', () => {
   it('propose les actions par priorité : limite dépassée, épargne, sauvegarde', () => {
     const a = suggestedActions(fixture(), TODAY, fmt);
     expect(a.map((x) => x.id)).toEqual(['limite:c-alim:2026-11', 'epargne:2026-11', 'sauvegarde:2026-11']);
-    expect(a[0].title).toBe('Votre budget « Alimentation » est dépassé de 8,00 €.');
-    expect(a[0].detail).toBe('Vous pouvez consulter les dépenses concernées ou ajuster cette limite pour le mois.');
-    expect(a[1].title).toBe('Il vous manque 50,00 € pour respecter votre objectif d’épargne du mois.');
+    expect(a[0].title).toBe('Ton budget « Alimentation » est dépassé de 8,00 €.');
+    expect(a[0].detail).toBe('Tu peux consulter les dépenses concernées ou ajuster cette limite pour le mois.');
+    expect(a[1].title).toBe('Il te manque 50,00 € pour respecter ton objectif d’épargne du mois.');
   });
 
   it('une action ignorée disparaît ; une sauvegarde récente supprime le rappel', () => {

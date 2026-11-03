@@ -21,7 +21,7 @@ export function FixedCharges() {
     <div className="page">
       <PageHeader
         title="Charges fixes"
-        description="Les dépenses qui reviennent régulièrement : loyer, abonnements, assurances…"
+        description="Loyer, abonnements, assurances…"
         actions={
           <Button variant="primaire" icon="plus" onClick={() => setEditing('new')}>
             Ajouter une charge
@@ -45,7 +45,7 @@ export function FixedCharges() {
               </Button>
             }
           >
-            Ajoutez votre loyer, votre forfait téléphone, vos assurances…
+            Ajoute ton loyer, ton forfait téléphone, tes assurances…
           </EmptyState>
         ) : (
           <ul className="item-list">
@@ -86,9 +86,7 @@ export function FixedCharges() {
             })}
           </ul>
         )}
-        <p className="field-hint">
-          Par défaut, une charge est considérée comme payée une fois sa date passée. Vous pouvez changer son statut à tout moment.
-        </p>
+        <p className="field-hint">Une charge passe à « payée » après sa date. Modifiable à tout moment.</p>
       </Card>
 
       {inactive.length > 0 && (
@@ -130,7 +128,7 @@ export function FixedCharges() {
       {toDelete && (
         <ConfirmDialog
           title="Supprimer cette charge fixe ?"
-          message={`« ${toDelete.name} » sera supprimée de tous les mois, y compris les mois passés. Pour l’arrêter seulement à partir d’une date, modifiez-la et indiquez une date de fin.`}
+          message={`« ${toDelete.name} » sera supprimée de tous les mois, y compris les mois passés. Pour l’arrêter seulement à partir d’une date, modifie-la et indique une date de fin.`}
           onCancel={() => setToDelete(null)}
           onConfirm={() => {
             const supprimee = toDelete;

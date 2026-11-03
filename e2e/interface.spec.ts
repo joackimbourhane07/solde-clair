@@ -19,7 +19,7 @@ for (const format of FORMATS) {
       const erreurs = await preparer(page);
       // Présentation (nouveau visiteur)
       await page.goto('./');
-      await expect(page.getByRole('heading', { level: 1, name: 'Votre budget devient enfin clair.' })).toBeVisible();
+      await expect(page.getByRole('heading', { level: 1, name: 'Ton budget devient enfin clair.' })).toBeVisible();
       await finAnimations(page);
       if (theme === 'dark') await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'dark'));
       expect(await problemesDeMiseEnPage(page), 'Mise en page de la présentation').toEqual([]);
@@ -93,7 +93,7 @@ test('configuration sur mobile : chaque montant du récapitulatif tient sur une 
   await page.getByRole('button', { name: /Continuer/ }).click();
   await page.getByLabel('Montant mensuel').nth(0).fill('1 250,00');
   for (let i = 0; i < 2; i++) await page.getByRole('button', { name: /Continuer/ }).click();
-  await page.getByLabel('Estimation de vos dépenses variables par mois').fill('1 250,00');
+  await page.getByLabel('Estimation de tes dépenses variables par mois').fill('1 250,00');
   await page.getByLabel('Objectif d’épargne mensuel').fill('250');
   for (let i = 0; i < 2; i++) await page.getByRole('button', { name: /Continuer/ }).click();
   await expect(page.getByRole('heading', { name: 'Tout est prêt !' })).toBeVisible();

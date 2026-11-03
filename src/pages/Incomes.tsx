@@ -81,7 +81,7 @@ export function Incomes() {
     <div className="page">
       <PageHeader
         title="Revenus"
-        description="Salaire, bourse, aides, ventes… tout ce qui entre sur votre compte."
+        description="Salaire, bourse, aides : tout ce qui entre."
         actions={
           <Button variant="primaire" icon="plus" onClick={() => setEditing('new')}>
             Ajouter un revenu
@@ -125,10 +125,8 @@ export function Incomes() {
       )}
       {attendusDuMois.length > 0 && (
         <p className="muted petit-texte">
-          {attendusDuMois.length === 1 ? `« ${attendusDuMois[0].name} » est attendu` : `${attendusDuMois.length} revenus sont attendus`} ce mois-ci :
-          pas compté
-          {attendusDuMois.length > 1 ? 's' : ''} tant que vous ne {attendusDuMois.length > 1 ? 'les' : 'l’'}avez pas confirmé
-          {attendusDuMois.length > 1 ? 's' : ''}.{' '}
+          {attendusDuMois.length === 1 ? `« ${attendusDuMois[0].name} » attendu` : `${attendusDuMois.length} revenus attendus`} : pas comptés avant
+          confirmation.{' '}
           <Link to="/plan" className="link">
             Mon plan
           </Link>
@@ -137,7 +135,7 @@ export function Incomes() {
       {sansDernier.map((inc) => (
         <Notice key={inc.id} tone="attention">
           « {inc.name} » commence le {formatDate(inc.date)} : reçu à partir du {jour}, il compte pour {monthLabel(addMonths(month, 1))}.{' '}
-          {monthLabel(month)} n’a donc pas ce revenu. Vous l’avez déjà reçu le mois dernier ?{' '}
+          {monthLabel(month)} n’a donc pas ce revenu. Tu l’as déjà reçu le mois dernier ?{' '}
           <button type="button" className="lien-bouton" onClick={() => setDernierPour(inc)}>
             Indiquer le dernier versement reçu
           </button>
@@ -164,7 +162,7 @@ export function Incomes() {
               </Button>
             }
           >
-            Ajoutez votre salaire, votre bourse ou vos aides.
+            Ajoute ton salaire, ta bourse ou tes aides.
           </EmptyState>
         ) : (
           <ul className="item-list">
@@ -248,7 +246,7 @@ export function Incomes() {
           title="Supprimer ce revenu ?"
           message={
             toDelete.recurring
-              ? `« ${toDelete.name} » sera supprimé de tous les mois, y compris les mois passés. Pour l’arrêter seulement à partir d’une date, modifiez-le et indiquez une date de fin.`
+              ? `« ${toDelete.name} » sera supprimé de tous les mois, y compris les mois passés. Pour l’arrêter seulement à partir d’une date, modifie-le et indique une date de fin.`
               : `« ${toDelete.name} » (${fmt(toDelete.amount)}) sera définitivement supprimé.`
           }
           onCancel={() => setToDelete(null)}

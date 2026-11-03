@@ -117,18 +117,19 @@ describe('paramètres : revenus de fin de mois', () => {
 describe('Poksy sur la page d’accueil', () => {
   it('nouveau visiteur : Poksy répond aux questions de présentation, sans bouton vers des pages internes', async () => {
     const user = renderApp(emptyData(), '/');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Votre budget devient enfin clair.' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Ton budget devient enfin clair.' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Ouvrir l’aide de Poksy' }));
     const fenetre = await screen.findByRole('dialog', { name: 'Poksy' });
     const page = within(fenetre).getByRole('region', { name: 'Sur cette page' });
-    expect(within(page).getAllByRole('button').map((b) => norm(b.textContent))).toEqual([
-      'Qu’est-ce que SoldeClair ?',
-      'Est-ce gratuit ?',
-      'Où sont enregistrées mes données ?',
-    ]);
+    expect(
+      within(page)
+        .getAllByRole('button')
+        .map((b) => norm(b.textContent)),
+    ).toEqual(['Qu’est-ce que SoldeClair ?', 'Est-ce gratuit ?', 'Où sont enregistrées mes données ?']);
     await user.click(within(page).getByRole('button', { name: /Est-ce gratuit/ }));
     expect(norm(within(fenetre).getByRole('log').textContent)).toContain('Oui, SoldeClair est entièrement gratuit');
-    await user.click(within(fenetre).getByRole('button', { name: /Comment ajuster mon solde/ }));
+    await user.click(within(fenetre).getByRole('button', { name: 'Plus de questions' }));
+    await user.click(within(fenetre).getAllByRole('button', { name: /Comment ajuster mon solde/ })[0]);
     expect(within(fenetre).queryByRole('button', { name: 'Ajuster mon solde' })).not.toBeInTheDocument();
   });
 });

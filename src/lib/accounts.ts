@@ -1,5 +1,5 @@
 import type { AccountId, AppData, Cents, ISODate, Transaction } from '../types';
-import { earliestDate, isCarteRestaurant, signedAmount, transactionsInRange } from './budget';
+import { earliestDate, isCarteRestaurant, isIzly, signedAmount, transactionsInRange } from './budget';
 import { addDays, daysRemainingInMonth, monthOf } from './dates';
 import { divideCents, sum } from './money';
 
@@ -13,7 +13,18 @@ export type FiltreCompte = AccountId | 'tout';
 export const ACCOUNT_LABELS: Record<AccountId, string> = {
   compte: 'Compte bancaire',
   'carte-restaurant': 'Carte restaurant',
+  izly: 'Izly',
 };
+
+/** Izly est-il utilisé (dépense payée avec Izly, recharge ou ajustement) ? */
+export function usesIzly(data: AppData): boolean {
+  return data.expenses.some((e) => isIzly(e.paymentMethod)) || (data.adjustments ?? []).some((a) => a.account === 'izly');
+}
+
+/** Comptes affichés : le compte bancaire, puis la carte restaurant et Izly s'ils servent. */
+export function comptesUtilises(data: AppData): AccountId[] {
+  return ['compte', ...(usesCarteRestaurant(data) ? (['carte-restaurant'] as const) : []), ...(usesIzly(data) ? (['izly'] as const) : [])];
+}
 
 /**
  * La carte restaurant est-elle utilisée (revenu, paiement ou ajustement) ?
@@ -22,7 +33,9 @@ export const ACCOUNT_LABELS: Record<AccountId, string> = {
 export function usesCarteRestaurant(data: AppData): boolean {
   const categorieCarte = new Set(data.categories.filter((c) => c.kind === 'income' && isCarteRestaurant(c.name)).map((c) => c.id));
   return (
-    data.incomes.some((i) => (i.account ?? (categorieCarte.has(i.categoryId) || isCarteRestaurant(i.name) ? 'carte-restaurant' : 'compte')) === 'carte-restaurant') ||
+    data.incomes.some(
+      (i) => (i.account ?? (categorieCarte.has(i.categoryId) || isCarteRestaurant(i.name) ? 'carte-restaurant' : 'compte')) === 'carte-restaurant',
+    ) ||
     data.expenses.some((e) => isCarteRestaurant(e.paymentMethod)) ||
     (data.adjustments ?? []).some((a) => a.account === 'carte-restaurant')
   );
@@ -100,7 +113,7 @@ export interface ResteAVivre {
 }
 
 /**
- * « Il vous reste » du tableau de bord : exactement le solde de « Mon compte » (tout ce qui est arrivé
+ * « Il te reste » du tableau de bord : exactement le solde de « Mon compte » (tout ce qui est arrivé
  * moins tout ce qui est parti, depuis la première saisie). Les opérations prévues comptent le jour où elles arrivent.
  */
 export function resteAVivre(data: AppData, today: ISODate): ResteAVivre {

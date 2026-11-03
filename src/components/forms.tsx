@@ -19,12 +19,13 @@ import { MODELES_SUPPORT, SUPPORT_KINDS } from '../lib/plan';
 import { useApp } from '../state/AppState';
 import { centsToInput, parseAmount } from '../lib/money';
 import { isValidISODate, monthLabel, monthOf } from '../lib/dates';
-import { frequentCategories, isCarteRestaurant, jourBascule, moisDuRevenu } from '../lib/budget';
+import { frequentCategories, isCarteRestaurant, isIzly, jourBascule, moisDuRevenu } from '../lib/budget';
 import { accountBalance, usesCarteRestaurant } from '../lib/accounts';
 import { newId } from '../lib/id';
 import { FREQUENCY_LABELS } from '../lib/recurrence';
-import { makeCategory, PAYMENT_METHODS } from '../lib/categories';
+import { CATEGORIE_IZLY, DEPENSES_CAMPUS, makeCategory, PAYMENT_METHODS } from '../lib/categories';
 import { GOAL_EXAMPLES, GOAL_THEMES, PRIORITY_LABELS, THEME_LABELS, themeFromName } from '../lib/goals';
+import { Icon } from './Icon';
 import { IllustrationObjectif } from './objectifs/IllustrationObjectif';
 import { Button, CheckboxField, IconButton, MoneyField, SelectField, TextAreaField, TextField } from './ui';
 
@@ -37,18 +38,18 @@ const MAX_AMOUNT = 100_000_000_00; // 100 millions : garde-fou contre les fautes
 /** Valide un montant saisi. Renvoie [centimes, message d'erreur]. */
 export function checkAmount(value: string, { allowZero = false, required = true } = {}): [number | null, string | null] {
   if (value.trim() === '') {
-    return required ? [null, 'Indiquez un montant, par exemple 12,50.'] : [0, null];
+    return required ? [null, 'Indique un montant, par exemple 12,50.'] : [0, null];
   }
   const cents = parseAmount(value);
-  if (cents === null) return [null, 'Montant non reconnu. Utilisez des chiffres, par exemple 12,50.'];
+  if (cents === null) return [null, 'Montant non reconnu. Utilise des chiffres, par exemple 12,50.'];
   if (cents < 0) return [null, 'Le montant ne peut pas être négatif.'];
   if (!allowZero && cents === 0) return [null, 'Le montant doit être supérieur à 0.'];
-  if (cents > MAX_AMOUNT) return [null, 'Ce montant semble trop élevé. Vérifiez la saisie.'];
+  if (cents > MAX_AMOUNT) return [null, 'Ce montant semble trop élevé. Vérifie la saisie.'];
   return [cents, null];
 }
 
 function checkDate(value: string, required = true): string | null {
-  if (!value) return required ? 'Indiquez une date.' : null;
+  if (!value) return required ? 'Indique une date.' : null;
   return isValidISODate(value) ? null : 'Date invalide.';
 }
 
@@ -121,8 +122,8 @@ function useChoixCategorie(kind: CategoryKind, initialId?: string | null) {
   const [categoryId, setCategoryId] = useState<string>(initialId ?? cats[0]?.id ?? NOUVELLE);
   const [nouvelle, setNouvelle] = useState('');
   const erreurs = (): Errors => ({
-    categoryId: categoryId === NOUVELLE || categoryId ? null : 'Choisissez une catégorie.',
-    nouvelleCategorie: categoryId === NOUVELLE && !nouvelle.trim() ? 'Indiquez le nom de la nouvelle catégorie.' : null,
+    categoryId: categoryId === NOUVELLE || categoryId ? null : 'Choisis une catégorie.',
+    nouvelleCategorie: categoryId === NOUVELLE && !nouvelle.trim() ? 'Indique le nom de la nouvelle catégorie.' : null,
   });
   /** Une fois le formulaire valide : crée la catégorie si besoin et renvoie son identifiant. */
   const resoudre = (): string => {
@@ -155,7 +156,7 @@ function ChampCategorie({ choix, errors }: { choix: ReturnType<typeof useChoixCa
           onChange={(e) => choix.setNouvelle(e.target.value)}
           error={errors.nouvelleCategorie}
           maxLength={60}
-          hint={choix.cats.length === 0 ? 'Aucune catégorie de ce type pour l’instant : créez-la ici.' : 'Elle sera ajoutée à vos catégories.'}
+          hint={choix.cats.length === 0 ? 'Aucune catégorie de ce type pour l’instant : crée-la ici.' : 'Elle sera ajoutée à tes catégories.'}
         />
       )}
     </>
@@ -172,12 +173,15 @@ export function ExpenseForm({
   onDone,
   onCancel,
   quick = false,
+  izly = false,
 }: {
   initial?: Expense;
   defaultDate: ISODate;
   onDone?: () => void;
   onCancel?: () => void;
   quick?: boolean;
+  /** Dépense payée avec Izly (raccourcis de campus, compte Izly). */
+  izly?: boolean;
 }) {
   const { data, dispatch, fmt, today } = useApp();
   const confirmer = useConfirmation();
@@ -189,7 +193,18 @@ export function ExpenseForm({
   const { categoryId, setCategoryId } = choix;
   const [date, setDate] = useState(initial?.date ?? defaultDate);
   const [description, setDescription] = useState(initial?.description ?? '');
-  const [paymentMethod, setPaymentMethod] = useState(initial?.paymentMethod ?? '');
+  const [paymentMethod, setPaymentMethod] = useState(initial?.paymentMethod ?? (izly ? 'Izly' : ''));
+  const avecIzly = isIzly(paymentMethod);
+  // Raccourci de campus : description + catégorie « Izly / CROUS » (créée si besoin)
+  const choisirCampus = (libelle: string) => {
+    setDescription(libelle);
+    const cat = data.categories.find((c) => c.kind === 'variable' && c.name === CATEGORIE_IZLY);
+    if (cat) choix.setCategoryId(cat.id);
+    else {
+      choix.setCategoryId('__nouvelle__');
+      choix.setNouvelle(CATEGORIE_IZLY);
+    }
+  };
   const [exceptionnelle, setExceptionnelle] = useState(initial?.exceptional ?? false);
   const [errors, setErrors] = useState<Errors>({});
 
@@ -228,6 +243,24 @@ export function ExpenseForm({
     <form onSubmit={submit} noValidate className={quick ? 'form-quick' : 'form'} aria-label={quick ? 'Ajout rapide d’une dépense' : undefined}>
       <div className={quick ? 'form-row' : 'form-grid'}>
         <MoneyField label="Montant" value={amount} onChange={(e) => setAmount(e.target.value)} error={errors.amount} required />
+        {avecIzly && (
+          <div className="chips chips-campus" role="group" aria-label="Dépense de campus">
+            {DEPENSES_CAMPUS.map((d) => (
+              <button
+                type="button"
+                key={d}
+                className={`chip chip-petit ${description === d ? 'chip-on' : ''}`}
+                aria-pressed={description === d}
+                onClick={() => choisirCampus(d)}
+              >
+                {d}
+              </button>
+            ))}
+            <p className="field-hint izly-mention">
+              <Icon name="campus" size={14} /> Suivi manuel, aucun accès à ton compte Izly.
+            </p>
+          </div>
+        )}
         {/* Montants rapides : un geste ajoute la somme au montant (aucune saisie au clavier nécessaire) */}
         <div className="chips chips-montants" role="group" aria-label="Ajouter rapidement au montant">
           {[500, 1000, 2000, 5000].map((c) => (
@@ -291,7 +324,7 @@ export function ExpenseForm({
           label="Dépense exceptionnelle (hors budget courant)"
           checked={exceptionnelle}
           onChange={(e) => setExceptionnelle(e.target.checked)}
-          hint="Voyage, gros achat… Elle reste dans votre solde, mais la projection de « Mon plan » la compte à part de vos dépenses courantes."
+          hint="Voyage, gros achat… Comptée à part dans « Mon plan »."
         />
       )}
       {quick ? (
@@ -385,7 +418,7 @@ export function IncomeForm({
     const [cents, amountError] = montantInconnu ? [0, null] : checkAmount(amount);
     const [max, maxError] = attendu && !inconnu && amountMax.trim() ? checkAmount(amountMax) : [null, null];
     const errs: Errors = {
-      name: name.trim() ? null : 'Donnez un nom à ce revenu (ex. : salaire).',
+      name: name.trim() ? null : 'Donne un nom à ce revenu (ex. : salaire).',
       amountMax:
         maxError ?? (max !== null && cents !== null && max < cents ? 'Le haut de la fourchette doit être supérieur au montant estimé.' : null),
       details: lignesLues.some((l) => (l.label && l.amount === null) || (!l.label && l.amount !== null))
@@ -489,8 +522,8 @@ export function IncomeForm({
         </div>
         <p className="field-hint">
           {attendu
-            ? 'Un revenu attendu (prime non confirmée, montant inconnu…) n’est compté nulle part tant que vous ne l’avez pas confirmé, sauf dans la projection optimiste de « Mon plan ».'
-            : 'Il est compté dans votre budget à sa date.'}
+            ? 'Un revenu attendu (prime non confirmée, montant inconnu…) n’est compté nulle part tant que tu ne l’as pas confirmé, sauf dans la projection optimiste de « Mon plan ».'
+            : 'Il est compté dans ton budget à sa date.'}
         </p>
       </fieldset>
       <div className="form-grid">
@@ -539,8 +572,8 @@ export function IncomeForm({
             error={errors.dernier}
             hint={
               jourBascule(data) !== null
-                ? `Vous avez déjà touché ce revenu (ex. : le salaire du 28 du mois dernier) ? Indiquez la date : il compte pour le mois en cours (reçu à partir du ${jourBascule(data)}, il compte pour le mois suivant), puis les versements s’enchaînent.`
-                : 'Vous avez déjà touché ce revenu ? Indiquez la date : les versements suivants s’enchaînent à partir de celle-ci.'
+                ? `Tu as déjà touché ce revenu (ex. : le salaire du 28 du mois dernier) ? Indique la date : il compte pour le mois en cours (reçu à partir du ${jourBascule(data)}, il compte pour le mois suivant), puis les versements s’enchaînent.`
+                : 'Tu as déjà touché ce revenu ? Indique la date : les versements suivants s’enchaînent à partir de celle-ci.'
             }
           />
         )}
@@ -557,7 +590,7 @@ export function IncomeForm({
               restaurant
             </label>
           </div>
-          <p className="field-hint">La carte restaurant a son propre solde dans l’onglet « Compte » ; le total de vos revenus les compte tous.</p>
+          <p className="field-hint">La carte restaurant a son propre solde dans l’onglet « Compte » ; le total de tes revenus les compte tous.</p>
         </fieldset>
       )}
       <fieldset className="fieldset">
@@ -592,7 +625,7 @@ export function IncomeForm({
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             error={errors.endDate}
-            hint="Laissez vide si le revenu continue."
+            hint="Laisse vide si le revenu continue."
           />
         </div>
       )}
@@ -601,7 +634,7 @@ export function IncomeForm({
           label="Mon solde réel indiqué dans « Mon compte » comprend déjà ce versement"
           checked={dejaDansSolde}
           onChange={(e) => setDejaDansSolde(e.target.checked)}
-          hint="Coché : SoldeClair ajoute une correction pour ne pas le compter deux fois dans votre solde."
+          hint="Coché : pas compté deux fois."
         />
       )}
       {attendu && (
@@ -693,7 +726,7 @@ export function ChargeForm({
     e.preventDefault();
     const [cents, amountError] = checkAmount(amount);
     const errs: Errors = {
-      name: name.trim() ? null : 'Donnez un nom à cette charge (ex. : loyer).',
+      name: name.trim() ? null : 'Donne un nom à cette charge (ex. : loyer).',
       amount: amountError,
       date: checkDate(date),
       ...choix.erreurs(),
@@ -732,7 +765,7 @@ export function ChargeForm({
           value={date}
           onChange={(e) => setDate(e.target.value)}
           error={errors.date}
-          hint="Première échéance. Les suivantes sont calculées automatiquement."
+          hint="Première échéance. Les suivantes sont automatiques."
         />
         <SelectField label="Fréquence" value={frequency} onChange={(e) => setFrequency(e.target.value as Frequency)}>
           {FREQUENCIES.map((f) => (
@@ -748,7 +781,7 @@ export function ChargeForm({
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
           error={errors.endDate}
-          hint="Laissez vide si la charge continue."
+          hint="Laisse vide si la charge continue."
         />
       </div>
       <TextAreaField label="Note" optional value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} />
@@ -793,7 +826,7 @@ export function GoalForm({
     const [ini, iniErr] = checkAmount(initialAmount, { allowZero: true, required: false });
     const [mon, monErr] = checkAmount(monthly, { allowZero: true, required: false });
     const errs: Errors = {
-      name: name.trim() ? null : 'Donnez un nom à votre objectif.',
+      name: name.trim() ? null : 'Donne un nom à ton objectif.',
       target: tErr,
       initialAmount: iniErr,
       monthly: monErr,
@@ -841,7 +874,7 @@ export function GoalForm({
           value={initialAmount}
           onChange={(e) => setInitialAmount(e.target.value)}
           error={errors.initialAmount}
-          hint="Ce que vous avez déjà mis de côté pour cet objectif."
+          hint="Ce que tu as déjà mis de côté pour cet objectif."
         />
         <MoneyField label="Contribution mensuelle prévue" value={monthly} onChange={(e) => setMonthly(e.target.value)} error={errors.monthly} />
         <TextField
@@ -863,10 +896,7 @@ export function GoalForm({
       {supports.length > 0 && (
         <fieldset className="fieldset">
           <legend>Suivre mes supports d’épargne</legend>
-          <p className="field-hint">
-            Cochés : l’avancement de l’objectif devient le total de ces supports (« tous supports confondus »), au lieu du montant déjà disponible et
-            des versements.
-          </p>
+          <p className="field-hint">Cochés : l’avancement devient le total de ces supports.</p>
           <div className="liste-cases">
             {supports.map((s) => (
               <CheckboxField
@@ -983,7 +1013,7 @@ export function DepositForm({
         <TextField label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} />
         <TextField label="Note" optional value={note} onChange={(e) => setNote(e.target.value)} maxLength={120} />
       </div>
-      <p className="field-hint">Ce montant est déduit de votre solde disponible du mois et ajouté à votre épargne.</p>
+      <p className="field-hint">Ce montant est déduit de ton solde disponible du mois et ajouté à ton épargne.</p>
       <FormActions onCancel={onCancel} submitLabel={initial ? 'Enregistrer' : 'Enregistrer le versement'} />
     </form>
   );
@@ -1045,7 +1075,7 @@ export function SupportForm({
     const [t, tErr] = checkAmount(target, { required: false, allowZero: true });
     const taux = lireTaux(rate);
     const errs: Errors = {
-      name: name.trim() ? null : 'Donnez un nom à ce support (ex. : Livret A).',
+      name: name.trim() ? null : 'Donne un nom à ce support (ex. : Livret A).',
       balance: bErr,
       balanceDate: checkDate(balanceDate),
       rate: taux === null ? 'Taux non reconnu. Exemple : 1,7' : null,
@@ -1108,7 +1138,7 @@ export function SupportForm({
           value={rate}
           onChange={(e) => setRate(e.target.value)}
           error={errors.rate}
-          hint="Indicatif : vérifiez le taux auprès de votre banque."
+          hint="Indicatif : vérifie le taux auprès de ta banque."
         />
         <MoneyField label="Plafond de versements" optional value={ceiling} onChange={(e) => setCeiling(e.target.value)} error={errors.ceiling} />
         <MoneyField
@@ -1117,7 +1147,7 @@ export function SupportForm({
           value={target}
           onChange={(e) => setTarget(e.target.value)}
           error={errors.target}
-          hint="Votre répartition cible (ex. : 4 100 € sur le PEL)."
+          hint="Ta répartition cible (ex. : 4 100 € sur le PEL)."
         />
       </div>
       <fieldset className="fieldset">
@@ -1177,7 +1207,7 @@ export function HoldForm({
     e.preventDefault();
     const [cents, amountError] = checkAmount(amount);
     const errs: Errors = {
-      label: label.trim() ? null : 'Donnez un nom (ex. : dépôt de garantie).',
+      label: label.trim() ? null : 'Donne un nom (ex. : dépôt de garantie).',
       amount: amountError,
       start: checkDate(start),
       end: checkDate(end, false) ?? (end && end < start ? 'La date de restitution doit suivre la date de blocage.' : null),
@@ -1198,16 +1228,13 @@ export function HoldForm({
         note: note.trim(),
       },
     });
-    notify(initial ? 'Somme bloquée modifiée.' : 'Somme bloquée enregistrée : ce n’est pas une dépense, votre solde ne change pas.');
+    notify(initial ? 'Somme bloquée modifiée.' : 'Somme bloquée enregistrée : ce n’est pas une dépense, ton solde ne change pas.');
     onDone();
   };
 
   return (
     <form onSubmit={submit} noValidate className="form">
-      <p className="field-hint">
-        Une caution ou un dépôt de garantie bloque de l’argent sans le dépenser : il n’est pas compté comme une dépense, mais il n’est pas disponible
-        jusqu’à sa restitution.
-      </p>
+      <p className="field-hint">Une caution bloque de l’argent sans le dépenser. Indisponible jusqu’au remboursement.</p>
       <div className="form-grid">
         <TextField
           label="Nom"

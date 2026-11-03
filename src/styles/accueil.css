@@ -8,6 +8,7 @@
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  min-height: 100dvh;
   --il-ink: var(--text);
 }
 
@@ -96,6 +97,41 @@
   flex-direction: column;
   align-items: center;
   gap: 20px;
+}
+
+/* Téléphone en portrait : l'introduction occupe le premier écran et reste centrée (svh : stable quand la barre du navigateur bouge) */
+@media (max-width: 899px) and (orientation: portrait) {
+  .accueil-intro {
+    min-height: min(calc(100svh - 64px), 720px);
+    justify-content: center;
+    padding-top: 32px;
+  }
+}
+
+/* Paysage sur téléphone (peu de hauteur) : titre plus petit, introduction centrée, tout tient à l'écran */
+@media (max-height: 500px) and (orientation: landscape) {
+  .accueil-intro {
+    min-height: calc(100svh - 64px);
+    justify-content: center;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    gap: 12px;
+  }
+
+  .accueil h1 {
+    font-size: clamp(1.8rem, 10svh, 2.8rem);
+    max-width: 22ch;
+  }
+
+  .accueil-chapeau {
+    font-size: 1rem;
+  }
+
+  .accueil-intro .btn-grand {
+    min-height: 44px;
+    padding: 8px 18px;
+    font-size: 1rem;
+  }
 }
 
 .accueil-surtitre,

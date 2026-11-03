@@ -32,14 +32,12 @@ const phrases = (t: string) => t.split(/(?<=[.!?])\s+(?=[A-ZÀ-ÖÙ-Ý«0-9])/).
 
 describe('Poksy : identité et textes', () => {
   it('textes de présentation, de bienvenue et de confidentialité', () => {
-    expect(PRESENTATION).toBe('Poksy vous aide à comprendre votre budget, simplement.');
+    expect(PRESENTATION).toBe('Poksy t’aide à comprendre ton budget, simplement.');
     expect(MESSAGE_PREMIERE_VISITE).toBe('Bonjour, je suis Poksy. Une question sur SoldeClair ?');
-    expect(MESSAGE_BIENVENUE).toBe(
-      'Bonjour, je suis Poksy.\nJe peux vous aider à comprendre votre budget ou à utiliser SoldeClair. Que souhaitez-vous savoir ?',
-    );
-    expect(MENTION).toBe('Poksy fonctionne sur votre appareil et ne remplace pas un conseiller financier professionnel.');
+    expect(MESSAGE_BIENVENUE).toBe('Bonjour, je suis Poksy.\nJe peux t’aider à comprendre ton budget ou à utiliser SoldeClair. Que veux-tu savoir ?');
+    expect(MENTION).toBe('Poksy fonctionne sur ton appareil et ne remplace pas un conseiller financier professionnel.');
     expect(REPONSE_INTROUVABLE).toBe(
-      'Je n’ai pas encore trouvé la réponse exacte. Vous pouvez choisir une question proposée ou consulter la rubrique correspondante dans SoldeClair.',
+      'Je n’ai pas encore trouvé la réponse exacte. Tu peux choisir une question proposée ou consulter la rubrique correspondante dans SoldeClair.',
     );
   });
 
@@ -72,9 +70,9 @@ describe('Poksy : questions proposées', () => {
     ]);
   });
 
-  it('« Voir plus de questions » : huit rubriques et toutes les questions demandées', () => {
+  it('« Plus de questions » : huit rubriques et toutes les questions demandées', () => {
     expect(RUBRIQUES.map((r) => `${r.titre} (${r.questions.length})`)).toEqual([
-      'Mon compte (5)',
+      'Mon compte (6)',
       'Revenus et dépenses (6)',
       'Budget (6)',
       'Épargne (4)',
@@ -102,11 +100,19 @@ describe('Poksy : questions proposées', () => {
 
   it('questions adaptées à la page ouverte', () => {
     const libelles = (p: PageKey) => QUESTIONS_PAR_PAGE[p]?.map((q) => q.libelle);
-    expect(libelles('compte')).toEqual(['Comment ajuster mon solde ?', 'Pourquoi mon solde est-il différent ?', 'Pourquoi la carte restaurant est-elle séparée ?']);
+    expect(libelles('compte')).toEqual([
+      'Comment ajuster mon solde ?',
+      'Pourquoi mon solde est-il différent ?',
+      'Pourquoi la carte restaurant est-elle séparée ?',
+    ]);
     expect(libelles('depenses')).toEqual(['Comment ajouter une dépense ?', 'Comment modifier une opération ?', 'Comment choisir une catégorie ?']);
     expect(libelles('budgets')).toEqual(['Comment fixer une limite ?', 'Que signifient les alertes ?', 'Comment modifier un budget ?']);
     expect(libelles('objectifs')).toEqual(['Comment créer un objectif ?', 'Comment ajouter un versement ?', 'Comment est calculée la progression ?']);
-    expect(libelles('parametres')).toEqual(['Comment sauvegarder mes données ?', 'Où sont enregistrées mes données ?', 'Comment supprimer mes données ?']);
+    expect(libelles('parametres')).toEqual([
+      'Comment sauvegarder mes données ?',
+      'Où sont enregistrées mes données ?',
+      'Comment supprimer mes données ?',
+    ]);
     expect(QUESTIONS_PAR_PAGE.autre).toBeUndefined();
   });
 
@@ -165,11 +171,9 @@ describe('Poksy : recherche par mots-clés', () => {
     expect(rechercher('?!').fiche).toBeNull();
   });
 
-  it('« Puis-je acheter cet article ? » : Poksy ne décide pas à votre place', () => {
+  it('« Puis-je acheter cet article ? » : Poksy ne décide pas à ta place', () => {
     const f = rechercher('Puis-je acheter cet article ?').fiche!;
-    expect(rep(f)).toBe(
-      'Poksy ne peut pas décider à votre place. Utilisez le simulateur d’achat pour voir l’impact sur votre solde, votre disponible quotidien et votre objectif d’épargne. Le résultat reste une indication budgétaire.',
-    );
+    expect(rep(f)).toBe('Poksy ne décide pas à ta place. Le simulateur montre l’effet sur ton solde et ton épargne. Ce n’est qu’une indication.');
     expect(f.action).toBe('simulateur');
   });
 
@@ -192,29 +196,29 @@ describe('Poksy : recherche par mots-clés', () => {
 });
 
 describe('Poksy : réponses', () => {
-  it('exemples demandés, mot pour mot', () => {
-    expect(rep(fiche('ajouter-depense'))).toContain(
-      'Appuyez sur le bouton « + », saisissez le montant, choisissez une catégorie puis validez.',
+  it('réponses courtes : une action, puis le résultat', () => {
+    expect(rep(fiche('ajouter-depense'))).toBe(
+      'Appuie sur « + », saisis le montant, choisis une catégorie, valide. Ton disponible est recalculé aussitôt.',
     );
     expect(rep(fiche('fixe-variable'))).toBe(
-      'Une charge fixe revient régulièrement avec un montant généralement prévisible, comme le loyer ou un abonnement. Une dépense variable peut changer chaque mois, comme les courses, le carburant ou les loisirs.',
+      'Une charge fixe revient chaque mois : loyer, abonnement. Une dépense variable change : courses, sorties.',
     );
-    expect(rep(fiche('ajuster-solde'))).toBe(
-      'Ouvrez la page « Mon compte », puis appuyez sur « Ajuster le solde ». Indiquez le montant réellement affiché par votre banque. SoldeClair enregistre une correction datée sans supprimer vos anciennes opérations.',
-    );
-    expect(rep(fiche('donnees-ou'))).toBe(
-      'Vos données sont enregistrées uniquement dans le navigateur de l’appareil utilisé. Elles ne sont pas envoyées à une banque ni stockées dans un compte SoldeClair. Pensez à exporter régulièrement une sauvegarde.',
-    );
-    expect(rep(fiche('reste-a-vivre'))).toContain('Appuyez sur « Comment est-ce calculé ? » dans le tableau de bord');
+    expect(rep(fiche('ajuster-solde'))).toContain('Indique le montant réellement affiché par ta banque.');
+    expect(rep(fiche('donnees-ou'))).toContain('Rien n’est envoyé.');
+    expect(rep(fiche('reste-a-vivre'))).toContain('Appuie sur « Comment est-ce calculé ? » dans le tableau de bord');
   });
 
   it('les chiffres réels complètent la réponse, sans jamais être inventés', () => {
-    expect(rep(fiche('reste-a-vivre'), CONTEXTE_COMPLET)).toContain('Aujourd’hui, il vous reste 1 407 €.');
-    expect(rep(fiche('reste-a-vivre'), { resteAVivre: '− 52 €', resteNegatif: true })).toContain('votre solde est de − 52 €');
-    expect(rep(fiche('reste-a-vivre'), {})).not.toContain('Aujourd’hui, il vous reste');
+    expect(rep(fiche('reste-a-vivre'), CONTEXTE_COMPLET)).toContain('Aujourd’hui, il te reste 1 407 €.');
+    expect(rep(fiche('reste-a-vivre'), { resteAVivre: '− 52 €', resteNegatif: true })).toContain('ton solde est de − 52 €');
+    expect(rep(fiche('reste-a-vivre'), {})).not.toContain('Aujourd’hui, il te reste');
     expect(rep(fiche('par-jour'), CONTEXTE_COMPLET)).toContain('environ 74 € par jour pendant 19 jours');
     expect(rep(fiche('solde-banque'), CONTEXTE_COMPLET)).toContain('Aucun solde réel n’a encore été indiqué.');
     expect(rep(fiche('solde-banque'), { ajustementFait: true })).not.toContain('Aucun solde réel');
+  });
+
+  it('réponses courtes : 240 caractères au plus (hors chiffres ajoutés)', () => {
+    for (const f of FICHES) expect(reponseDe(f, {}).length, f.id).toBeLessThanOrEqual(240);
   });
 
   it('de une à quatre phrases, en français simple', () => {
@@ -229,16 +233,16 @@ describe('Poksy : réponses', () => {
 
   it('jamais culpabilisante, jamais de conseil financier, jamais de prétention à être une IA', () => {
     const interdits = [
-      /gérez mal/i,
+      /gère mal/i,
       /ne devriez jamais/i,
-      /vous devez investir/i,
-      /prenez un crédit/i,
+      /tu dois investir/i,
+      /prends un crédit/i,
       /situation est mauvaise/i,
       /je suis une (intelligence artificielle|IA)/i,
       /\bje suis (une banque|un conseiller|un comptable)/i,
     ];
     for (const f of FICHES) for (const motif of interdits) expect(rep(f, CONTEXTE_COMPLET), f.id).not.toMatch(motif);
-    expect(rep(fiche('qui-es-tu'))).toContain('je ne suis pas une intelligence artificielle');
+    expect(rep(fiche('qui-es-tu'))).toContain('Je ne suis pas une intelligence artificielle.');
   });
 
   it('ne demande jamais de données bancaires', () => {
@@ -250,7 +254,7 @@ describe('Poksy : réponses', () => {
   });
 
   it('typographie française à l’affichage', () => {
-    expect(typographie('Que souhaitez-vous savoir ?')).toBe('Que souhaitez-vous savoir ?');
+    expect(typographie('Que veux-tu savoir ?')).toBe('Que veux-tu savoir ?');
     expect(typographie('« Mon compte »')).toBe('« Mon compte »');
   });
 });

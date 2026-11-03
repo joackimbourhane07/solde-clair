@@ -208,7 +208,7 @@ export function Poksy({
             </span>
             <p className="poksy-bulle-identite">
               <span className="poksy-bulle-nom">Poksy</span>
-              <span className="poksy-bulle-role">Votre guide SoldeClair</span>
+              <span className="poksy-bulle-role">Ton guide SoldeClair</span>
             </p>
             <button type="button" className="poksy-bulle-fermer" aria-label="Fermer le message de Poksy" onClick={masquerBulle}>
               <Icon name="close" size={18} />

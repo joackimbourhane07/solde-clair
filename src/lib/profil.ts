@@ -104,10 +104,8 @@ export const REVENUS_ATTENDUS_SUGGERES: Record<ProfileType, SuggestionRevenu[]> 
       aide: 'En fin de contrat : congés non pris, prorata de 13e mois éventuel. Montant à estimer en fourchette.',
     },
   ],
-  salarie: [TREIZIEME, { nom: 'Prime annuelle', mois: null, aide: 'Prime d’objectifs, d’ancienneté… selon votre contrat.' }, PPV, PARTICIPATION],
-  independant: [
-    { nom: 'Facture en attente', mois: null, aide: 'Une facture émise mais pas encore payée : comptez-la seulement à son encaissement.' },
-  ],
+  salarie: [TREIZIEME, { nom: 'Prime annuelle', mois: null, aide: 'Prime d’objectifs, d’ancienneté… selon ton contrat.' }, PPV, PARTICIPATION],
+  independant: [{ nom: 'Facture en attente', mois: null, aide: 'Une facture émise mais pas encore payée : compte-la seulement à son encaissement.' }],
   autre: [{ nom: 'Prime', mois: null, aide: 'Un revenu possible mais pas encore sûr.' }],
 };
 
@@ -139,7 +137,7 @@ export function supportsSuggeres(type: ProfileType, ageAnnees: number | null): S
 }
 
 /* -------------------------------------------------------------------------- */
-/* Repères pour vous (accueil et « Mon plan »)                                 */
+/* Repères pour toi (accueil et « Mon plan »)                                 */
 /* -------------------------------------------------------------------------- */
 
 export interface Repere {
@@ -188,10 +186,10 @@ export function reperesPourVous(data: AppData, today: ISODate): Repere[] {
       id: 'fin-contrat',
       titre: `Fin du contrat ${dureeLisible(jours)}`,
       texte:
-        `Votre contrat se termine le ${new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(sit.fin + 'T12:00:00'))}` +
+        `Ton contrat se termine le ${new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(sit.fin + 'T12:00:00'))}` +
         (attenduFin
-          ? '. Le solde de tout compte est déjà prévu dans vos revenus attendus.'
-          : '. Pensez au solde de tout compte (congés non pris…) : ajoutez-le en revenu attendu.'),
+          ? '. Le solde de tout compte est déjà prévu dans tes revenus attendus.'
+          : '. Pense au solde de tout compte (congés non pris…) : ajoute-le en revenu attendu.'),
       lien: attenduFin
         ? { to: '/plan', label: 'Voir mon plan' }
         : { to: '/plan?attendu=solde-de-tout-compte', label: 'Ajouter le solde de tout compte' },
@@ -217,7 +215,7 @@ export function reperesPourVous(data: AppData, today: ISODate): Repere[] {
           // La hausse s'applique le mois suivant l'anniversaire
           const effet = toISO(parseISO(anniversaire).year, parseISO(anniversaire).month, 1);
           const suivant = addMonthsToDate(effet, 1);
-          if (!sit.fin || suivant < sit.fin) prochains.push({ date: suivant, raison: `vos ${seuil} ans` });
+          if (!sit.fin || suivant < sit.fin) prochains.push({ date: suivant, raison: `tes ${seuil} ans` });
           break;
         }
       }
@@ -227,7 +225,7 @@ export function reperesPourVous(data: AppData, today: ISODate): Repere[] {
       reperes.push({
         id: 'revalorisation',
         titre: `Salaire revalorisé en ${monthLabel(monthOf(prochains[0].date))}`,
-        texte: `Le salaire d’apprenti dépend de l’âge et de l’année de contrat : prochain changement lié à ${prochains[0].raison}. Mettez à jour votre revenu à ce moment-là.`,
+        texte: `Le salaire d’apprenti dépend de l’âge et de l’année de contrat : prochain changement lié à ${prochains[0].raison}. Mets à jour ton revenu à ce moment-là.`,
         lien: { to: '/revenus', label: 'Voir mes revenus' },
       });
     }
@@ -241,16 +239,16 @@ export function reperesPourVous(data: AppData, today: ISODate): Repere[] {
         id: 'ete',
         titre: mois >= 7 ? 'L’été sans bourse' : 'Préparer l’été',
         texte: bourse
-          ? 'La bourse est versée sur 10 mois : rien en juillet et en août. Mettez un peu de côté avant l’été, ou ajoutez un job d’été en revenu attendu.'
-          : 'Si vous touchez une bourse, elle n’est versée que sur 10 mois (rien en juillet-août). Un job d’été peut compenser.',
+          ? 'La bourse est versée sur 10 mois : rien en juillet et en août. Mets un peu de côté avant l’été, ou ajoute un job d’été en revenu attendu.'
+          : 'Si tu touches une bourse, elle n’est versée que sur 10 mois (rien en juillet-août). Un job d’été peut compenser.',
         lien: { to: '/plan?attendu=job-d-ete', label: 'Ajouter un job d’été' },
       });
     } else {
       reperes.push({
         id: 'reste-par-jour',
-        titre: 'Votre repère : le reste par jour',
+        titre: 'Ton repère : le reste par jour',
         texte:
-          'Avec un budget étudiant, le plus utile est de savoir combien vous pouvez dépenser par jour jusqu’à la fin du mois : il est affiché sur l’accueil.',
+          'Avec un budget étudiant, le plus utile est de savoir combien tu peux dépenser par jour jusqu’à la fin du mois : il est affiché sur l’accueil.',
       });
     }
   }
@@ -264,13 +262,13 @@ export function reperesPourVous(data: AppData, today: ISODate): Repere[] {
       id: 'reserve',
       titre:
         moisReserve === null
-          ? 'Votre réserve de précaution'
+          ? 'Ta réserve de précaution'
           : `Réserve : ${moisReserve.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} mois de charges`,
       texte:
         'Avec des revenus irréguliers, on conseille souvent une réserve de 3 à 6 mois de charges, disponible tout de suite. ' +
         (moisReserve !== null && moisReserve < 3
-          ? 'Vous êtes en dessous de 3 mois : priorité à cette réserve.'
-          : 'Pensez aussi à provisionner vos cotisations URSSAF.'),
+          ? 'Tu es en dessous de 3 mois : priorité à cette réserve.'
+          : 'Pense aussi à provisionner tes cotisations URSSAF.'),
       lien: { to: '/plan', label: 'Voir mon épargne' },
     });
   }
@@ -282,15 +280,14 @@ export function reperesPourVous(data: AppData, today: ISODate): Repere[] {
       reperes.push({
         id: 'prochain-attendu',
         titre: `${prochain.name} attendu ${dureeLisible(dayDiff(today, prochain.date))}`,
-        texte:
-          'Il n’est pas compté dans votre budget tant que vous ne l’avez pas confirmé : quand il arrive, appuyez sur « Reçu » dans « Mon plan ».',
+        texte: 'Il n’est pas compté dans ton budget tant que tu ne l’as pas confirmé : quand il arrive, appuie sur « Reçu » dans « Mon plan ».',
         lien: { to: '/plan', label: 'Voir mon plan' },
       });
     } else if (mois >= 9) {
       reperes.push({
         id: 'treizieme',
         titre: 'Un 13e mois en décembre ?',
-        texte: 'S’il est prévu par votre convention ou votre contrat, ajoutez-le en revenu attendu : il apparaîtra dans votre projection optimiste.',
+        texte: 'S’il est prévu par ta convention ou ton contrat, ajoute-le en revenu attendu : il apparaîtra dans ta projection optimiste.',
         lien: { to: '/plan?attendu=13e-mois', label: 'Ajouter le 13e mois' },
       });
     }
@@ -301,7 +298,7 @@ export function reperesPourVous(data: AppData, today: ISODate): Repere[] {
     reperes.push({
       id: 'livret-jeune',
       titre: 'Le Livret Jeune, jusqu’à 25 ans',
-      texte: `Vous avez ${ageAnnees} ans : le Livret Jeune (1 600 € de versements, taux au moins égal à celui du Livret A, disponible à tout moment) peut accueillir une partie de votre épargne.`,
+      texte: `Tu as ${ageAnnees} ans : le Livret Jeune (1 600 € de versements, taux au moins égal à celui du Livret A, disponible à tout moment) peut accueillir une partie de ton épargne.`,
       lien: { to: '/plan?support=livret-jeune', label: 'Ajouter ce support' },
     });
   }

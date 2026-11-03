@@ -5,7 +5,7 @@ import { objectifPrincipal, progressionObjectif, projection, totauxEpargne } fro
 import { reperesPourVous, sousTitreProfil } from '../lib/profil';
 import { carryOverEnabled, dailyBalanceSeries, monthAlerts, monthSummary, monthTransactions, signedAmount, spendingByCategory } from '../lib/budget';
 import { balanceForecast } from '../lib/forecast';
-import { accountBalance, JOURS_A_VENIR_ACCUEIL, operationsAVenir, resteAVivre, usesCarteRestaurant } from '../lib/accounts';
+import { accountBalance, ACCOUNT_LABELS, comptesUtilises, JOURS_A_VENIR_ACCUEIL, operationsAVenir, resteAVivre } from '../lib/accounts';
 import { sortGoals } from '../lib/goals';
 import { allLimitsRespected, MAX_ACTIONS, suggestedActions } from '../lib/actions';
 import { dayHeader, defaultDateFor, formatDate, lastDay, monthOf, ofMonth, parseISO, relativeDay } from '../lib/dates';
@@ -18,7 +18,7 @@ import { Icon } from '../components/Icon';
 import { MontantAnime } from '../components/mouvement';
 
 /** Priorité exprimée en mots (pas seulement par la couleur). */
-const PRIORITES = { 1: 'À traiter maintenant', 2: 'Bientôt', 3: 'Quand vous avez un moment' } as const;
+const PRIORITES = { 1: 'À traiter maintenant', 2: 'Bientôt', 3: 'Quand tu as un moment' } as const;
 
 export function Dashboard() {
   const { data, month, today, fmt, fmtShort, dispatch } = useApp();
@@ -35,7 +35,7 @@ export function Dashboard() {
         .slice(0, 3),
     [data, month, today],
   );
-  // « Il vous reste » = exactement le solde de « Mon compte » ; « À venir » = aujourd'hui et les 3 prochains jours
+  // « Il te reste » = exactement le solde de « Mon compte » ; « À venir » = aujourd'hui et les 3 prochains jours
   const reste = useMemo(() => resteAVivre(data, today), [data, today]);
   const prochaines = useMemo(() => operationsAVenir(data, 'tout', today, JOURS_A_VENIR_ACCUEIL), [data, today]);
   const actions = useMemo(() => suggestedActions(data, today, fmt), [data, today, fmt]);
@@ -61,7 +61,7 @@ export function Dashboard() {
     headline =
       principal >= 0 ? (
         <>
-          Mois terminé : il vous restait <V>{fmt(principal)}</V> à la fin du mois.
+          Mois terminé : il te restait <V>{fmt(principal)}</V> à la fin du mois.
         </>
       ) : (
         <>
@@ -72,7 +72,7 @@ export function Dashboard() {
     headline =
       principal >= 0 ? (
         <>
-          Prévision : il vous resterait <V>{short(principal)}</V> sur ce mois.
+          Prévision : il te resterait <V>{short(principal)}</V> sur ce mois.
         </>
       ) : (
         <>
@@ -82,7 +82,7 @@ export function Dashboard() {
   } else if (principal >= 0) {
     headline = (
       <>
-        Il vous reste{' '}
+        Il te reste{' '}
         <V>
           <MontantAnime cents={principal} format={short} brut />
         </V>{' '}
@@ -97,17 +97,16 @@ export function Dashboard() {
       const apresEpargne = divideCents(principal - s.savingsRemaining, reste.joursRestants);
       subline =
         apresEpargne >= 0
-          ? `En mettant aussi de côté les ${over(s.savingsRemaining)} d’épargne prévus, il vous resterait environ ${short(apresEpargne)} par jour.`
-          : `Pour atteindre votre objectif d’épargne (${over(s.savingsRemaining)} restants), il faudrait réduire vos dépenses.`;
+          ? `En mettant aussi de côté les ${over(s.savingsRemaining)} d’épargne prévus, il te resterait environ ${short(apresEpargne)} par jour.`
+          : `Pour atteindre ton objectif d’épargne (${over(s.savingsRemaining)} restants), il faudrait réduire tes dépenses.`;
     }
   } else {
     headline = (
       <>
-        Votre solde est de <V>− {over(-principal)}</V> aujourd’hui.
+        Ton solde est de <V>− {over(-principal)}</V> aujourd’hui.
       </>
     );
-    subline =
-      'Les revenus prévus s’ajouteront le jour de leur arrivée. Si votre banque affiche un autre montant, ajustez le solde dans « Mon compte ».';
+    subline = 'Les revenus prévus s’ajouteront le jour de leur arrivée. Si ta banque affiche un autre montant, ajuste le solde dans « Mon compte ».';
   }
 
   const visibles = actions.slice(0, MAX_ACTIONS);
@@ -130,9 +129,10 @@ export function Dashboard() {
   const epargneTotale = useMemo(() => totauxEpargne(data, today), [data, today]);
   const reperes = useMemo(() => reperesPourVous(data, today).slice(0, 2), [data, today]);
   const sousTitre = sousTitreProfil(data);
-  const avecCarte = usesCarteRestaurant(data);
-  const soldeCompte = useMemo(() => (avecCarte ? accountBalance(data, 'compte', today, today) : 0), [data, today, avecCarte]);
-  const soldeCarte = useMemo(() => (avecCarte ? accountBalance(data, 'carte-restaurant', today, today) : 0), [data, today, avecCarte]);
+  // Plusieurs comptes (carte restaurant, Izly) : le solde de chacun
+  const comptes = comptesUtilises(data);
+  const avecCarte = comptes.length > 1;
+  const soldes = useMemo(() => comptes.map((c) => [c, accountBalance(data, c, today, today)] as const), [data, today, comptes.join()]);
 
   return (
     <div className="page">
@@ -239,10 +239,10 @@ export function Dashboard() {
                   </div>
                 </dl>
                 <p>
-                  Tout ce qui est arrivé moins tout ce qui est parti, depuis votre première saisie ({formatDate(reste.detail.depuis)}).
+                  Tout ce qui est arrivé moins tout ce qui est parti, depuis ta première saisie ({formatDate(reste.detail.depuis)}).
                   {reste.parJour !== null &&
                     ` Divisé par ${reste.joursRestants} jour${reste.joursRestants > 1 ? 's' : ''} restant${reste.joursRestants > 1 ? 's' : ''} (aujourd’hui inclus), cela fait environ ${fmt(reste.parJour)} par jour.`}{' '}
-                  Les opérations prévues ne sont pas encore comptées : elles s’ajoutent le jour où elles arrivent (voir « À venir »).
+                  Les opérations prévues comptent le jour où elles arrivent.
                 </p>
               </>
             ) : (
@@ -333,7 +333,7 @@ export function Dashboard() {
 
       {/* Repères selon le profil (fin de contrat, été sans bourse, réserve…) */}
       {reperes.length > 0 && courant && (
-        <section className="reperes-accueil" aria-label="Repères pour vous">
+        <section className="reperes-accueil" aria-label="Repères pour toi">
           {reperes.map((r) => (
             <div key={r.id} className="repere repere-accueil">
               <p className="repere-titre">{r.titre}</p>
@@ -361,7 +361,7 @@ export function Dashboard() {
           <p className="upcoming-summary">
             {prochaines.length === 0
               ? `Rien de prévu dans les ${JOURS_A_VENIR_ACCUEIL} prochains jours.`
-              : `Dans les ${JOURS_A_VENIR_ACCUEIL} prochains jours : ${prochaines.length === 1 ? '1 opération prévue' : `${prochaines.length} opérations prévues`}, pas encore comptée${prochaines.length > 1 ? 's' : ''} dans votre solde.`}
+              : `Dans les ${JOURS_A_VENIR_ACCUEIL} prochains jours : ${prochaines.length === 1 ? '1 opération prévue' : `${prochaines.length} opérations prévues`}, pas encore comptée${prochaines.length > 1 ? 's' : ''} dans ton solde.`}
           </p>
           {prochaines.length > 0 && (
             <ul className="tx-list">
@@ -398,14 +398,14 @@ export function Dashboard() {
             <p className="report-ligne">
               <Icon name="wallet" size={16} />
               <span>
-                Soldes aujourd’hui : compte bancaire{' '}
-                <strong className={soldeCompte < 0 ? 'montant-moins' : 'montant-plus'}>
-                  {soldeCompte < 0 ? `− ${fmt(-soldeCompte)}` : fmt(soldeCompte)}
-                </strong>
-                , carte restaurant{' '}
-                <strong className={soldeCarte < 0 ? 'montant-moins' : 'montant-plus'}>
-                  {soldeCarte < 0 ? `− ${fmt(-soldeCarte)}` : fmt(soldeCarte)}
-                </strong>
+                Soldes :{' '}
+                {soldes.map(([c, v], k) => (
+                  <span key={c}>
+                    {k > 0 && ', '}
+                    {ACCOUNT_LABELS[c].toLocaleLowerCase('fr').replace('izly', 'Izly')}{' '}
+                    <strong className={v < 0 ? 'montant-moins' : 'montant-plus'}>{v < 0 ? `− ${fmt(-v)}` : fmt(v)}</strong>
+                  </span>
+                ))}
                 .{' '}
                 <Link to="/compte" className="link">
                   Mon compte
@@ -462,11 +462,11 @@ export function Dashboard() {
               <p className="muted">
                 {epargneManque === 0
                   ? `Objectif du mois atteint à ${epargnePct}\u00a0%. Bravo !`
-                  : `${epargnePct}\u00a0% de l’objectif du mois : il vous manque ${fmt(epargneManque)}.`}
+                  : `${epargnePct}\u00a0% de l’objectif du mois : il te manque ${fmt(epargneManque)}.`}
               </p>
             </div>
           ) : (
-            <p className="muted">Aucun objectif d’épargne mensuel. Vous pouvez en fixer un dans vos paramètres.</p>
+            <p className="muted">Aucun objectif d’épargne mensuel. Tu peux en fixer un dans tes paramètres.</p>
           )}
           {objectifs.length > 0 && (
             <ul className="objectifs-mini" aria-label="Objectifs en cours">
@@ -495,8 +495,8 @@ export function Dashboard() {
             {visibles.length === 0 ? (
               <Notice tone="succes">
                 {allLimitsRespected(data, today)
-                  ? 'Rien à faire pour l’instant : toutes vos limites sont respectées ce mois-ci.'
-                  : 'Rien à faire pour l’instant : votre budget est à jour.'}
+                  ? 'Rien à faire pour l’instant : toutes tes limites sont respectées ce mois-ci.'
+                  : 'Rien à faire pour l’instant : ton budget est à jour.'}
               </Notice>
             ) : (
               <ul className="actions-list">
@@ -552,7 +552,7 @@ export function Dashboard() {
                 ? `Attention vers le ${formatDate(prevision.lowest.date)} : il pourrait manquer environ ${over(-prevision.lowest.balance)}${
                     prevision.points[2].balance >= 0 ? ', avant le retour à environ ' + short(prevision.points[2].balance) + ' dans 30 jours' : ''
                   }.`
-                : `Si tout se passe comme prévu, il vous resterait environ ${short(prevision.points[2].balance)} dans 30 jours.`}
+                : `Si tout se passe comme prévu, il te resterait environ ${short(prevision.points[2].balance)} dans 30 jours.`}
             </p>
             <dl className="prevision-points">
               {prevision.points.map((p) => (
@@ -568,7 +568,7 @@ export function Dashboard() {
                 <p>
                   Aujourd’hui : {signe(prevision.start)} (le solde de « Mon compte », moins les charges pas encore payées). Ensuite, environ{' '}
                   {fmt(prevision.dailyVariable)} de dépenses courantes par jour{' '}
-                  {prevision.basis === 'rythme' ? '(votre rythme du mois)' : '(d’après vos limites prévues)'}.
+                  {prevision.basis === 'rythme' ? '(ton rythme du mois)' : '(d’après tes limites prévues)'}.
                 </p>
                 {prevision.events.length > 0 && (
                   <ul className="tx-list">
@@ -585,8 +585,8 @@ export function Dashboard() {
                 )}
                 <p className="muted">
                   {carryOverEnabled(data)
-                    ? 'Estimation indicative fondée sur vos saisies, report des mois précédents compris.'
-                    : 'Estimation indicative fondée sur vos saisies : l’argent des mois précédents n’est pas compté (report désactivé).'}
+                    ? 'Estimation indicative fondée sur tes saisies, report des mois précédents compris.'
+                    : 'Estimation indicative fondée sur tes saisies : l’argent des mois précédents n’est pas compté (report désactivé).'}
                 </p>
               </div>
             </details>
@@ -653,9 +653,9 @@ export function Dashboard() {
               tone={s.forecastEndBalance < 0 ? 'negatif' : 'positif'}
               detail={
                 s.forecastBasis === 'rythme'
-                  ? 'Si vous gardez le même rythme de dépenses'
+                  ? 'Si tu gardes le même rythme de dépenses'
                   : s.forecastBasis === 'plan'
-                    ? 'D’après vos budgets prévus'
+                    ? 'D’après tes budgets prévus'
                     : 'Montant réel'
               }
             />
@@ -664,11 +664,7 @@ export function Dashboard() {
             <LineChart
               title="Évolution du solde au cours du mois"
               emptyText="Aucun mouvement enregistré pour ce mois."
-              description={
-                monthOf(today) === month
-                  ? 'Revenus moins dépenses, charges et épargne, jour après jour jusqu’à aujourd’hui.'
-                  : 'Revenus moins dépenses, charges et épargne, jour après jour.'
-              }
+              description={monthOf(today) === month ? 'Ton solde, jour après jour.' : 'Ton solde, jour après jour.'}
               valueLabel="Solde"
               area
               points={series.map((p) => ({ label: formatDate(p.date), tick: String(parseISO(p.date).day), value: p.balance }))}
