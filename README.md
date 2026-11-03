@@ -23,13 +23,14 @@ Toutes les données restent **dans votre navigateur**. Aucun compte, aucune banq
 7. [Tests](#tests)
 8. [Organisation des fichiers](#organisation-des-fichiers)
 9. [Données de démonstration](#données-de-démonstration)
-10. [Poksy, guide SoldeClair](#poksy-guide-soldeclair)
-11. [Données locales et confidentialité](#données-locales-et-confidentialité)
-12. [Règles de calcul](#règles-de-calcul)
-13. [Limites actuelles](#limites-actuelles)
-14. [Améliorations possibles (version 2)](#améliorations-possibles-version-2)
-15. [Installer SoldeClair comme une application](#installer-soldeclair-comme-une-application)
-16. [Version en ligne (GitHub Pages)](#version-en-ligne-github-pages)
+10. [Remplir SoldeClair avec ses propres données](#remplir-soldeclair-avec-ses-propres-données)
+11. [Poksy, guide SoldeClair](#poksy-guide-soldeclair)
+12. [Données locales et confidentialité](#données-locales-et-confidentialité)
+13. [Règles de calcul](#règles-de-calcul)
+14. [Limites actuelles](#limites-actuelles)
+15. [Améliorations possibles (version 2)](#améliorations-possibles-version-2)
+16. [Installer SoldeClair comme une application](#installer-soldeclair-comme-une-application)
+17. [Version en ligne (GitHub Pages)](#version-en-ligne-github-pages)
 
 ---
 
@@ -54,19 +55,21 @@ Permettre à chacun de :
 | **Configuration initiale** | Parcours en 6 étapes : prénom ou pseudonyme, situation (étudiant, alternant, salarié, indépendant, autre), devise (euro par défaut), revenu principal et revenus complémentaires, charges fixes, estimation des dépenses variables, objectif d’épargne mensuel, objectif à long terme, choix des catégories proposées selon le profil. Possibilité de charger une démonstration ou d’importer une sauvegarde. |
 | **Tableau de bord** | Dans l’ordre : **carte principale** (« Il vous reste X € pour terminer le mois, soit environ Y € par jour ») qui affiche **exactement le solde de « Mon compte »** : tout ce qui est arrivé moins tout ce qui est parti, depuis la première saisie ; « Comment est-ce calculé ? » détaille ce cumul. **À venir** : les opérations d’aujourd’hui et des **3 prochains jours** seulement (pas encore comptées dans le solde ; « Tout voir » ouvre Mon compte → À venir). Puis **Ce mois-ci** (revenus, dépenses, dernières opérations), **Épargne du mois**, **À faire**, **Estimation des 30 prochains jours** (à partir du solde de Mon compte), ajout rapide (sur ordinateur), **un seul graphique** ; le reste (bilan du mois, report…) dans « Détail du mois ». Navigation de mois en mois (mois passé : solde à la fin du mois ; mois à venir : prévision). |
 | **Mon compte** | Vue façon application bancaire : **solde du jour** écrit en vert (ou en rouge s’il est négatif) : le total cumulé compte bancaire + carte restaurant, puis chacun séparément si la carte est utilisée. Tant qu’aucun solde réel n’a été indiqué, une aide explique que le solde part de 0 € et propose « Indiquer mon solde réel », solde estimé après les opérations des 30 prochains jours, puis deux **bulles** qui ouvrent chacune leur onglet : **Opérations** (toutes les opérations jour par jour (« Aujourd’hui », « Hier », « Mercredi 4 novembre 2026 ») avec ce qui est entré, ce qui est sorti et le **solde en fin de journée** ; recherche, total des entrées et des sorties, mois précédents à la demande) et **À venir** (nombre d’opérations des 7 prochains jours dans la bulle, rien s’il n’y en a pas ; prélèvements et revenus attendus sur 30 jours, charges pas encore payées, total entrant et sortant). Adresse directe : `#/compte?vue=a-venir`. Bouton **« Ajuster le solde »** : on indique le solde réel affiché par la banque (ou la carte restaurant, découvert possible) et SoldeClair ajoute un « ajustement du solde » daté du jour pour combler l’écart ; un ajustement se supprime d’un geste. |
-| **Revenus** | Ajout, modification, suppression. Nom, montant, date, catégorie, récurrent ou exceptionnel, fréquence, date de fin facultative, note. **Carte restaurant** : catégorie proposée à tous les profils ; un revenu de cette catégorie est « versé sur » la carte restaurant (modifiable). Le total du mois compte **toutes les sources**, puis le détail **sur le compte bancaire** et **sur la carte restaurant**. |
-| **Dépenses** | Ajout, modification, suppression, recherche et filtre par catégorie. Montant, catégorie, date, description et moyen de paiement facultatifs (carte bancaire, **carte restaurant**, espèces, virement…). Une dépense payée par carte restaurant est retirée du solde de la carte, pas du compte bancaire. |
+| **Revenus** | Ajout, modification, suppression. Nom, montant, date, catégorie, récurrent ou exceptionnel, fréquence, date de fin facultative, note. **Sûr ou attendu** : un revenu attendu (prime non confirmée, 13e mois, solde de tout compte) peut avoir une fourchette (« jusqu’à »), un montant inconnu, et une case « Inclure dans la projection optimiste » ; il n’est compté nulle part tant qu’il n’est pas confirmé (étiquette « Attendu »). **Détail facultatif** du revenu (lignes du bulletin de paie, montants signés, total vérifié). **Carte restaurant** : catégorie proposée à tous les profils ; un revenu de cette catégorie est « versé sur » la carte restaurant (modifiable). Avec une carte restaurant, la page distingue les **revenus encaissés** (compte bancaire) du **pouvoir d’achat alimentaire** (titres-restaurant, avantage en nature), puis le total des ressources. |
+| **Mon plan d’épargne** | L’objectif principal « tous supports confondus » : montant réuni, pourcentage, reste à réunir, mois restants, **épargne nécessaire par mois** (recalculée chaque jour) et statut **dans les temps / en retard** avec l’écart chiffré. **Supports d’épargne** (Livret A, Livret Jeune, LDDS, LEP, PEL, CEL, assurance vie, PEA, épargne salariale, compte courant…) avec solde, taux, plafond, disponibilité (« bloqué jusqu’au… », « retrait = clôture ») et montant visé ; **épargne totale**, **disponible** et **bloquée** affichées séparément. **Projection mois par mois** jusqu’à la date de l’objectif (base ; case « Inclure les revenus attendus » pour la projection optimiste), avec notes (prime, voyage, caution). **Revenus attendus** (case à cocher, bouton « Reçu »). **Sommes bloquées temporairement** (caution, dépôt de garantie : pas une dépense, bouton « Rendu »). **Bilan du mois guidé** : prévu / réel pour l’épargne, les dépenses et les revenus attendus ; seul ce qui manque est créé. **Repères pour vous** selon le profil. Suggestions de supports et de revenus attendus selon le profil. |
+| **Dépenses** | Ajout, modification, suppression, recherche et filtre par catégorie. Montant, catégorie, date, description et moyen de paiement facultatifs (carte bancaire, **carte restaurant**, espèces, virement…). Case **« Dépense exceptionnelle »** (voyage, gros achat) : comptée dans le solde, mais séparée des dépenses courantes dans la projection. Une dépense payée par carte restaurant est retirée du solde de la carte, pas du compte bancaire. |
 | **Charges fixes** | Ajout, modification, suppression. Nom, montant, date de prélèvement, catégorie, fréquence (hebdomadaire à annuelle), statut **payé / à venir** modifiable pour chaque échéance, note. |
 | **Budgets par catégorie** | Limite mensuelle par catégorie résumée en une phrase (« 45,40 € dépensés sur 60,00 € (76 %), il reste 14,60 € ») avec une barre de progression et des repères à 75 % et 90 %. Alertes à **75 %**, **90 %** et en cas de **dépassement**, signalées par un texte et une icône (pas seulement par la couleur) ; en cas de dépassement, lien direct vers les dépenses de la catégorie. Les catégories **sans limite** sont regroupées dans une liste courte, avec un bouton « Fixer une limite ». |
 | **Objectifs d’épargne** | **Cartes illustrées** : une illustration originale par thème (imprévus, voyage, véhicule, études, logement, informatique, fête, santé, projet), choisie automatiquement d’après le nom ou dans le formulaire ; **anneau de progression** et **jalons** 25 / 50 / 75 / 100 % ; **versement rapide** (+ 20 €, + 50 €, + 100 €, annulable) ; curseur **« Et si je mettais X € par mois ? »** qui recalcule la date d’arrivée et la compare à la date souhaitée (bouton pour l’adopter). Toujours : montant cible, montant déjà disponible, date souhaitée, priorité, contribution mensuelle, effort mensuel nécessaire, date d’atteinte estimée, versements (modifier, supprimer). Grande carte sur deux colonnes quand il n’y a qu’un objectif ; idées d’objectifs illustrées quand il n’y en a aucun. |
 | **Simulateur d’achat** | Part du **solde de « Mon compte »** (le même que le tableau de bord) : solde après achat, nouveau reste à vivre quotidien, impact sur l’épargne du mois, impact sur chaque objectif, dépassement éventuel d’une catégorie, et appréciation : *situation confortable*, *achat possible avec prudence* ou *achat susceptible de déséquilibrer le budget* (indication budgétaire, pas un conseil financier). |
 | **Historique et bilan** | Historique complet avec recherche, **puces** pour la période et le type, liste pour la catégorie, filtres actifs visibles et effaçables en un geste, bilan mensuel (revenus, charges, dépenses, épargne, solde final, catégories les plus coûteuses, budgets dépassés), comparaison avec le mois précédent, export CSV. |
-| **Paramètres** | Sauvegarde en premier (export CSV, sauvegarde JSON avec la date de la dernière sauvegarde et un rappel au-delà de 30 jours, import JSON), profil, devise, objectif d’épargne, thème clair / sombre / automatique, catégories (ajouter, renommer, supprimer), données de démonstration, effacement total avec **double confirmation**. |
+| **Paramètres** | Sauvegarde en premier (export CSV, sauvegarde JSON avec la date de la dernière sauvegarde et un rappel au-delà de 30 jours, import JSON), **point de départ** (enregistré à chaque import ou à la demande ; « Réinitialiser aux données par défaut » y revient après une double confirmation), profil (date de naissance et situation facultatives, dont les libellés suivent le profil : contrat d’alternance, études, emploi, activité ; territoire), devise, objectif d’épargne, thème clair / sombre / automatique, catégories (ajouter, renommer, supprimer), données de démonstration, effacement total avec **double confirmation**. |
 
 **Partout dans l’application** :
 
 - **Poksy, guide SoldeClair** (bouton rond en bas à droite, avec une tête de chat) : une aide simple pour comprendre le site, vos chiffres et les calculs. Voir [Poksy](#poksy-guide-soldeclair) ;
 
+- **personnalisation selon le profil** (étudiant, alternant, salarié, indépendant) : l’interface **met en avant** ce qui compte pour la situation, sans rien interdire. Repères sur l’accueil (fin de contrat et revalorisation du salaire d’apprenti, été sans bourse, réserve de précaution en mois de charges, prochain revenu attendu, Livret Jeune avant 26 ans), revenus attendus et supports suggérés, questions de Poksy « Pour votre situation ». Analyse détaillée : [docs/profils-et-donnees.md](docs/profils-et-donnees.md) ;
 - **plusieurs profils** sur le même appareil, chacun avec ses propres données (le logo ramène à la page d’accueil pour changer de profil ou en créer un) ;
 - **report du reste d’un mois sur le suivant** (cumul, désactivable dans les paramètres) : une prime reçue fin octobre et non dépensée compte encore en novembre ;
 - **création d’une catégorie sans quitter un formulaire** (« + Nouvelle catégorie… »), utile si la liste est vide ;
@@ -229,6 +232,8 @@ solde-clair/
     │   ├── poksyTextes.ts     Poksy : textes du bouton et du message de première visite
     │   ├── accounts.ts        Soldes des comptes, relevé jour par jour, opérations à venir
     │   ├── goals.ts           Objectifs d’épargne
+    │   ├── plan.ts            Supports, épargne totale / disponible, projection mois par mois
+    │   ├── profil.ts          Personnalisation selon le profil (repères, suggestions, libellés)
     │   ├── simulator.ts       Simulateur d’achat
     │   ├── forecast.ts        Estimation du disponible à 7, 15 et 30 jours
     │   ├── actions.ts         Petites actions utiles du tableau de bord
@@ -252,6 +257,7 @@ solde-clair/
     ├── styles/global.css      Identité claire (palette --dp-*), thèmes clair et sombre, responsive
     ├── styles/fonts.css       Police IBM Plex Sans hébergée localement
     ├── styles/accueil.css     Styles de la présentation
+    ├── styles/plan.css        Styles de « Mon plan d’épargne » et des repères
     ├── styles/poksy.css       Styles de Poksy
     ├── test/                  Configuration et jeu de données des tests
     └── __tests__/             Tests de l’interface
@@ -271,6 +277,10 @@ Trois profils **entièrement fictifs** sont fournis, chacun avec plusieurs reven
 - ou à tout moment dans **Paramètres → Données de démonstration** (une confirmation est demandée, car les données actuelles sont remplacées : exportez-les avant si besoin).
 
 Les dates sont calculées par rapport au jour actuel, et les données sont identiques à chaque chargement.
+
+## Remplir SoldeClair avec ses propres données
+
+Le site est public : **aucune donnée réelle ne doit être placée dans le code**. Pour préremplir l’application, on crée sur son ordinateur un fichier de sauvegarde JSON (à la main ou avec un assistant de code), puis on l’importe (Paramètres → « Importer une sauvegarde »). Le fichier importé devient le **point de départ**. Le format complet, avec un exemple entièrement fictif ([docs/exemple-sauvegarde-fictive.json](docs/exemple-sauvegarde-fictive.json)), est décrit dans [docs/format-sauvegarde.md](docs/format-sauvegarde.md). Le dossier `mes-donnees/` et les fichiers `*donnees-reelles*.json` sont ignorés par Git.
 
 ## Poksy, guide SoldeClair
 
@@ -293,6 +303,7 @@ Mention affichée dans la fenêtre : « Poksy fonctionne sur votre appareil et n
 ## Données locales et confidentialité
 
 - Les données sont enregistrées **uniquement dans le navigateur** (`localStorage`), sur l’appareil utilisé : clé `soldeclair:donnees:v1` pour le premier profil, `soldeclair:donnees:v1:<identifiant>` pour les suivants, et la liste des profils dans `soldeclair:profils:v1`.
+- Le **point de départ** d’un profil est enregistré dans `soldeclair:depart:v1:<identifiant>`, sur le même appareil ; il est effacé avec le profil.
 - « Effacer toutes mes données » efface le **profil ouvert** ; les autres profils de l’appareil sont conservés.
 - **Aucun compte**, **aucune synchronisation bancaire**, **aucune coordonnée bancaire** demandée, **aucun paiement**.
 - **Aucune donnée financière n’est envoyée** à un serveur : l’application ne fait aucun appel réseau une fois chargée.
@@ -333,16 +344,20 @@ Tous les calculs se font en centimes entiers ; la conversion en euros n’a lieu
 | Objectif : date estimée | Aujourd’hui + ⌈restant ÷ contribution mensuelle⌉ mois. |
 | Estimation à 7, 15 et 30 jours | Solde de « Mon compte » − charges passées pas encore payées + revenus prévus − charges prévues − dépenses courantes estimées (rythme du mois dès le 7ᵉ jour, sinon limites prévues ÷ jours du mois). Estimation indicative ; le point le plus bas est signalé. |
 | À faire | Limite dépassée ou à 90 %, rythme qui ferait finir le mois dans le rouge, prélèvement aujourd’hui ou demain, dépense des 7 derniers jours au moins 3 fois supérieure à la médiane de sa catégorie (90 jours, au moins 4 dépenses, 30 € minimum), épargne du mois incomplète à partir du 10, sauvegarde absente ou de plus de 30 jours. 3 actions au maximum, par priorité ; « Ignorer » la masque jusqu’au mois suivant. |
+| **Revenu attendu** | Compté nulle part (solde, budget, historique) tant qu’il n’est pas confirmé. Projection optimiste : montant estimé (bas de la fourchette), 0 si le montant est inconnu, seulement si la case est cochée. |
+| **Épargne totale / disponible** | Totale : somme des supports (solde déclaré + versements liés depuis sa date). Disponible : sans les supports bloqués (PEL, épargne salariale… ou date de blocage non atteinte). |
+| **Projection (Mon plan)** | En trésorerie, de demain jusqu’à la date de l’objectif, avec les **vraies dates** (la règle du 20 ne s’applique pas : un salaire du 28 juillet ou un revenu du 31 juillet compte pour un objectif au 31 juillet). Par mois : revenus sûrs encaissés sur le compte − charges fixes − dépenses courantes (reste du budget pour le mois en cours, budget ensuite, ou plus si des dépenses sont déjà prévues) − dépenses exceptionnelles. Point de départ : le total des supports aujourd’hui. Titres-restaurant et sommes bloquées affichés à part, hors calcul. Épargne nécessaire = reste ÷ mois restants (mois en cours compris), arrondi au centime supérieur. |
+| **Bilan du mois** (Mon plan) | Épargne réelle − épargne déjà enregistrée → un versement du complément ; dépenses réelles − dépenses déjà saisies → « Autres dépenses du mois » ; revenus attendus reçus → confirmés au montant réel. Rien n’est créé si tout est à jour. |
 | Simulateur | *Déséquilibre* si le solde devient négatif ; *prudence* si l’achat entame l’épargne prévue du mois, fait dépasser une limite ou dépasse la moitié du solde disponible ; sinon *confortable*. |
 
 ## Limites actuelles
 
-- **Poksy** ne comprend que des questions proches de celles qu’il connaît (54 fiches, recherche par mots-clés) : une question formulée très différemment reçoit le message « Je n’ai pas encore trouvé la réponse exacte ». Il ne garde pas la conversation après un rechargement de la page.
+- **Poksy** ne comprend que des questions proches de celles qu’il connaît (70 fiches, recherche par mots-clés) : une question formulée très différemment reçoit le message « Je n’ai pas encore trouvé la réponse exacte ». Il ne garde pas la conversation après un rechargement de la page.
 - Les données sont liées **à un seul navigateur sur un seul appareil** (pas de synchronisation entre téléphone et ordinateur ; utiliser export / import JSON).
 - Le `localStorage` est limité à quelques mégaoctets (largement suffisant pour plusieurs années de saisies manuelles).
 - Supprimer un revenu ou une charge récurrente le retire aussi des mois passés : pour l’arrêter seulement à partir d’une date, il faut renseigner une **date de fin**.
 - Les dépenses récurrentes variables (ex. : courses hebdomadaires automatiques) ne sont pas gérées ; seules les charges fixes et revenus peuvent être récurrents.
-- Deux comptes seulement (compte bancaire et carte restaurant) : pas de livret séparé, de plusieurs devises simultanées ni de dépenses partagées.
+- Deux comptes seulement (compte bancaire et carte restaurant) ; les livrets et plans sont suivis comme **supports d’épargne** (« Mon plan »), sans relevé détaillé ; pas de plusieurs devises simultanées ni de dépenses partagées.
 - **Pas de connexion à la banque ni à Apple Pay**, volontairement : cela demanderait un prestataire agréé (DSP2), un serveur et l’envoi des données hors de l’appareil. Le bouton « Ajuster le solde » permet de recaler le solde à la main en quelques secondes.
 - Les limites budgétaires concernent les dépenses variables (pas les charges fixes).
 - Pas d’import de relevés bancaires (CSV de banque) — volontairement, pour cette première version.

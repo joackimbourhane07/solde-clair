@@ -14,6 +14,7 @@ import { Simulator } from './pages/Simulator';
 import { History } from './pages/History';
 import { SettingsPage } from './pages/Settings';
 import { Compte } from './pages/Compte';
+import { Plan } from './pages/Plan';
 
 // Page de présentation : chargée séparément, les personnes qui ont déjà des données ne la téléchargent pas.
 const Accueil = lazy(() => import('./pages/Accueil'));
@@ -61,6 +62,7 @@ export function AppRoutes() {
         <Route path="/depenses" element={<Expenses />} />
         <Route path="/charges" element={<FixedCharges />} />
         <Route path="/budgets" element={<Budgets />} />
+        <Route path="/plan" element={<Plan />} />
         <Route path="/objectifs" element={<Goals />} />
         <Route path="/simulateur" element={<Simulator />} />
         <Route path="/historique" element={<History />} />

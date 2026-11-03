@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { sommesBloquees } from '../lib/plan';
 import { useApp } from '../state/AppState';
 import type { AccountId, Transaction } from '../types';
 import { accountBalance, ACCOUNT_LABELS, operationsAVenir, releve, totaux, usesCarteRestaurant, type FiltreCompte } from '../lib/accounts';
@@ -7,7 +8,18 @@ import { earliestDate, signedAmount } from '../lib/budget';
 import { addDays, addMonths, dayHeader, firstDay, monthLabel, monthOf, ofMonth, relativeDay } from '../lib/dates';
 import { centsToInput, parseAmount, sum } from '../lib/money';
 import { newId } from '../lib/id';
-import { Button, CheckboxField, ConfirmDialog, EmptyState, IconButton, Modal, MoneyField, PageHeader, SignedAmount, TextField } from '../components/ui';
+import {
+  Button,
+  CheckboxField,
+  ConfirmDialog,
+  EmptyState,
+  IconButton,
+  Modal,
+  MoneyField,
+  PageHeader,
+  SignedAmount,
+  TextField,
+} from '../components/ui';
 import { Icon } from '../components/Icon';
 
 type Vue = 'operations' | 'a-venir';
@@ -34,7 +46,10 @@ function details(t: Transaction, avecCompte: boolean): string {
 /** Pastille ronde : verte pour l'argent qui entre, rouge pour l'argent qui sort, bleue pour l'épargne ; le pictogramme indique le type. */
 function IconeOperation({ t }: { t: Transaction }) {
   return (
-    <span className={`operation-icone ${t.type === 'epargne' ? 'sens-epargne' : signedAmount(t) >= 0 ? 'sens-entree' : 'sens-sortie'}`} aria-hidden="true">
+    <span
+      className={`operation-icone ${t.type === 'epargne' ? 'sens-epargne' : signedAmount(t) >= 0 ? 'sens-entree' : 'sens-sortie'}`}
+      aria-hidden="true"
+    >
       <Icon name={ICONES[t.type]} size={18} />
     </span>
   );
@@ -50,7 +65,13 @@ function Operation({ t, avecCompte, onSupprimer }: { t: Transaction; avecCompte:
         <p className="operation-detail">{details(t, avecCompte)}</p>
       </div>
       <SignedAmount cents={Math.abs(montant)} positive={montant >= 0} epargne={t.type === 'epargne'} />
-      {onSupprimer && <IconButton icon="trash" label={`Supprimer cet ajustement de ${montant >= 0 ? '+' : '−'}${centsToInput(Math.abs(montant))} €`} onClick={onSupprimer} />}
+      {onSupprimer && (
+        <IconButton
+          icon="trash"
+          label={`Supprimer cet ajustement de ${montant >= 0 ? '+' : '−'}${centsToInput(Math.abs(montant))} €`}
+          onClick={onSupprimer}
+        />
+      )}
     </li>
   );
 }
@@ -103,7 +124,11 @@ function AjusterSolde({ comptes, onClose }: { comptes: AccountId[]; onClose: () 
               error={erreurs[c]}
               hint={`Solde calculé par SoldeClair : ${fmt(calcules[c])}`}
             />
-            <CheckboxField label="Solde négatif (découvert)" checked={negatifs[c] ?? false} onChange={(e) => setNegatifs({ ...negatifs, [c]: e.target.checked })} />
+            <CheckboxField
+              label="Solde négatif (découvert)"
+              checked={negatifs[c] ?? false}
+              onChange={(e) => setNegatifs({ ...negatifs, [c]: e.target.checked })}
+            />
           </div>
         ))}
         <div className="form-actions">
@@ -153,6 +178,9 @@ export function Compte() {
   const soldeCarte = useMemo(() => accountBalance(data, 'carte-restaurant', today, today), [data, today]);
   const aVenir = useMemo(() => operationsAVenir(data, actif, today, 30), [data, actif, today]);
   const soldePrevu = solde + sum(aVenir.map(signedAmount));
+  // Sommes bloquées (caution, dépôt de garantie) : comprises dans le solde mais pas disponibles
+  const bloquees = sommesBloquees(data, today).filter((h) => actif === 'tout' || h.account === actif);
+  const bloque = sum(bloquees.map((h) => h.amount));
   const aVenirTotaux = totaux(aVenir);
   // Le nombre dans la bulle n'apparaît que pour les 7 prochains jours (et les charges en retard)
   const bientot = aVenir.filter((t) => t.date <= addDays(today, 7)).length;
@@ -160,7 +188,10 @@ export function Compte() {
   const q = recherche.trim().toLocaleLowerCase('fr');
   const joursFiltres = q
     ? jours
-        .map((j) => ({ ...j, operations: j.operations.filter((t) => `${t.label} ${t.categoryName} ${t.paymentMethod}`.toLocaleLowerCase('fr').includes(q)) }))
+        .map((j) => ({
+          ...j,
+          operations: j.operations.filter((t) => `${t.label} ${t.categoryName} ${t.paymentMethod}`.toLocaleLowerCase('fr').includes(q)),
+        }))
         .filter((j) => j.operations.length > 0)
     : jours;
   const { entrees, sorties } = totaux(joursFiltres.flatMap((j) => j.operations));
@@ -189,7 +220,13 @@ export function Compte() {
               ['carte-restaurant', 'Carte restaurant'],
             ] as [FiltreCompte, string][]
           ).map(([v, l]) => (
-            <button key={v} type="button" className={`chip ${filtre === v ? 'chip-on' : ''}`} aria-pressed={filtre === v} onClick={() => setFiltre(v)}>
+            <button
+              key={v}
+              type="button"
+              className={`chip ${filtre === v ? 'chip-on' : ''}`}
+              aria-pressed={filtre === v}
+              onClick={() => setFiltre(v)}
+            >
               {l}
             </button>
           ))}
@@ -202,6 +239,15 @@ export function Compte() {
           {actif === 'tout' ? 'Solde total aujourd’hui' : `${ACCOUNT_LABELS[actif]} – solde aujourd’hui`}
         </p>
         <p className={`solde-montant ${solde < 0 ? 'montant-moins' : 'montant-plus'}`}>{solde < 0 ? `− ${fmt(-solde)}` : fmt(solde)}</p>
+        {bloque > 0 && (
+          <p className="solde-bloque">
+            dont {fmt(bloque)} bloqué{bloque >= 200 ? 's' : ''} temporairement ({bloquees.map((h) => h.label).join(', ')}) : disponible tout de suite,{' '}
+            {fmt(solde - bloque)}.{' '}
+            <Link to="/plan" className="link">
+              Voir
+            </Link>
+          </p>
+        )}
         {actif === 'tout' && avecCarte && (
           <dl className="solde-detail">
             <div>
@@ -217,8 +263,8 @@ export function Compte() {
         {(data.adjustments ?? []).length === 0 && (
           <div className="solde-astuce">
             <p>
-              SoldeClair part de 0 € et ajoute chaque revenu le jour où il est versé (voir « À venir »). Pour afficher l’argent déjà présent sur
-              votre compte{avecCarte ? ' et votre carte restaurant' : ''}, indiquez une fois le solde affiché par votre banque.
+              SoldeClair part de 0 € et ajoute chaque revenu le jour où il est versé (voir « À venir »). Pour afficher l’argent déjà présent sur votre
+              compte{avecCarte ? ' et votre carte restaurant' : ''}, indiquez une fois le solde affiché par votre banque.
             </p>
             <Button variant="secondaire" className="btn-small" icon="edit" onClick={() => setAjuster(true)}>
               Indiquer mon solde réel
@@ -268,7 +314,10 @@ export function Compte() {
             <p className="a-venir-resume">
               Dans les 30 prochains jours : <strong className="montant-plus">+ {fmt(aVenirTotaux.entrees)}</strong> qui entrent,{' '}
               <strong className="montant-moins">− {fmt(aVenirTotaux.sorties)}</strong> qui sortent. Solde prévu :{' '}
-              <strong className={soldePrevu < 0 ? 'montant-moins' : 'montant-plus'}>{soldePrevu < 0 ? `− ${fmt(-soldePrevu)}` : fmt(soldePrevu)}</strong>.
+              <strong className={soldePrevu < 0 ? 'montant-moins' : 'montant-plus'}>
+                {soldePrevu < 0 ? `− ${fmt(-soldePrevu)}` : fmt(soldePrevu)}
+              </strong>
+              .
             </p>
             {aVenir.length === 0 ? (
               <EmptyState title="Rien de prévu">Aucune opération prévue dans les 30 prochains jours.</EmptyState>
@@ -280,8 +329,10 @@ export function Compte() {
                     <div className="operation-texte">
                       <p className="operation-libelle">{t.label}</p>
                       <p className="operation-detail">
-                        {t.date < today ? `Prévu le ${dayHeader(t.date, today).toLocaleLowerCase('fr')}, pas encore payé` : relativeDay(t.date, today)} –{' '}
-                        {details(t, avecCompte)}
+                        {t.date < today
+                          ? `Prévu le ${dayHeader(t.date, today).toLocaleLowerCase('fr')}, pas encore payé`
+                          : relativeDay(t.date, today)}{' '}
+                        – {details(t, avecCompte)}
                       </p>
                     </div>
                     <SignedAmount cents={Math.abs(signedAmount(t))} positive={signedAmount(t) >= 0} epargne={t.type === 'epargne'} />
@@ -294,7 +345,13 @@ export function Compte() {
           <>
             <h2 className="sr-only">Opérations passées</h2>
             <div className="operations-outils">
-              <TextField label="Rechercher une opération" type="search" value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Libellé, catégorie…" />
+              <TextField
+                label="Rechercher une opération"
+                type="search"
+                value={recherche}
+                onChange={(e) => setRecherche(e.target.value)}
+                placeholder="Libellé, catégorie…"
+              />
               <p className="operations-totaux" aria-live="polite">
                 <span>
                   Entrées : <strong className="montant-plus">+ {fmt(entrees)}</strong>
@@ -316,12 +373,20 @@ export function Compte() {
                     <h3 className="releve-date">
                       <span>{dayHeader(j.date, today)}</span>
                       <span className="releve-solde">
-                        Solde : <strong className={j.solde < 0 ? 'montant-moins' : 'montant-plus'}>{j.solde < 0 ? `− ${fmt(-j.solde)}` : fmt(j.solde)}</strong>
+                        Solde :{' '}
+                        <strong className={j.solde < 0 ? 'montant-moins' : 'montant-plus'}>
+                          {j.solde < 0 ? `− ${fmt(-j.solde)}` : fmt(j.solde)}
+                        </strong>
                       </span>
                     </h3>
                     <ul className="operations">
                       {j.operations.map((t) => (
-                        <Operation key={t.key} t={t} avecCompte={avecCompte} onSupprimer={t.type === 'ajustement' ? () => setASupprimer(t) : undefined} />
+                        <Operation
+                          key={t.key}
+                          t={t}
+                          avecCompte={avecCompte}
+                          onSupprimer={t.type === 'ajustement' ? () => setASupprimer(t) : undefined}
+                        />
                       ))}
                     </ul>
                   </section>

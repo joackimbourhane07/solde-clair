@@ -8,6 +8,7 @@ import {
   MENTION,
   PRESENTATION,
   QUESTIONS_PAR_PAGE,
+  QUESTIONS_PAR_PROFIL,
   QUESTIONS_RAPIDES,
   REPONSE_INTROUVABLE,
   RUBRIQUES,
@@ -34,7 +35,17 @@ interface Props {
   ajouterDepense: () => void;
 }
 
-function Groupe({ id, titre, questions, onChoisir }: { id: string; titre: string; questions: QuestionProposee[]; onChoisir: (q: QuestionProposee) => void }) {
+function Groupe({
+  id,
+  titre,
+  questions,
+  onChoisir,
+}: {
+  id: string;
+  titre: string;
+  questions: QuestionProposee[];
+  onChoisir: (q: QuestionProposee) => void;
+}) {
   return (
     <section className="poksy-groupe" aria-labelledby={id}>
       <h3 id={id} className="poksy-groupe-titre">
@@ -123,6 +134,8 @@ export default function PoksyPanneau({ messages, setMessages, plus, setPlus, onF
   const questionsPage = QUESTIONS_PAR_PAGE[page];
   const dejaProposees = new Set(questionsPage?.map((q) => q.id) ?? []);
   const rapides = QUESTIONS_RAPIDES.filter((q) => !dejaProposees.has(q.id));
+  // Questions adaptées à la situation (alternant : fin de contrat, 13e mois…), proposées en plus
+  const pourVous = (data.profile ? QUESTIONS_PAR_PROFIL[data.profile.type] : []).filter((q) => !dejaProposees.has(q.id));
   const choisir = (q: QuestionProposee) => repondre(q.libelle, q.id);
 
   return (
@@ -180,13 +193,16 @@ export default function PoksyPanneau({ messages, setMessages, plus, setPlus, onF
         <div className="poksy-suggestions">
           {questionsPage && <Groupe id="poksy-page" titre="Sur cette page" questions={questionsPage} onChoisir={choisir} />}
           <Groupe id="poksy-rapides" titre="Questions fréquentes" questions={rapides} onChoisir={choisir} />
+          {pourVous.length > 0 && <Groupe id="poksy-pour-vous" titre="Pour votre situation" questions={pourVous} onChoisir={choisir} />}
           <button type="button" className="poksy-plus" aria-expanded={plus} aria-controls="poksy-rubriques" onClick={() => setPlus(!plus)}>
             <Icon name={plus ? 'minus' : 'plus'} size={16} />
             <span>{plus ? 'Voir moins de questions' : 'Voir plus de questions'}</span>
           </button>
           <div id="poksy-rubriques" hidden={!plus}>
             {plus &&
-              RUBRIQUES.map((r, i) => <Groupe key={r.titre} id={`poksy-rubrique-${i}`} titre={r.titre} questions={r.questions} onChoisir={choisir} />)}
+              RUBRIQUES.map((r, i) => (
+                <Groupe key={r.titre} id={`poksy-rubrique-${i}`} titre={r.titre} questions={r.questions} onChoisir={choisir} />
+              ))}
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { Income } from '../types';
 import { carryOverInto, categoryName, jourBascule, moisDuRevenu, monthTransactions, transactionsInRange } from '../lib/budget';
@@ -24,13 +24,15 @@ export function Incomes() {
     }
   }, [params, setParams]);
 
-  const occurrences = useMemo(
-    () => monthTransactions(data, month, today).filter((t) => t.type === 'revenu'),
-    [data, month, today],
-  );
+  const occurrences = useMemo(() => monthTransactions(data, month, today).filter((t) => t.type === 'revenu'), [data, month, today]);
   const total = sum(occurrences.map((t) => t.amount));
   const idsThisMonth = new Set(occurrences.map((t) => t.sourceId));
-  const list = (showAll ? data.incomes : data.incomes.filter((i) => idsThisMonth.has(i.id))).slice().sort((a, b) => b.amount - a.amount);
+  // Revenus attendus (incertains) : affichés à part avec le mois prévu, jamais comptés tant qu'ils ne sont pas confirmés
+  const jourB = jourBascule(data);
+  const attendusDuMois = data.incomes.filter((i) => i.certitude === 'attendu' && moisDuRevenu(i.date, jourB) === month);
+  const list = (showAll ? data.incomes : data.incomes.filter((i) => idsThisMonth.has(i.id) || attendusDuMois.includes(i)))
+    .slice()
+    .sort((a, b) => Number(a.certitude === 'attendu') - Number(b.certitude === 'attendu') || b.amount - a.amount);
   const report = useMemo(() => carryOverInto(data, month, today), [data, month, today]);
   // Règle du 20 : un revenu reçu à partir de ce jour compte pour le mois suivant
   const jour = jourBascule(data);
@@ -45,7 +47,10 @@ export function Incomes() {
   /** Pourquoi un revenu n'apparaît pas dans les totaux du mois affiché. */
   const horsDuMois = (inc: Income): { texte: string; mois: string } | null => {
     if (idsThisMonth.has(inc.id)) return null;
-    if (inc.recurring && inc.endDate && inc.endDate < firstDay(month)) return { texte: `Terminé le ${formatDate(inc.endDate)}`, mois: monthOf(inc.endDate) };
+    if (inc.certitude === 'attendu')
+      return { texte: `Attendu vers ${monthLabel(moisDuRevenu(inc.date, jour))}, pas encore compté`, mois: moisDuRevenu(inc.date, jour) };
+    if (inc.recurring && inc.endDate && inc.endDate < firstDay(month))
+      return { texte: `Terminé le ${formatDate(inc.endDate)}`, mois: monthOf(inc.endDate) };
     const m = moisDuRevenu(inc.date, jour);
     if (inc.recurring) return { texte: `À partir de ${monthLabel(m)}`, mois: m };
     return { texte: `Compté en ${monthLabel(m)}`, mois: m };
@@ -68,34 +73,62 @@ export function Incomes() {
       />
       <MonthSwitcher />
       <div className="stats-grid stats-compact">
-        <Stat label={`Revenus ${ofMonth(month)}`} value={fmt(total)} tone="entree" detail={avecCarte ? 'Toutes les sources' : undefined} />
         {avecCarte ? (
           <>
-            <Stat label="Sur le compte bancaire" value={fmt(total - surCarte)} tone="entree" />
-            <Stat label="Sur la carte restaurant" value={fmt(surCarte)} tone="entree" />
+            <Stat label={`Revenus encaissés ${ofMonth(month)}`} value={fmt(total - surCarte)} tone="entree" detail="Sur le compte bancaire" />
+            <Stat
+              label="Pouvoir d’achat alimentaire"
+              value={fmt(surCarte)}
+              tone="entree"
+              detail="Titres-restaurant : avantage en nature, pas un revenu encaissé"
+            />
+            <Stat label="Total des ressources" value={fmt(total)} detail="Encaissé + titres-restaurant" />
           </>
         ) : (
           <>
-            <Stat label="Dont revenus récurrents" value={fmt(recurringTotal)} tone="entree" />
-            <Stat label="Dont revenus exceptionnels" value={fmt(total - recurringTotal)} tone="entree" />
+            <Stat label={`Revenus ${ofMonth(month)}`} value={fmt(total)} tone="entree" />
+            <>
+              <Stat label="Dont revenus récurrents" value={fmt(recurringTotal)} tone="entree" />
+              <Stat label="Dont revenus exceptionnels" value={fmt(total - recurringTotal)} tone="entree" />
+            </>
           </>
         )}
       </div>
       {jour !== null && (recusLeMoisPrecedent.length > 0 || finDeMoisCeMois.length > 0) && (
         <Notice>
           Les revenus reçus à partir du {jour} comptent pour le mois suivant
-          {recusLeMoisPrecedent.length > 0 ? ` : ${recusLeMoisPrecedent.map((t) => `${t.label} (${formatDate(t.date)})`).join(', ')} ${recusLeMoisPrecedent.length > 1 ? 'sont comptés' : 'est compté'} ici` : ''}
-          {finDeMoisCeMois.length > 0 ? `${recusLeMoisPrecedent.length > 0 ? ' ; ' : ' : '}${finDeMoisCeMois.map((t) => `${t.label} (${formatDate(t.date)})`).join(', ')} ${finDeMoisCeMois.length > 1 ? 'compteront' : 'comptera'} pour ${monthLabel(addMonths(month, 1))}` : ''}
+          {recusLeMoisPrecedent.length > 0
+            ? ` : ${recusLeMoisPrecedent.map((t) => `${t.label} (${formatDate(t.date)})`).join(', ')} ${recusLeMoisPrecedent.length > 1 ? 'sont comptés' : 'est compté'} ici`
+            : ''}
+          {finDeMoisCeMois.length > 0
+            ? `${recusLeMoisPrecedent.length > 0 ? ' ; ' : ' : '}${finDeMoisCeMois.map((t) => `${t.label} (${formatDate(t.date)})`).join(', ')} ${finDeMoisCeMois.length > 1 ? 'compteront' : 'comptera'} pour ${monthLabel(addMonths(month, 1))}`
+            : ''}
           . Réglable dans les paramètres.
         </Notice>
       )}
+      {attendusDuMois.length > 0 && (
+        <p className="muted petit-texte">
+          {attendusDuMois.length === 1 ? `« ${attendusDuMois[0].name} » est attendu` : `${attendusDuMois.length} revenus sont attendus`} ce mois-ci :
+          pas compté
+          {attendusDuMois.length > 1 ? 's' : ''} tant que vous ne {attendusDuMois.length > 1 ? 'les' : 'l’'}avez pas confirmé
+          {attendusDuMois.length > 1 ? 's' : ''}.{' '}
+          <Link to="/plan" className="link">
+            Mon plan
+          </Link>
+        </p>
+      )}
       {report !== 0 && (
         <p className="muted petit-texte">
-          {report > 0 ? `Reste des mois précédents : + ${fmt(report)}` : `Dépassement des mois précédents : − ${fmt(-report)}`}, déjà compris dans le solde de « Mon compte » et du tableau de bord.
+          {report > 0 ? `Reste des mois précédents : + ${fmt(report)}` : `Dépassement des mois précédents : − ${fmt(-report)}`}, déjà compris dans le
+          solde de « Mon compte » et du tableau de bord.
         </p>
       )}
       <Card>
-        <CheckboxField label="Afficher tous les revenus enregistrés (tous les mois)" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
+        <CheckboxField
+          label="Afficher tous les revenus enregistrés (tous les mois)"
+          checked={showAll}
+          onChange={(e) => setShowAll(e.target.checked)}
+        />
         {list.length === 0 ? (
           <EmptyState
             title="Aucun revenu pour ce mois"
@@ -120,11 +153,16 @@ export function Incomes() {
                       <span className={`tag ${inc.recurring ? 'tag-recurrent' : ''}`}>
                         {inc.recurring ? FREQUENCY_LABELS[inc.frequency ?? 'mensuel'] : 'Exceptionnel'}
                       </span>
+                      {inc.certitude === 'attendu' && <span className="tag tag-attendu">Attendu</span>}
                       {hors && <span className="tag tag-autre-mois">{hors.texte}</span>}
                       {occ.some((o) => monthOf(o.date) !== month) && (
-                        <span className="tag tag-autre-mois">Reçu fin {monthLabel(monthOf(occ.find((o) => monthOf(o.date) !== month)!.date), false)}</span>
+                        <span className="tag tag-autre-mois">
+                          Reçu fin {monthLabel(monthOf(occ.find((o) => monthOf(o.date) !== month)!.date), false)}
+                        </span>
                       )}
-                      {avecCarte && (occ[0]?.account ?? (inc.account || null)) === 'carte-restaurant' && <span className="tag tag-carte">Carte restaurant</span>}
+                      {avecCarte && (occ[0]?.account ?? (inc.account || null)) === 'carte-restaurant' && (
+                        <span className="tag tag-carte">Carte restaurant</span>
+                      )}
                     </p>
                     <p className="item-meta">
                       {categoryName(data, inc.categoryId)} –{' '}
@@ -143,7 +181,8 @@ export function Incomes() {
                     )}
                   </div>
                   <span className={`montant ${hors ? 'montant-hors-mois' : 'montant-plus'}`}>
-                    + {fmt(inc.amount)}
+                    {inc.certitude === 'attendu' && inc.amountUnknown ? 'Montant inconnu' : `+ ${fmt(inc.amount)}`}
+                    {inc.certitude === 'attendu' && inc.amountMax ? ` à ${fmt(inc.amountMax)}` : ''}
                     {occ.length > 1 && <span className="muted"> × {occ.length}</span>}
                   </span>
                   <div className="item-actions">

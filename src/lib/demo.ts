@@ -11,6 +11,7 @@ import type {
   ProfileType,
   SavingsDeposit,
   SavingsGoal,
+  SavingsSupport,
 } from '../types';
 import { presetCategories } from './categories';
 import { addMonths, addMonthsToDate, daysInMonth, monthOf, toISO, parseMonth } from './dates';
@@ -120,12 +121,30 @@ const SPECS: Record<DemoProfile, DemoSpec> = {
       { name: 'Frais d’inscription', amount: 17000, day: 15, category: 'Frais scolaires', frequency: 'annuel', monthsAgo: 2 },
     ],
     budgets: {
-      Alimentation: 18000, Transport: 2000, Loisirs: 5000, Restaurants: 4000, Fournitures: 1500,
-      Santé: 1500, Shopping: 3000, Imprévus: 2000,
+      Alimentation: 18000,
+      Transport: 2000,
+      Loisirs: 5000,
+      Restaurants: 4000,
+      Fournitures: 1500,
+      Santé: 1500,
+      Shopping: 3000,
+      Imprévus: 2000,
     },
     variables: [
-      { category: 'Alimentation', monthly: 17500, count: 9, labels: ['Courses supermarché', 'Marché', 'Boulangerie', 'Épicerie'], payment: 'Carte bancaire' },
-      { category: 'Restaurants', monthly: 4200, count: 4, labels: ['Restaurant universitaire', 'Café avec des amis', 'Kebab'], payment: 'Carte bancaire' },
+      {
+        category: 'Alimentation',
+        monthly: 17500,
+        count: 9,
+        labels: ['Courses supermarché', 'Marché', 'Boulangerie', 'Épicerie'],
+        payment: 'Carte bancaire',
+      },
+      {
+        category: 'Restaurants',
+        monthly: 4200,
+        count: 4,
+        labels: ['Restaurant universitaire', 'Café avec des amis', 'Kebab'],
+        payment: 'Carte bancaire',
+      },
       { category: 'Loisirs', monthly: 4000, count: 3, labels: ['Cinéma', 'Sortie', 'Concert'], payment: 'Carte bancaire' },
       { category: 'Fournitures', monthly: 1200, count: 2, labels: ['Cahiers', 'Photocopies'], payment: 'Espèces' },
       { category: 'Shopping', monthly: 2600, count: 1, labels: ['Vêtements', 'Livre'], payment: 'Carte bancaire' },
@@ -133,8 +152,24 @@ const SPECS: Record<DemoProfile, DemoSpec> = {
       { category: 'Santé', monthly: 900, count: 1, labels: ['Pharmacie'], payment: 'Carte bancaire' },
     ],
     goals: [
-      { name: 'Ordinateur', description: 'Remplacer mon ordinateur portable pour les cours.', target: 90000, initial: 15000, monthly: 4000, monthsToTarget: 10, priority: 'haute' },
-      { name: 'Fonds d’urgence', description: 'Avoir un petit matelas de sécurité.', target: 50000, initial: 12000, monthly: 1000, monthsToTarget: null, priority: 'moyenne' },
+      {
+        name: 'Ordinateur',
+        description: 'Remplacer mon ordinateur portable pour les cours.',
+        target: 90000,
+        initial: 15000,
+        monthly: 4000,
+        monthsToTarget: 10,
+        priority: 'haute',
+      },
+      {
+        name: 'Fonds d’urgence',
+        description: 'Avoir un petit matelas de sécurité.',
+        target: 50000,
+        initial: 12000,
+        monthly: 1000,
+        monthsToTarget: null,
+        priority: 'moyenne',
+      },
     ],
   },
   alternant: {
@@ -159,8 +194,14 @@ const SPECS: Record<DemoProfile, DemoSpec> = {
       { name: 'Streaming + salle de sport', amount: 3498, day: 18, category: 'Abonnements' },
     ],
     budgets: {
-      Alimentation: 22000, Carburant: 12000, Transport: 2000, Restaurants: 6000, Loisirs: 7000,
-      Shopping: 5000, Santé: 2000, Imprévus: 3000,
+      Alimentation: 22000,
+      Carburant: 12000,
+      Transport: 2000,
+      Restaurants: 6000,
+      Loisirs: 7000,
+      Shopping: 5000,
+      Santé: 2000,
+      Imprévus: 3000,
     },
     variables: [
       { category: 'Alimentation', monthly: 21000, count: 8, labels: ['Courses', 'Drive', 'Boulangerie'], payment: 'Carte bancaire' },
@@ -172,8 +213,24 @@ const SPECS: Record<DemoProfile, DemoSpec> = {
       { category: 'Imprévus', monthly: 2500, count: 1, labels: ['Réparation vélo', 'Amende de stationnement'], payment: 'Carte bancaire' },
     ],
     goals: [
-      { name: 'Voiture', description: 'Changer de voiture à la fin de l’alternance.', target: 400000, initial: 80000, monthly: 12000, monthsToTarget: 20, priority: 'haute' },
-      { name: 'Voyage', description: 'Une semaine au soleil l’été prochain.', target: 80000, initial: 10000, monthly: 3000, monthsToTarget: 9, priority: 'moyenne' },
+      {
+        name: 'Voiture',
+        description: 'Changer de voiture à la fin de l’alternance.',
+        target: 400000,
+        initial: 80000,
+        monthly: 12000,
+        monthsToTarget: 20,
+        priority: 'haute',
+      },
+      {
+        name: 'Voyage',
+        description: 'Une semaine au soleil l’été prochain.',
+        target: 80000,
+        initial: 10000,
+        monthly: 3000,
+        monthsToTarget: 9,
+        priority: 'moyenne',
+      },
     ],
   },
   salarie: {
@@ -202,11 +259,25 @@ const SPECS: Record<DemoProfile, DemoSpec> = {
       { name: 'Streaming', amount: 2497, day: 20, category: 'Abonnements' },
     ],
     budgets: {
-      Alimentation: 45000, Carburant: 11000, Enfants: 8000, Loisirs: 10000, Restaurants: 8000,
-      Shopping: 9000, Santé: 4000, Cadeaux: 4000, Voyages: 5000, Imprévus: 6000,
+      Alimentation: 45000,
+      Carburant: 11000,
+      Enfants: 8000,
+      Loisirs: 10000,
+      Restaurants: 8000,
+      Shopping: 9000,
+      Santé: 4000,
+      Cadeaux: 4000,
+      Voyages: 5000,
+      Imprévus: 6000,
     },
     variables: [
-      { category: 'Alimentation', monthly: 43000, count: 10, labels: ['Courses de la semaine', 'Marché', 'Boucherie', 'Boulangerie'], payment: 'Carte bancaire' },
+      {
+        category: 'Alimentation',
+        monthly: 43000,
+        count: 10,
+        labels: ['Courses de la semaine', 'Marché', 'Boucherie', 'Boulangerie'],
+        payment: 'Carte bancaire',
+      },
       { category: 'Carburant', monthly: 10500, count: 2, labels: ['Plein'], payment: 'Carte bancaire' },
       { category: 'Enfants', monthly: 8500, count: 3, labels: ['Couches', 'Vêtements enfant', 'Jouet'], payment: 'Carte bancaire' },
       { category: 'Loisirs', monthly: 7500, count: 3, labels: ['Piscine', 'Cinéma', 'Livre'], payment: 'Carte bancaire' },
@@ -217,8 +288,24 @@ const SPECS: Record<DemoProfile, DemoSpec> = {
       { category: 'Imprévus', monthly: 4000, count: 1, labels: ['Réparation électroménager', 'Serrurier'], payment: 'Virement' },
     ],
     goals: [
-      { name: 'Fonds d’urgence', description: 'Trois mois de dépenses de côté.', target: 600000, initial: 320000, monthly: 20000, monthsToTarget: 14, priority: 'haute' },
-      { name: 'Voyage en famille', description: 'Vacances d’été.', target: 150000, initial: 30000, monthly: 10000, monthsToTarget: 8, priority: 'moyenne' },
+      {
+        name: 'Fonds d’urgence',
+        description: 'Trois mois de dépenses de côté.',
+        target: 600000,
+        initial: 320000,
+        monthly: 20000,
+        monthsToTarget: 14,
+        priority: 'haute',
+      },
+      {
+        name: 'Voyage en famille',
+        description: 'Vacances d’été.',
+        target: 150000,
+        initial: 30000,
+        monthly: 10000,
+        monthsToTarget: 8,
+        priority: 'moyenne',
+      },
     ],
   },
 };
@@ -236,7 +323,7 @@ export function buildDemoData(profile: DemoProfile, today: ISODate): AppData {
   const categories: Category[] = presetCategories(spec.type).map((c) => ({
     ...c,
     id: id('cat'),
-    budget: c.kind === 'variable' ? spec.budgets[c.name] ?? null : null,
+    budget: c.kind === 'variable' ? (spec.budgets[c.name] ?? null) : null,
   }));
   const cat = (kind: CategoryKind, name: string): string => {
     const found = categories.find((c) => c.kind === kind && c.name === name);
@@ -334,6 +421,41 @@ export function buildDemoData(profile: DemoProfile, today: ISODate): AppData {
     });
   }
 
+  // « Mon plan d'épargne » : un livret qui reçoit l'épargne, et pour l'alternant une fin de contrat et un 13e mois attendu
+  const epargneTotale = goals.reduce((t, g) => t + g.initialAmount, 0) + savings.reduce((t, s) => t + s.amount, 0);
+  const supports: SavingsSupport[] = [
+    {
+      id: id('sup'),
+      name: 'Livret A',
+      kind: 'livret-a',
+      balance: epargneTotale,
+      balanceDate: today,
+      rate: 1.7,
+      liquidity: 'immediate',
+      blockedUntil: null,
+      withdrawalCloses: false,
+      ceiling: 2295000,
+      target: null,
+      note: '',
+    },
+  ];
+  if (spec.type === 'alternant') {
+    const decembre = `${today.slice(0, 4)}-12-15`;
+    incomes.push({
+      id: id('rev'),
+      name: '13e mois',
+      amount: 90000,
+      date: decembre >= today ? decembre : addMonthsToDate(decembre, 12),
+      categoryId: incomes[0].categoryId,
+      recurring: false,
+      frequency: null,
+      endDate: null,
+      note: 'Prévu par l’entreprise, montant à confirmer',
+      certitude: 'attendu',
+      inOptimistic: true,
+    });
+  }
+
   return {
     version: 1,
     profile: {
@@ -343,6 +465,7 @@ export function buildDemoData(profile: DemoProfile, today: ISODate): AppData {
       monthlySavingsTarget: spec.savingsTarget,
       variableEstimate: spec.variableEstimate,
       createdAt: dateIn(startMonth, 1),
+      ...(spec.type === 'alternant' ? { situation: { formation: 'BTS, 2e année', fin: addMonthsToDate(today, 10) } } : {}),
     },
     settings: { theme: 'light', appearanceVersion: APPEARANCE_VERSION, presetsVersion: PRESETS_VERSION },
     adjustments: [],
@@ -352,5 +475,7 @@ export function buildDemoData(profile: DemoProfile, today: ISODate): AppData {
     expenses,
     goals,
     savings,
+    supports,
+    holds: [],
   };
 }

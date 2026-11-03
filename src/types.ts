@@ -35,6 +35,24 @@ export interface Profile {
   /** Estimation des dépenses variables mensuelles (centimes). */
   variableEstimate: Cents;
   createdAt: ISODate;
+  /** Date de naissance (facultative) : âge, Livret Jeune, tranche de salaire d'apprenti. */
+  birthDate?: ISODate | null;
+  /** Détails de la situation (facultatifs), dont le sens dépend du profil. */
+  situation?: ProfileSituation;
+}
+
+/**
+ * Détails de la situation. Alternant : formation, entreprise, début et fin du contrat ;
+ * étudiant : études, établissement, année universitaire ; salarié : poste, employeur, embauche, fin de CDD ;
+ * indépendant : activité, entreprise, début d'activité.
+ */
+export interface ProfileSituation {
+  formation?: string;
+  employeur?: string;
+  debut?: ISODate | null;
+  fin?: ISODate | null;
+  /** Territoire ou département (ex. « Gironde (33) »). */
+  territoire?: string;
 }
 
 export interface Category {
@@ -59,6 +77,25 @@ export interface Income {
   note: string;
   /** Compte crédité ; absent = déduit de la catégorie ou du nom (« Carte restaurant » → carte restaurant). */
   account?: AccountId;
+  /**
+   * « attendu » : revenu incertain (prime non confirmée, montant inconnu…). Il n'est compté nulle part
+   * tant qu'il n'est pas confirmé, sauf dans la projection optimiste si on le coche. Absent : revenu sûr.
+   */
+  certitude?: 'sur' | 'attendu';
+  /** Revenu attendu : haut de la fourchette (le montant `amount` en est le bas). */
+  amountMax?: Cents | null;
+  /** Revenu attendu dont le montant est encore inconnu. */
+  amountUnknown?: boolean;
+  /** Revenu attendu inclus dans la projection optimiste. */
+  inOptimistic?: boolean;
+  /** Détail facultatif, par exemple les lignes du bulletin de paie (montants signés, en centimes). */
+  details?: IncomeDetail[];
+}
+
+export interface IncomeDetail {
+  label: string;
+  /** Montant signé : + pour un gain, − pour une retenue. */
+  amount: number;
 }
 
 /** Ajustement du solde réel d'un compte (montant signé), pour coller au solde de la banque. */
@@ -94,6 +131,8 @@ export interface Expense {
   date: ISODate;
   description: string;
   paymentMethod: string;
+  /** Dépense exceptionnelle (voyage, achat important…) : hors du budget courant, comptée à part dans la projection. */
+  exceptional?: boolean;
 }
 
 export interface SavingsGoal {
@@ -109,6 +148,8 @@ export interface SavingsGoal {
   createdAt: ISODate;
   /** Illustration choisie ; absente : déduite du nom (« Voyage » → voyage…). */
   theme?: GoalTheme;
+  /** Supports d'épargne suivis par l'objectif : le montant atteint est leur total (tous supports confondus). */
+  supportIds?: string[];
 }
 
 export type GoalTheme = 'urgence' | 'voyage' | 'vehicule' | 'etudes' | 'logement' | 'tech' | 'fete' | 'sante' | 'projet';
@@ -119,6 +160,59 @@ export interface SavingsDeposit {
   goalId: string | null;
   amount: Cents;
   date: ISODate;
+  note: string;
+  /** Support crédité (Livret A, PEL…) : son solde augmente du versement. */
+  supportId?: string | null;
+}
+
+export type SupportKind =
+  | 'livret-a'
+  | 'ldds'
+  | 'livret-jeune'
+  | 'lep'
+  | 'pel'
+  | 'cel'
+  | 'assurance-vie'
+  | 'pea'
+  | 'epargne-salariale'
+  | 'compte-courant'
+  | 'autre';
+
+/** Support d'épargne : livret, plan, compte… avec son solde, son taux et sa disponibilité. */
+export interface SavingsSupport {
+  id: string;
+  name: string;
+  kind: SupportKind;
+  /** Solde connu à la date `balanceDate` ; les versements liés après cette date s'y ajoutent. */
+  balance: Cents;
+  balanceDate: ISODate;
+  /** Taux net annuel en % (ex. 1.7). */
+  rate: number;
+  /** Disponibilité : immédiate ou bloquée. */
+  liquidity: 'immediate' | 'bloque';
+  /** Bloqué jusqu'à cette date (facultatif). */
+  blockedUntil: ISODate | null;
+  /** Un retrait clôture le support (PEL…). */
+  withdrawalCloses: boolean;
+  /** Plafond de versements (facultatif). */
+  ceiling: Cents | null;
+  /** Montant visé sur ce support dans la répartition de l'objectif (facultatif). */
+  target: Cents | null;
+  note: string;
+}
+
+/** Somme bloquée temporairement (dépôt de garantie, caution…) : ce n'est pas une dépense, elle est rendue ensuite. */
+export interface TemporaryHold {
+  id: string;
+  label: string;
+  amount: Cents;
+  /** Date à laquelle la somme est bloquée. */
+  start: ISODate;
+  /** Date prévue de restitution (facultative). */
+  end: ISODate | null;
+  account: AccountId;
+  /** Somme rendue (restitution confirmée). */
+  returned: boolean;
   note: string;
 }
 
@@ -155,6 +249,10 @@ export interface AppData {
   savings: SavingsDeposit[];
   /** Ajustements de solde (onglet Compte). */
   adjustments: BalanceAdjustment[];
+  /** Supports d'épargne (absents des sauvegardes plus anciennes). */
+  supports?: SavingsSupport[];
+  /** Sommes bloquées temporairement (dépôt de garantie…). */
+  holds?: TemporaryHold[];
 }
 
 export type TransactionType = 'revenu' | 'charge' | 'depense' | 'epargne' | 'ajustement';

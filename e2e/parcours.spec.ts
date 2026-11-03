@@ -157,7 +157,7 @@ test('carte restaurant et onglet Compte : revenu, paiement, soldes séparés, aj
   await expect(revenu.getByRole('group', { name: 'Versé sur' }).getByLabel('Carte restaurant')).toBeChecked();
   await revenu.getByLabel('Date du premier versement').fill('2026-11-01');
   await revenu.getByRole('button', { name: 'Ajouter le revenu' }).click();
-  expect(await stat(page, 'Sur la carte restaurant')).toBe('180,00 €');
+  expect(await stat(page, 'Pouvoir d’achat alimentaire')).toBe('180,00 €');
 
   // Déjeuner payé avec la carte restaurant
   await aller(page, 'depenses');

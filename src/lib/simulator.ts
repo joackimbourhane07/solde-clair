@@ -1,8 +1,9 @@
 import type { AppData, Cents, ISODate } from '../types';
 import { budgetLevel, categoryBudgets, monthSummary, type BudgetLevel } from './budget';
 import { monthOf } from './dates';
-import { goalProgress, sortGoals } from './goals';
+import { sortGoals } from './goals';
 import { resteAVivre } from './accounts';
+import { progressionObjectif } from './plan';
 import { divideCents } from './money';
 
 export type Verdict = 'confortable' | 'prudence' | 'desequilibre';
@@ -94,7 +95,7 @@ export function simulatePurchase(
   }
 
   const goals: GoalImpact[] = sortGoals(data.goals)
-    .filter((g) => !goalProgress(g, data.savings, today).reached)
+    .filter((g) => !progressionObjectif(data, g, today).reached)
     .map((g) => ({
       goalId: g.id,
       name: g.name,

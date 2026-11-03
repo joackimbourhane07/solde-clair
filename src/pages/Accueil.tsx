@@ -331,7 +331,7 @@ export default function Accueil() {
           </div>
           <div className="accueil-colonne-visuel visuel-tel duo-tel">
             <Telephone src={captureAjout} className="tel-arriere" alt="Ajout d’une dépense : montant, catégories fréquentes en un geste, description et date." />
-            <Telephone src={captureAVenir} className="tel-avant" alt="Carte « À venir » : « Dans les 7 prochains jours : 1 charge prévue », prélèvements et revenus attendus avec leurs dates." />
+            <Telephone src={captureAVenir} className="tel-avant" alt="Carte « À venir » : « Dans les 7 prochains jours : 1 charge prévue », prélèvements et revenus prévus avec leurs dates." />
             <div className="objet-coin objet-coin-bas" aria-hidden="true">
               <PetitTicket />
             </div>

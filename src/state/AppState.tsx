@@ -13,8 +13,10 @@ import type {
   SavingsDeposit,
   SavingsGoal,
   ThemeChoice,
+  SavingsSupport,
+  TemporaryHold,
 } from '../types';
-import { clearData, emptyData, listProfiles, loadData, loadIndex, PRESETS_VERSION, saveData, saveIndex, type ProfilResume } from '../lib/storage';
+import { clearData, clearDepart, emptyData, listProfiles, loadData, loadIndex, PRESETS_VERSION, saveData, saveIndex, type ProfilResume } from '../lib/storage';
 import { isCarteRestaurant } from '../lib/budget';
 import { newId } from '../lib/id';
 import { monthOf, todayISO } from '../lib/dates';
@@ -33,6 +35,8 @@ type Collections = {
   savings: SavingsDeposit;
   categories: Category;
   adjustments: BalanceAdjustment;
+  supports: SavingsSupport;
+  holds: TemporaryHold;
 };
 type CollectionName = keyof Collections;
 
@@ -93,13 +97,13 @@ export function reducer(state: AppData, action: Action): AppData {
       return { ...state, settings: { ...state.settings, dismissedActions: [...deja, action.id].slice(-50) } };
     }
     case 'upsert': {
-      const list = state[action.collection] as { id: string }[];
+      const list = (state[action.collection] ?? []) as { id: string }[];
       const exists = list.some((x) => x.id === action.item.id);
       const next = exists ? list.map((x) => (x.id === action.item.id ? action.item : x)) : [...list, action.item];
       return { ...state, [action.collection]: next };
     }
     case 'remove': {
-      const list = state[action.collection] as { id: string }[];
+      const list = (state[action.collection] ?? []) as { id: string }[];
       return { ...state, [action.collection]: list.filter((x) => x.id !== action.id) };
     }
     case 'removeGoal':
@@ -236,9 +240,10 @@ export function AppProvider({
     const index = loadIndex();
     const isEmpty =
       !data.profile &&
-      [data.categories, data.incomes, data.fixedCharges, data.expenses, data.goals, data.savings, data.adjustments ?? []].every((l) => l.length === 0);
+      [data.categories, data.incomes, data.fixedCharges, data.expenses, data.goals, data.savings, data.adjustments ?? [], data.supports ?? [], data.holds ?? []].every((l) => l.length === 0);
     if (isEmpty) {
       clearData(profilActif); // après « Tout effacer », rien ne reste dans le navigateur pour ce profil
+      clearDepart(profilActif);
       saveIndex({ actif: profilActif, ids: index.ids.filter((id) => id !== profilActif) });
       setProfils(listProfiles());
       return;

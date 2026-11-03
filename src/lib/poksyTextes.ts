@@ -13,7 +13,8 @@ export type PoksyAction =
   | 'simulateur'
   | 'budgets'
   | 'sauvegarde'
-  | 'parametres';
+  | 'parametres'
+  | 'plan';
 
 export interface MessagePoksy {
   id: number;

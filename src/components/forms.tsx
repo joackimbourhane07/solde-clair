@@ -1,5 +1,21 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import type { AccountId, CategoryKind, Expense, FixedCharge, Frequency, GoalTheme, Income, ISODate, Priority, SavingsDeposit, SavingsGoal } from '../types';
+import type {
+  AccountId,
+  CategoryKind,
+  Expense,
+  FixedCharge,
+  Frequency,
+  GoalTheme,
+  Income,
+  ISODate,
+  Priority,
+  SavingsDeposit,
+  SavingsGoal,
+  SavingsSupport,
+  SupportKind,
+  TemporaryHold,
+} from '../types';
+import { MODELES_SUPPORT, SUPPORT_KINDS } from '../lib/plan';
 import { useApp } from '../state/AppState';
 import { centsToInput, parseAmount } from '../lib/money';
 import { isValidISODate, monthLabel, monthOf } from '../lib/dates';
@@ -10,7 +26,7 @@ import { FREQUENCY_LABELS } from '../lib/recurrence';
 import { makeCategory, PAYMENT_METHODS } from '../lib/categories';
 import { GOAL_EXAMPLES, GOAL_THEMES, PRIORITY_LABELS, THEME_LABELS, themeFromName } from '../lib/goals';
 import { IllustrationObjectif } from './objectifs/IllustrationObjectif';
-import { Button, MoneyField, SelectField, TextAreaField, TextField } from './ui';
+import { Button, CheckboxField, IconButton, MoneyField, SelectField, TextAreaField, TextField } from './ui';
 
 /* -------------------------------------------------------------------------- */
 /* Validation                                                                  */
@@ -83,8 +99,8 @@ function useConfirmation() {
       : decale
         ? ` Reçu à partir du ${jour} : il compte pour ${monthLabel(m)}.`
         : m < month && data.settings.carryOver !== false
-        ? ` Mois concerné : ${monthLabel(m)}. Le reste de ce mois est reporté sur les suivants.`
-        : ` Mois concerné : ${monthLabel(m)} (pas ${monthLabel(month)}).`;
+          ? ` Mois concerné : ${monthLabel(m)}. Le reste de ce mois est reporté sur les suivants.`
+          : ` Mois concerné : ${monthLabel(m)} (pas ${monthLabel(month)}).`;
     notify(texte + precision, 'info', { label: `Voir ${monthLabel(m)}`, onClick: () => setMonth(m) });
   };
 }
@@ -174,6 +190,7 @@ export function ExpenseForm({
   const [date, setDate] = useState(initial?.date ?? defaultDate);
   const [description, setDescription] = useState(initial?.description ?? '');
   const [paymentMethod, setPaymentMethod] = useState(initial?.paymentMethod ?? '');
+  const [exceptionnelle, setExceptionnelle] = useState(initial?.exceptional ?? false);
   const [errors, setErrors] = useState<Errors>({});
 
   const submit = (e: FormEvent) => {
@@ -196,6 +213,7 @@ export function ExpenseForm({
         date,
         description: description.trim(),
         paymentMethod,
+        ...(exceptionnelle ? { exceptional: true } : {}),
       },
     });
     confirmer(initial ? 'Dépense modifiée et enregistrée.' : `Dépense de ${fmt(cents)} enregistrée.`, date);
@@ -249,6 +267,14 @@ export function ExpenseForm({
           </SelectField>
         )}
       </div>
+      {!quick && (
+        <CheckboxField
+          label="Dépense exceptionnelle (hors budget courant)"
+          checked={exceptionnelle}
+          onChange={(e) => setExceptionnelle(e.target.checked)}
+          hint="Voyage, gros achat… Elle reste dans votre solde, mais la projection de « Mon plan » la compte à part de vos dépenses courantes."
+        />
+      )}
       {quick ? (
         <div className="form-actions">
           <button type="submit" className="btn btn-primaire">
@@ -266,43 +292,82 @@ export function ExpenseForm({
 /* Revenu                                                                      */
 /* -------------------------------------------------------------------------- */
 
+/** Montant signé saisi en texte (« -88 » ou « − 88,00 » pour une retenue). */
+function lireMontantSigne(texte: string): number | null {
+  const t = texte.trim();
+  const negatif = /^[-−]/.test(t);
+  const v = parseAmount(t.replace(/^[-−+]\s*/, ''));
+  return v === null ? null : negatif ? -v : v;
+}
+
 export function IncomeForm({
   initial,
   defaultDate,
+  certitudeParDefaut = 'sur',
+  confirmerReception = false,
+  nomPropose,
   onDone,
   onCancel,
 }: {
   initial?: Income;
   defaultDate: ISODate;
+  /** Nouveau revenu : sûr (par défaut) ou attendu (prime incertaine…). */
+  certitudeParDefaut?: 'sur' | 'attendu';
+  /** Un revenu attendu vient d'arriver : le formulaire le confirme (il devient sûr). */
+  confirmerReception?: boolean;
+  /** Nom prérempli (suggestion selon le profil : 13e mois…). */
+  nomPropose?: string;
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const { data, dispatch } = useApp();
+  const { data, dispatch, notify, fmt } = useApp();
   const confirmer = useConfirmation();
   const choix = useChoixCategorie('income', initial?.categoryId);
-  const [name, setName] = useState(initial?.name ?? '');
+  const [name, setName] = useState(initial?.name ?? nomPropose ?? '');
   // Compte crédité : choisi par la personne, sinon déduit de la catégorie ou du nom (« Carte restaurant »).
   const [compteChoisi, setCompteChoisi] = useState<AccountId | null>(initial?.account ?? null);
   const nomCategorie = choix.categoryId === '__nouvelle__' ? choix.nouvelle : (data.categories.find((c) => c.id === choix.categoryId)?.name ?? '');
   const compte: AccountId = compteChoisi ?? (isCarteRestaurant(nomCategorie) || isCarteRestaurant(name) ? 'carte-restaurant' : 'compte');
   const proposerCompte = usesCarteRestaurant(data) || compte === 'carte-restaurant';
   const [amount, setAmount] = useState(centsToInput(initial?.amount));
-  const [date, setDate] = useState(initial?.date ?? defaultDate);
-  const [recurring, setRecurring] = useState(initial?.recurring ?? true);
+  // Réception confirmée : la date proposée est celle du jour (modifiable)
+  const [date, setDate] = useState(confirmerReception ? defaultDate : (initial?.date ?? defaultDate));
+  const [recurring, setRecurring] = useState(initial?.recurring ?? certitudeParDefaut !== 'attendu');
   const [frequency, setFrequency] = useState<Frequency>(initial?.frequency ?? 'mensuel');
   const [endDate, setEndDate] = useState(initial?.endDate ?? '');
   const [note, setNote] = useState(initial?.note ?? '');
   const [errors, setErrors] = useState<Errors>({});
+  // Revenu sûr ou attendu (incertain : prime non confirmée, montant inconnu…)
+  const [certitude, setCertitude] = useState<'sur' | 'attendu'>(confirmerReception ? 'sur' : (initial?.certitude ?? certitudeParDefaut));
+  const attendu = certitude === 'attendu';
+  const [amountMax, setAmountMax] = useState(centsToInput(initial?.amountMax ?? undefined));
+  const [inconnu, setInconnu] = useState(initial?.amountUnknown ?? false);
+  const [optimiste, setOptimiste] = useState(initial?.inOptimistic ?? true);
+  // Détail facultatif (bulletin de paie) : lignes libellé + montant signé
+  const [lignes, setLignes] = useState<{ label: string; montant: string }[]>(
+    () => initial?.details?.map((d) => ({ label: d.label, montant: (d.amount < 0 ? '-' : '') + centsToInput(Math.abs(d.amount)) })) ?? [],
+  );
+  const lignesLues = lignes.map((l) => ({ label: l.label.trim(), amount: lireMontantSigne(l.montant) }));
+  const totalLignes = lignesLues.reduce((t, l) => t + (l.amount ?? 0), 0);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    const [cents, amountError] = checkAmount(amount);
+    const montantInconnu = attendu && inconnu;
+    const [cents, amountError] = montantInconnu ? [0, null] : checkAmount(amount);
+    const [max, maxError] = attendu && !inconnu && amountMax.trim() ? checkAmount(amountMax) : [null, null];
     const errs: Errors = {
       name: name.trim() ? null : 'Donnez un nom à ce revenu (ex. : salaire).',
+      amountMax:
+        maxError ?? (max !== null && cents !== null && max < cents ? 'Le haut de la fourchette doit être supérieur au montant estimé.' : null),
+      details: lignesLues.some((l) => (l.label && l.amount === null) || (!l.label && l.amount !== null))
+        ? 'Chaque ligne du détail a besoin d’un libellé et d’un montant (ex. : -88,00).'
+        : null,
       amount: amountError,
       date: checkDate(date),
       ...choix.erreurs(),
-      endDate: recurring ? checkDate(endDate, false) ?? (endDate && endDate < date ? 'La date de fin doit être après la date de début.' : null) : null,
+      endDate: recurring
+        ? (checkDate(endDate, false) ?? (endDate && endDate < date ? 'La date de fin doit être après la date de début.' : null))
+        : null,
     };
     setErrors(errs);
     if (hasErrors(errs) || cents === null) return;
@@ -320,17 +385,71 @@ export function IncomeForm({
         endDate: recurring && endDate ? endDate : null,
         note: note.trim(),
         account: compte,
+        ...(attendu
+          ? {
+              certitude: 'attendu' as const,
+              inOptimistic: optimiste,
+              ...(montantInconnu ? { amountUnknown: true } : {}),
+              ...(max !== null ? { amountMax: max } : {}),
+            }
+          : {}),
+        ...(lignesLues.some((l) => l.label)
+          ? { details: lignesLues.filter((l) => l.label && l.amount !== null).map((l) => ({ label: l.label, amount: l.amount! })) }
+          : {}),
       },
     });
-    confirmer(initial ? 'Revenu modifié et enregistré.' : 'Revenu enregistré.', date, recurring, moisDuRevenu(date, jourBascule(data)));
+    if (attendu)
+      notify(initial ? 'Revenu attendu modifié.' : 'Revenu attendu enregistré : il n’est pas compté tant qu’il n’est pas confirmé.', 'info');
+    else if (confirmerReception) notify('Revenu confirmé : il est maintenant compté.');
+    else confirmer(initial ? 'Revenu modifié et enregistré.' : 'Revenu enregistré.', date, recurring, moisDuRevenu(date, jourBascule(data)));
     onDone();
   };
 
   return (
     <form onSubmit={submit} noValidate className="form">
+      <fieldset className="fieldset">
+        <legend>Ce revenu est-il sûr ?</legend>
+        <div className="radio-row">
+          <label className="radio">
+            <input type="radio" name="certitude" checked={!attendu} onChange={() => setCertitude('sur')} /> Sûr (reçu ou prévu)
+          </label>
+          <label className="radio">
+            <input type="radio" name="certitude" checked={attendu} onChange={() => setCertitude('attendu')} /> Attendu (incertain)
+          </label>
+        </div>
+        <p className="field-hint">
+          {attendu
+            ? 'Un revenu attendu (prime non confirmée, montant inconnu…) n’est compté nulle part tant que vous ne l’avez pas confirmé, sauf dans la projection optimiste de « Mon plan ».'
+            : 'Il est compté dans votre budget à sa date.'}
+        </p>
+      </fieldset>
       <div className="form-grid">
-        <TextField label="Nom" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} maxLength={80} placeholder="Ex. : salaire" />
-        <MoneyField label="Montant" value={amount} onChange={(e) => setAmount(e.target.value)} error={errors.amount} />
+        <TextField
+          label="Nom"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          error={errors.name}
+          maxLength={80}
+          placeholder="Ex. : salaire"
+        />
+        {!(attendu && inconnu) && (
+          <MoneyField
+            label={attendu ? 'Montant estimé (bas de la fourchette)' : 'Montant'}
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            error={errors.amount}
+          />
+        )}
+        {attendu && !inconnu && (
+          <MoneyField
+            label="Jusqu’à"
+            optional
+            value={amountMax}
+            onChange={(e) => setAmountMax(e.target.value)}
+            error={errors.amountMax}
+            hint="Haut de la fourchette, si le montant peut varier."
+          />
+        )}
         <ChampCategorie choix={choix} errors={errors} />
         <TextField
           label={recurring ? 'Date du premier versement' : 'Date'}
@@ -391,8 +510,61 @@ export function IncomeForm({
           />
         </div>
       )}
+      {attendu && (
+        <div className="form-grid">
+          <CheckboxField label="Montant encore inconnu" checked={inconnu} onChange={(e) => setInconnu(e.target.checked)} />
+          <CheckboxField label="Inclure dans la projection optimiste" checked={optimiste} onChange={(e) => setOptimiste(e.target.checked)} />
+        </div>
+      )}
+      <details className="disclosure" open={lignes.length > 0 || undefined}>
+        <summary>Détail du revenu (bulletin de paie, facultatif)</summary>
+        <div className="disclosure-body detail-revenu">
+          <p className="field-hint">
+            Une ligne par élément : salaire de base, cotisations (-), retenue titres-restaurant (-), indemnité transport (+)…
+          </p>
+          {lignes.map((l, i) => (
+            <div key={i} className="detail-revenu-ligne">
+              <TextField
+                label={`Libellé de la ligne ${i + 1}`}
+                value={l.label}
+                onChange={(e) => setLignes(lignes.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
+                maxLength={80}
+              />
+              <TextField
+                label={`Montant de la ligne ${i + 1}`}
+                inputMode="decimal"
+                value={l.montant}
+                placeholder="-10,40"
+                onChange={(e) => setLignes(lignes.map((x, j) => (j === i ? { ...x, montant: e.target.value } : x)))}
+              />
+              <IconButton icon="trash" label={`Retirer la ligne ${i + 1}`} onClick={() => setLignes(lignes.filter((_, j) => j !== i))} />
+            </div>
+          ))}
+          {errors.details && <p className="field-error">{errors.details}</p>}
+          <Button variant="secondaire" className="btn-small" icon="plus" onClick={() => setLignes([...lignes, { label: '', montant: '' }])}>
+            Ajouter une ligne
+          </Button>
+          {lignes.length > 0 && (
+            <p className="field-hint">
+              Total des lignes : {fmt(totalLignes)}
+              {parseAmount(amount) !== null && totalLignes !== parseAmount(amount) && ` (le montant du revenu est de ${fmt(parseAmount(amount)!)})`}
+            </p>
+          )}
+        </div>
+      </details>
       <TextAreaField label="Note" optional value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} />
-      <FormActions onCancel={onCancel} submitLabel={initial ? 'Enregistrer les modifications' : 'Ajouter le revenu'} />
+      <FormActions
+        onCancel={onCancel}
+        submitLabel={
+          confirmerReception
+            ? 'Confirmer la réception'
+            : initial
+              ? 'Enregistrer les modifications'
+              : attendu
+                ? 'Ajouter le revenu attendu'
+                : 'Ajouter le revenu'
+        }
+      />
     </form>
   );
 }
@@ -507,7 +679,9 @@ export function GoalForm({
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const { dispatch, notify, today } = useApp();
+  const { data, dispatch, notify, today } = useApp();
+  const supports = data.supports ?? [];
+  const [suivis, setSuivis] = useState<string[]>(initial?.supportIds ?? []);
   const [name, setName] = useState(initial?.name ?? nomPropose ?? '');
   // Illustration : « auto » = déduite du nom
   const [theme, setTheme] = useState<GoalTheme | 'auto'>(initial?.theme ?? 'auto');
@@ -547,6 +721,7 @@ export function GoalForm({
         monthlyContribution: mon ?? 0,
         createdAt: initial?.createdAt ?? today,
         ...(theme !== 'auto' ? { theme } : {}),
+        ...(suivis.length > 0 ? { supportIds: suivis.filter((id) => supports.some((s) => s.id === id)) } : {}),
       },
     });
     notify(initial ? 'Objectif modifié.' : 'Objectif créé.');
@@ -574,13 +749,15 @@ export function GoalForm({
           error={errors.initialAmount}
           hint="Ce que vous avez déjà mis de côté pour cet objectif."
         />
-        <MoneyField
-          label="Contribution mensuelle prévue"
-          value={monthly}
-          onChange={(e) => setMonthly(e.target.value)}
-          error={errors.monthly}
+        <MoneyField label="Contribution mensuelle prévue" value={monthly} onChange={(e) => setMonthly(e.target.value)} error={errors.monthly} />
+        <TextField
+          label="Date souhaitée"
+          optional
+          type="date"
+          value={targetDate}
+          onChange={(e) => setTargetDate(e.target.value)}
+          error={errors.targetDate}
         />
-        <TextField label="Date souhaitée" optional type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} error={errors.targetDate} />
         <SelectField label="Priorité" value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
           {(Object.keys(PRIORITY_LABELS) as Priority[]).map((p) => (
             <option key={p} value={p}>
@@ -589,6 +766,25 @@ export function GoalForm({
           ))}
         </SelectField>
       </div>
+      {supports.length > 0 && (
+        <fieldset className="fieldset">
+          <legend>Suivre mes supports d’épargne</legend>
+          <p className="field-hint">
+            Cochés : l’avancement de l’objectif devient le total de ces supports (« tous supports confondus »), au lieu du montant déjà disponible et
+            des versements.
+          </p>
+          <div className="liste-cases">
+            {supports.map((s) => (
+              <CheckboxField
+                key={s.id}
+                label={s.name}
+                checked={suivis.includes(s.id)}
+                onChange={(e) => setSuivis(e.target.checked ? [...suivis, s.id] : suivis.filter((id) => id !== s.id))}
+              />
+            ))}
+          </div>
+        </fieldset>
+      )}
       <TextAreaField label="Description" optional value={description} onChange={(e) => setDescription(e.target.value)} maxLength={300} />
       <fieldset className="fieldset choix-illustration">
         <legend>Illustration</legend>
@@ -618,12 +814,15 @@ export function GoalForm({
 export function DepositForm({
   initial,
   goalId,
+  supportId,
   defaultDate,
   onDone,
   onCancel,
 }: {
   initial?: SavingsDeposit;
   goalId?: string | null;
+  /** Support d'épargne proposé (livret, PEL…). */
+  supportId?: string;
   defaultDate: ISODate;
   onDone: () => void;
   onCancel: () => void;
@@ -631,6 +830,8 @@ export function DepositForm({
   const { data, dispatch, notify, fmt } = useApp();
   const [amount, setAmount] = useState(centsToInput(initial?.amount));
   const [target, setTarget] = useState(initial?.goalId ?? goalId ?? data.goals[0]?.id ?? '');
+  const supports = data.supports ?? [];
+  const [support, setSupport] = useState(initial?.supportId ?? supportId ?? '');
   const [date, setDate] = useState(initial?.date ?? defaultDate);
   const [note, setNote] = useState(initial?.note ?? '');
   const [errors, setErrors] = useState<Errors>({});
@@ -644,7 +845,14 @@ export function DepositForm({
     dispatch({
       type: 'upsert',
       collection: 'savings',
-      item: { id: initial?.id ?? newId('epa'), goalId: target || null, amount: cents, date, note: note.trim() },
+      item: {
+        id: initial?.id ?? newId('epa'),
+        goalId: target || null,
+        amount: cents,
+        date,
+        note: note.trim(),
+        ...(support ? { supportId: support } : {}),
+      },
     });
     notify(initial ? 'Versement modifié.' : `Versement de ${fmt(cents)} enregistré.`);
     onDone();
@@ -662,6 +870,22 @@ export function DepositForm({
           ))}
           <option value="">Épargne libre (sans objectif)</option>
         </SelectField>
+        {supports.length > 0 && (
+          <SelectField
+            label="Sur quel support ?"
+            optional
+            value={support}
+            onChange={(e) => setSupport(e.target.value)}
+            hint="Le solde de ce support augmente du montant versé."
+          >
+            <option value="">Non précisé</option>
+            {supports.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </SelectField>
+        )}
         <TextField label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} error={errors.date} />
         <TextField label="Note" optional value={note} onChange={(e) => setNote(e.target.value)} maxLength={120} />
       </div>
@@ -671,3 +895,246 @@ export function DepositForm({
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Support d'épargne (livret, PEL, compte…)                                    */
+/* -------------------------------------------------------------------------- */
+
+/** Taux saisi en texte (« 1,575 ») → nombre, ou null si illisible. */
+function lireTaux(texte: string): number | null {
+  const t = texte.trim().replace(',', '.').replace(/\s*%$/, '');
+  if (t === '') return 0;
+  const v = Number(t);
+  return Number.isFinite(v) && v >= 0 && v <= 100 ? v : null;
+}
+
+export function SupportForm({
+  initial,
+  kindPropose,
+  onDone,
+  onCancel,
+}: {
+  initial?: SavingsSupport;
+  kindPropose?: SupportKind;
+  onDone: () => void;
+  onCancel: () => void;
+}) {
+  const { dispatch, notify, today } = useApp();
+  const depart = MODELES_SUPPORT[initial?.kind ?? kindPropose ?? 'livret-a'];
+  const [kind, setKind] = useState<SupportKind>(initial?.kind ?? kindPropose ?? 'livret-a');
+  const [name, setName] = useState(initial?.name ?? depart.label);
+  const [balance, setBalance] = useState(centsToInput(initial?.balance ?? 0));
+  const [balanceDate, setBalanceDate] = useState(initial?.balanceDate ?? today);
+  const [rate, setRate] = useState(String(initial?.rate ?? depart.taux).replace('.', ','));
+  const [bloque, setBloque] = useState((initial?.liquidity ?? depart.liquidite) === 'bloque');
+  const [blockedUntil, setBlockedUntil] = useState(initial?.blockedUntil ?? '');
+  const [cloture, setCloture] = useState(initial?.withdrawalCloses ?? depart.retraitCloture);
+  const [ceiling, setCeiling] = useState(centsToInput(initial?.ceiling ?? depart.plafond ?? undefined));
+  const [target, setTarget] = useState(centsToInput(initial?.target ?? undefined));
+  const [note, setNote] = useState(initial?.note ?? '');
+  const [errors, setErrors] = useState<Errors>({});
+
+  // Changer de type préremplit les repères (nom, taux, blocage, plafond), modifiables ensuite
+  const changerType = (k: SupportKind) => {
+    const m = MODELES_SUPPORT[k];
+    if (!name.trim() || name === MODELES_SUPPORT[kind].label) setName(m.label);
+    setKind(k);
+    setRate(String(m.taux).replace('.', ','));
+    setBloque(m.liquidite === 'bloque');
+    setCloture(m.retraitCloture);
+    setCeiling(centsToInput(m.plafond ?? undefined));
+  };
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const [b, bErr] = checkAmount(balance, { allowZero: true });
+    const [c, cErr] = checkAmount(ceiling, { required: false, allowZero: true });
+    const [t, tErr] = checkAmount(target, { required: false, allowZero: true });
+    const taux = lireTaux(rate);
+    const errs: Errors = {
+      name: name.trim() ? null : 'Donnez un nom à ce support (ex. : Livret A).',
+      balance: bErr,
+      balanceDate: checkDate(balanceDate),
+      rate: taux === null ? 'Taux non reconnu. Exemple : 1,7' : null,
+      blockedUntil: checkDate(blockedUntil, false),
+      ceiling: cErr,
+      target: tErr,
+    };
+    setErrors(errs);
+    if (hasErrors(errs) || b === null || taux === null) return;
+    dispatch({
+      type: 'upsert',
+      collection: 'supports',
+      item: {
+        id: initial?.id ?? newId('sup'),
+        name: name.trim(),
+        kind,
+        balance: b,
+        balanceDate,
+        rate: taux,
+        liquidity: bloque ? 'bloque' : 'immediate',
+        blockedUntil: bloque && blockedUntil ? blockedUntil : null,
+        withdrawalCloses: cloture,
+        ceiling: ceiling.trim() && c ? c : null,
+        target: target.trim() && t ? t : null,
+        note: note.trim(),
+      },
+    });
+    notify(initial ? 'Support modifié.' : 'Support ajouté.');
+    onDone();
+  };
+
+  return (
+    <form onSubmit={submit} noValidate className="form">
+      <div className="form-grid">
+        <SelectField
+          label="Type de support"
+          value={kind}
+          onChange={(e) => changerType(e.target.value as SupportKind)}
+          hint={MODELES_SUPPORT[kind].aide || undefined}
+        >
+          {SUPPORT_KINDS.map((k) => (
+            <option key={k} value={k}>
+              {MODELES_SUPPORT[k].label}
+            </option>
+          ))}
+        </SelectField>
+        <TextField label="Nom" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} maxLength={60} />
+        <MoneyField label="Solde" value={balance} onChange={(e) => setBalance(e.target.value)} error={errors.balance} />
+        <TextField
+          label="Solde connu au"
+          type="date"
+          value={balanceDate}
+          onChange={(e) => setBalanceDate(e.target.value)}
+          error={errors.balanceDate}
+          hint="Les versements liés à ce support après cette date s’ajoutent au solde."
+        />
+        <TextField
+          label="Taux annuel net (%)"
+          inputMode="decimal"
+          value={rate}
+          onChange={(e) => setRate(e.target.value)}
+          error={errors.rate}
+          hint="Indicatif : vérifiez le taux auprès de votre banque."
+        />
+        <MoneyField label="Plafond de versements" optional value={ceiling} onChange={(e) => setCeiling(e.target.value)} error={errors.ceiling} />
+        <MoneyField
+          label="Montant visé sur ce support"
+          optional
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+          error={errors.target}
+          hint="Votre répartition cible (ex. : 4 100 € sur le PEL)."
+        />
+      </div>
+      <fieldset className="fieldset">
+        <legend>Disponibilité</legend>
+        <CheckboxField label="Argent bloqué (pas disponible tout de suite)" checked={bloque} onChange={(e) => setBloque(e.target.checked)} />
+        {bloque && (
+          <div className="form-grid">
+            <TextField
+              label="Bloqué jusqu’au"
+              optional
+              type="date"
+              value={blockedUntil}
+              onChange={(e) => setBlockedUntil(e.target.value)}
+              error={errors.blockedUntil}
+            />
+          </div>
+        )}
+        <CheckboxField
+          label="Un retrait clôture ce support"
+          checked={cloture}
+          onChange={(e) => setCloture(e.target.checked)}
+          hint="C’est le cas du PEL : aucun retrait partiel possible."
+        />
+      </fieldset>
+      <TextAreaField label="Note" optional value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} />
+      <FormActions onCancel={onCancel} submitLabel={initial ? 'Enregistrer les modifications' : 'Ajouter le support'} />
+    </form>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Somme bloquée temporairement (dépôt de garantie, caution…)                  */
+/* -------------------------------------------------------------------------- */
+
+export function HoldForm({
+  initial,
+  defaultDate,
+  onDone,
+  onCancel,
+}: {
+  initial?: TemporaryHold;
+  defaultDate: ISODate;
+  onDone: () => void;
+  onCancel: () => void;
+}) {
+  const { data, dispatch, notify } = useApp();
+  const [label, setLabel] = useState(initial?.label ?? '');
+  const [amount, setAmount] = useState(centsToInput(initial?.amount));
+  const [start, setStart] = useState(initial?.start ?? defaultDate);
+  const [end, setEnd] = useState(initial?.end ?? '');
+  const [compteChoisi, setCompte] = useState<AccountId>(initial?.account ?? 'compte');
+  const proposerCompte = usesCarteRestaurant(data) || compteChoisi === 'carte-restaurant';
+  const [note, setNote] = useState(initial?.note ?? '');
+  const [errors, setErrors] = useState<Errors>({});
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const [cents, amountError] = checkAmount(amount);
+    const errs: Errors = {
+      label: label.trim() ? null : 'Donnez un nom (ex. : dépôt de garantie).',
+      amount: amountError,
+      start: checkDate(start),
+      end: checkDate(end, false) ?? (end && end < start ? 'La date de restitution doit suivre la date de blocage.' : null),
+    };
+    setErrors(errs);
+    if (hasErrors(errs) || cents === null) return;
+    dispatch({
+      type: 'upsert',
+      collection: 'holds',
+      item: {
+        id: initial?.id ?? newId('blq'),
+        label: label.trim(),
+        amount: cents,
+        start,
+        end: end || null,
+        account: compteChoisi,
+        returned: initial?.returned ?? false,
+        note: note.trim(),
+      },
+    });
+    notify(initial ? 'Somme bloquée modifiée.' : 'Somme bloquée enregistrée : ce n’est pas une dépense, votre solde ne change pas.');
+    onDone();
+  };
+
+  return (
+    <form onSubmit={submit} noValidate className="form">
+      <p className="field-hint">
+        Une caution ou un dépôt de garantie bloque de l’argent sans le dépenser : il n’est pas compté comme une dépense, mais il n’est pas disponible
+        jusqu’à sa restitution.
+      </p>
+      <div className="form-grid">
+        <TextField
+          label="Nom"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          error={errors.label}
+          maxLength={80}
+          placeholder="Ex. : dépôt de garantie"
+        />
+        <MoneyField label="Montant bloqué" value={amount} onChange={(e) => setAmount(e.target.value)} error={errors.amount} />
+        <TextField label="Bloqué à partir du" type="date" value={start} onChange={(e) => setStart(e.target.value)} error={errors.start} />
+        <TextField label="Rendu vers le" optional type="date" value={end} onChange={(e) => setEnd(e.target.value)} error={errors.end} />
+        {proposerCompte && (
+          <SelectField label="Sur" value={compteChoisi} onChange={(e) => setCompte(e.target.value as AccountId)}>
+            <option value="compte">Mon compte</option>
+            <option value="carte-restaurant">Carte restaurant</option>
+          </SelectField>
+        )}
+      </div>
+      <TextAreaField label="Note" optional value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} />
+      <FormActions onCancel={onCancel} submitLabel={initial ? 'Enregistrer les modifications' : 'Enregistrer la somme bloquée'} />
+    </form>
+  );
+}

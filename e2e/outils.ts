@@ -11,6 +11,7 @@ export const PAGES: [string, string][] = [
   ['revenus', 'Revenus'],
   ['charges', 'Charges fixes'],
   ['budgets', 'Budgets'],
+  ['plan', 'Mon plan d’épargne'],
   ['objectifs', 'Objectifs'],
   ['simulateur', 'Simulateur'],
   ['historique', 'Historique'],

@@ -14,6 +14,7 @@ export const NAV_ITEMS = [
   { to: '/revenus', label: 'Revenus', short: 'Revenus', icon: 'income' },
   { to: '/charges', label: 'Charges fixes', short: 'Charges', icon: 'calendar' },
   { to: '/budgets', label: 'Budgets par catégorie', short: 'Budgets', icon: 'gauge' },
+  { to: '/plan', label: 'Mon plan d’épargne', short: 'Plan', icon: 'target' },
   { to: '/objectifs', label: 'Objectifs d’épargne', short: 'Objectifs', icon: 'piggy' },
   { to: '/simulateur', label: 'Simulateur d’achat', short: 'Simulateur', icon: 'calculator' },
   { to: '/historique', label: 'Historique et bilan', short: 'Historique', icon: 'history' },
