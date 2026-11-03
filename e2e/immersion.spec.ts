@@ -176,3 +176,40 @@ test('présentation immersive : mise en page et accessibilité à 320, 390, 800 
   }
   expect(erreurs).toEqual([]);
 });
+
+test('interactivité : montants rapides, élément récent, annuler une suppression, budgets dépliables, par semaine', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const erreurs = await preparer(page);
+  await chargerDemo(page, 'etudiant');
+  // Par jour / par semaine
+  await page.getByRole('button', { name: 'Par semaine' }).click();
+  await expect(page.locator('.hero-text')).toContainText('par semaine');
+  // Montants rapides : 10 + 5 = 15 €
+  await page.locator('.bottom-nav').getByRole('button', { name: 'Ajouter une dépense' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Nouvelle dépense' });
+  await dialog.getByRole('button', { name: /^Ajouter 10/ }).click();
+  await dialog.getByRole('button', { name: /^Ajouter 5,00/ }).click();
+  await expect(dialog.getByLabel(/^Montant/)).toHaveValue('15,00');
+  await dialog.getByLabel('Description').fill('Test rapide');
+  await dialog.getByRole('button', { name: 'Ajouter la dépense' }).click();
+  // L'élément ajouté est mis en valeur dans la liste
+  await page.goto('./#/depenses');
+  const ligne = page.locator('.item', { hasText: 'Test rapide' });
+  await expect(ligne).toBeVisible();
+  // Suppression, puis « Annuler » la restaure
+  await ligne.getByRole('button', { name: /Supprimer/ }).click();
+  await page
+    .getByRole('alertdialog')
+    .getByRole('button', { name: /Supprimer|Confirmer/ })
+    .click();
+  await expect(ligne).toBeHidden();
+  await page.getByRole('button', { name: 'Annuler' }).click();
+  await expect(ligne).toBeVisible();
+  await expect(ligne).toHaveClass(/item-recent/);
+  // Budgets : les dépenses de la catégorie se déplient dans la carte
+  await page.goto('./#/budgets');
+  const detail = page.locator('.budget-detail').first();
+  await detail.locator('summary').click();
+  await expect(detail.getByRole('link', { name: /Voir/ })).toBeVisible();
+  expect(erreurs).toEqual([]);
+});

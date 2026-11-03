@@ -5,11 +5,24 @@ import type { Expense } from '../types';
 import { defaultDateFor, formatDate, monthOf, ofMonth } from '../lib/dates';
 import { sum } from '../lib/money';
 import { categoryName } from '../lib/budget';
-import { Button, Card, ConfirmDialog, EmptyState, IconButton, Modal, MonthSwitcher, PageHeader, SelectField, Stat, TextField, CategoryOptions } from '../components/ui';
+import {
+  Button,
+  Card,
+  ConfirmDialog,
+  EmptyState,
+  IconButton,
+  Modal,
+  MonthSwitcher,
+  PageHeader,
+  SelectField,
+  Stat,
+  TextField,
+  CategoryOptions,
+} from '../components/ui';
 import { ExpenseForm } from '../components/forms';
 
 export function Expenses() {
-  const { data, month, today, fmt, dispatch, notify } = useApp();
+  const { data, month, today, fmt, dispatch, notify, recents } = useApp();
   const [editing, setEditing] = useState<Expense | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<Expense | null>(null);
   // « Voir les dépenses » depuis un budget : la catégorie est présélectionnée (?categorie=…).
@@ -56,7 +69,13 @@ export function Expenses() {
 
       <Card>
         <div className="filters">
-          <TextField label="Rechercher" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Description, catégorie…" />
+          <TextField
+            label="Rechercher"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Description, catégorie…"
+          />
           <SelectField label="Catégorie" value={category} onChange={(e) => setCategory(e.target.value)}>
             <option value="">Toutes les catégories</option>
             <CategoryOptions categories={data.categories} kind="variable" />
@@ -84,7 +103,7 @@ export function Expenses() {
             )}
             <ul className="item-list">
               {filtered.map((e) => (
-                <li key={e.id} className="item">
+                <li key={e.id} className={`item ${recents.has(e.id) ? 'item-recent' : ''}`}>
                   <div className="item-main">
                     <p className="item-title">{e.description || categoryName(data, e.categoryId)}</p>
                     <p className="item-meta">
@@ -94,8 +113,16 @@ export function Expenses() {
                   </div>
                   <span className="montant montant-moins">− {fmt(e.amount)}</span>
                   <div className="item-actions">
-                    <IconButton icon="edit" label={`Modifier la dépense ${e.description || ''} du ${formatDate(e.date)}`} onClick={() => setEditing(e)} />
-                    <IconButton icon="trash" label={`Supprimer la dépense ${e.description || ''} du ${formatDate(e.date)}`} onClick={() => setToDelete(e)} />
+                    <IconButton
+                      icon="edit"
+                      label={`Modifier la dépense ${e.description || ''} du ${formatDate(e.date)}`}
+                      onClick={() => setEditing(e)}
+                    />
+                    <IconButton
+                      icon="trash"
+                      label={`Supprimer la dépense ${e.description || ''} du ${formatDate(e.date)}`}
+                      onClick={() => setToDelete(e)}
+                    />
                   </div>
                 </li>
               ))}
@@ -120,8 +147,13 @@ export function Expenses() {
           message={`La dépense de ${fmt(toDelete.amount)} du ${formatDate(toDelete.date)} sera définitivement supprimée.`}
           onCancel={() => setToDelete(null)}
           onConfirm={() => {
-            dispatch({ type: 'remove', collection: 'expenses', id: toDelete.id });
-            notify('Dépense supprimée.');
+            const supprimee = toDelete;
+            dispatch({ type: 'remove', collection: 'expenses', id: supprimee.id });
+            // Retour en arrière possible pendant quelques secondes
+            notify('Dépense supprimée.', 'succes', {
+              label: 'Annuler',
+              onClick: () => dispatch({ type: 'upsert', collection: 'expenses', item: supprimee }),
+            });
             setToDelete(null);
           }}
         />

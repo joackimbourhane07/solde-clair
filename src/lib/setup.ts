@@ -1,6 +1,6 @@
 import type { AppData, Category, Cents, FixedCharge, ISODate, Income, ProfileType, SavingsGoal, ThemeChoice } from '../types';
 import { makeCategory, PROFILE_PRESETS } from './categories';
-import { daysInMonth, monthOf } from './dates';
+import { addMonths, daysInMonth, monthOf } from './dates';
 import { newId } from './id';
 import { splitByWeights } from './money';
 import { APPEARANCE_VERSION, PRESETS_VERSION } from './storage';
@@ -10,6 +10,8 @@ export interface SetupLine {
   amount: Cents;
   day: number;
   category: string;
+  /** Revenu : date du dernier versement déjà reçu (il compte tout de suite dans le solde et le mois). */
+  lastReceived?: ISODate | null;
 }
 
 export interface SetupInput {
@@ -30,8 +32,7 @@ export interface SetupInput {
 /** Construit les données initiales à partir du parcours de configuration. */
 export function buildInitialData(input: SetupInput, today: ISODate): AppData {
   const month = monthOf(today);
-  const dateFor = (day: number) =>
-    `${month}-${String(Math.min(Math.max(1, Math.round(day) || 1), daysInMonth(month))).padStart(2, '0')}`;
+  const dateFor = (day: number) => `${month}-${String(Math.min(Math.max(1, Math.round(day) || 1), daysInMonth(month))).padStart(2, '0')}`;
 
   const categories: Category[] = [];
   const addCats = (kind: Category['kind'], names: string[]) => {
@@ -62,7 +63,8 @@ export function buildInitialData(input: SetupInput, today: ISODate): AppData {
       id: newId('rev'),
       name: l.name.trim() || 'Revenu',
       amount: l.amount,
-      date: dateFor(l.day),
+      // Dernier versement déjà reçu : la série commence là (le solde de départ n'est pas à 0)
+      date: l.lastReceived && l.lastReceived <= today ? l.lastReceived : dateFor(l.day),
       categoryId: ensureCat('income', l.category, 'Autre revenu'),
       recurring: true,
       frequency: 'mensuel',
@@ -129,4 +131,16 @@ export function buildInitialData(input: SetupInput, today: ISODate): AppData {
     goals,
     savings: [],
   };
+}
+
+/**
+ * Date proposée pour le dernier versement d'un revenu mensuel versé le jour `jour` :
+ * ce mois-ci si ce jour est passé (ou aujourd'hui), sinon le mois précédent.
+ */
+export function dernierVersementPropose(jour: number, today: ISODate): ISODate {
+  const j = Math.min(Math.max(1, Math.round(jour) || 1), 31);
+  const mois = monthOf(today);
+  const auj = Number(today.slice(8, 10));
+  const m = j <= auj ? mois : addMonths(mois, -1);
+  return `${m}-${String(Math.min(j, daysInMonth(m))).padStart(2, '0')}`;
 }

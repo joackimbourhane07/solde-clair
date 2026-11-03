@@ -1,18 +1,9 @@
-import { useMemo, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import { objectifPrincipal, progressionObjectif, projection, totauxEpargne } from '../lib/plan';
 import { reperesPourVous, sousTitreProfil } from '../lib/profil';
-import {
-  carryOverEnabled,
-  dailyBalanceSeries,
-  monthAlerts,
-  monthSummary,
-  monthTransactions,
-  revenusSansDernierVersement,
-  signedAmount,
-  spendingByCategory,
-} from '../lib/budget';
+import { carryOverEnabled, dailyBalanceSeries, monthAlerts, monthSummary, monthTransactions, signedAmount, spendingByCategory } from '../lib/budget';
 import { balanceForecast } from '../lib/forecast';
 import { accountBalance, JOURS_A_VENIR_ACCUEIL, operationsAVenir, resteAVivre, usesCarteRestaurant } from '../lib/accounts';
 import { sortGoals } from '../lib/goals';
@@ -31,6 +22,8 @@ const PRIORITES = { 1: 'À traiter maintenant', 2: 'Bientôt', 3: 'Quand vous av
 
 export function Dashboard() {
   const { data, month, today, fmt, fmtShort, dispatch } = useApp();
+  // Le reste affiché par jour ou par semaine (au choix, d'un geste)
+  const [rythme, setRythme] = useState<'jour' | 'semaine'>('jour');
   const courant = month === monthOf(today);
   const s = useMemo(() => monthSummary(data, month, today), [data, month, today]);
   const alerts = useMemo(() => monthAlerts(data, month, today, fmt), [data, month, today, fmt]);
@@ -95,9 +88,9 @@ export function Dashboard() {
         </V>{' '}
         pour terminer le mois, soit environ{' '}
         <V>
-          <MontantAnime cents={reste.parJour ?? 0} format={short} brut />
+          <MontantAnime cents={rythme === 'semaine' ? Math.min(principal, (reste.parJour ?? 0) * 7) : (reste.parJour ?? 0)} format={short} brut />
         </V>{' '}
-        par jour.
+        {rythme === 'semaine' ? 'par semaine' : 'par jour'}.
       </>
     );
     if (s.savingsRemaining > 0 && reste.joursRestants > 0) {
@@ -174,6 +167,26 @@ export function Dashboard() {
             <Icon name="gauge" size={16} /> {s.budgetUsedPct === null ? 'Aucun revenu ce mois-ci' : `${s.budgetUsedPct} % des revenus déjà dépensés`}
           </span>
         </div>
+        {s.period === 'courant' && principal >= 0 && (
+          <div className="hero-rythme" role="group" aria-label="Afficher le reste">
+            {(
+              [
+                ['jour', 'Par jour'],
+                ['semaine', 'Par semaine'],
+              ] as const
+            ).map(([v, libelle]) => (
+              <button
+                key={v}
+                type="button"
+                className={`chip chip-petit ${rythme === v ? 'chip-on' : ''}`}
+                aria-pressed={rythme === v}
+                onClick={() => setRythme(v)}
+              >
+                {libelle}
+              </button>
+            ))}
+          </div>
+        )}
         <ProgressBar
           value={s.totalExpenses}
           max={s.income}
@@ -279,18 +292,6 @@ export function Dashboard() {
           </div>
         </details>
       </section>
-
-      {/* Revenu récurrent qui commence fin de mois : le mois en cours n'a pas ce revenu (dernier versement oublié ?) */}
-      {courant &&
-        revenusSansDernierVersement(data, month).map((inc) => (
-          <Notice key={inc.id} tone="attention">
-            « {inc.name} » commence le {formatDate(inc.date)} et compte donc pour le mois prochain : ce mois-ci n’a pas ce revenu. Déjà reçu le mois
-            dernier ?{' '}
-            <Link to={`/revenus?dernier=${inc.id}`} className="link">
-              Indiquer le dernier versement reçu
-            </Link>
-          </Notice>
-        ))}
 
       {/* Mon objectif : résumé de « Mon plan d'épargne » */}
       {plan && courant && (
@@ -603,7 +604,10 @@ export function Dashboard() {
 
       {/* 7. Un seul graphique visible ; le reste dans « Détail du mois » */}
       <Card>
-        <CategoryBarsChart title="Répartition des dépenses variables" items={byCategory} />
+        <CategoryBarsChart
+          title="Répartition des dépenses variables"
+          items={byCategory.map((c) => ({ ...c, lien: c.categoryId ? `/depenses?categorie=${c.categoryId}` : undefined }))}
+        />
       </Card>
 
       <details className="disclosure detail-mois">

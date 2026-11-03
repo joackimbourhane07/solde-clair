@@ -9,14 +9,11 @@ import { ChargeForm } from '../components/forms';
 import { Icon } from '../components/Icon';
 
 export function FixedCharges() {
-  const { data, month, today, fmt, dispatch, notify } = useApp();
+  const { data, month, today, fmt, dispatch, notify, recents } = useApp();
   const [editing, setEditing] = useState<FixedCharge | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<FixedCharge | null>(null);
 
-  const occurrences = useMemo(
-    () => monthTransactions(data, month, today).filter((t) => t.type === 'charge'),
-    [data, month, today],
-  );
+  const occurrences = useMemo(() => monthTransactions(data, month, today).filter((t) => t.type === 'charge'), [data, month, today]);
   const s = useMemo(() => monthSummary(data, month, today), [data, month, today]);
   const inactive = data.fixedCharges.filter((c) => !occurrences.some((o) => o.sourceId === c.id));
 
@@ -56,7 +53,7 @@ export function FixedCharges() {
               const charge = data.fixedCharges.find((c) => c.id === o.sourceId)!;
               const paid = o.status === 'paye';
               return (
-                <li key={o.key} className="item">
+                <li key={o.key} className={`item ${recents.has(o.sourceId) ? 'item-recent' : ''}`}>
                   <div className="item-main">
                     <p className="item-title">
                       {o.label} <span className="tag">{FREQUENCY_LABELS[charge.frequency]}</span>
@@ -99,7 +96,7 @@ export function FixedCharges() {
           <p className="muted">Ces charges n’ont pas d’échéance ce mois-ci (trimestrielles, annuelles, terminées ou futures).</p>
           <ul className="item-list">
             {inactive.map((c) => (
-              <li key={c.id} className="item">
+              <li key={c.id} className={`item ${recents.has(c.id) ? 'item-recent' : ''}`}>
                 <div className="item-main">
                   <p className="item-title">
                     {c.name} <span className="tag">{FREQUENCY_LABELS[c.frequency]}</span>
@@ -136,8 +133,12 @@ export function FixedCharges() {
           message={`« ${toDelete.name} » sera supprimée de tous les mois, y compris les mois passés. Pour l’arrêter seulement à partir d’une date, modifiez-la et indiquez une date de fin.`}
           onCancel={() => setToDelete(null)}
           onConfirm={() => {
-            dispatch({ type: 'remove', collection: 'fixedCharges', id: toDelete.id });
-            notify('Charge fixe supprimée.');
+            const supprimee = toDelete;
+            dispatch({ type: 'remove', collection: 'fixedCharges', id: supprimee.id });
+            notify('Charge fixe supprimée.', 'succes', {
+              label: 'Annuler',
+              onClick: () => dispatch({ type: 'upsert', collection: 'fixedCharges', item: supprimee }),
+            });
             setToDelete(null);
           }}
         />

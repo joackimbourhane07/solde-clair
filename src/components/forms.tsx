@@ -228,6 +228,25 @@ export function ExpenseForm({
     <form onSubmit={submit} noValidate className={quick ? 'form-quick' : 'form'} aria-label={quick ? 'Ajout rapide d’une dépense' : undefined}>
       <div className={quick ? 'form-row' : 'form-grid'}>
         <MoneyField label="Montant" value={amount} onChange={(e) => setAmount(e.target.value)} error={errors.amount} required />
+        {/* Montants rapides : un geste ajoute la somme au montant (aucune saisie au clavier nécessaire) */}
+        <div className="chips chips-montants" role="group" aria-label="Ajouter rapidement au montant">
+          {[500, 1000, 2000, 5000].map((c) => (
+            <button
+              type="button"
+              key={c}
+              className="chip chip-petit"
+              aria-label={`Ajouter ${fmt(c)} au montant`}
+              onClick={() => setAmount(centsToInput((parseAmount(amount) ?? 0) + c))}
+            >
+              + {fmt(c).replace(/,00/, '')}
+            </button>
+          ))}
+          {amount.trim() !== '' && (
+            <button type="button" className="chip chip-petit chip-effacer" onClick={() => setAmount('')}>
+              Effacer
+            </button>
+          )}
+        </div>
         <ChampCategorie choix={choix} errors={errors} />
         {frequentes.length > 1 && (
           <div className="chips chips-frequentes" role="group" aria-label="Catégories fréquentes">
