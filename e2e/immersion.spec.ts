@@ -213,3 +213,33 @@ test('interactivité : montants rapides, élément récent, annuler une suppress
   await expect(detail.getByRole('link', { name: /Voir/ })).toBeVisible();
   expect(erreurs).toEqual([]);
 });
+
+test('configuration, étape des revenus : aucun champ ne se chevauche (320 à 1440 px)', async ({ page }) => {
+  await preparer(page);
+  for (const largeur of [320, 390, 760, 900, 1440]) {
+    await page.setViewportSize({ width: largeur, height: 1000 });
+    await page.goto('./#/bienvenue');
+    await page.reload();
+    await page.getByLabel('Prénom ou pseudonyme').fill('Sam');
+    await page.getByRole('button', { name: /Continuer/ }).click();
+    await page.getByRole('button', { name: 'Ajouter un revenu complémentaire' }).click();
+    await finAnimations(page);
+    const chevauchements = await page.evaluate(() => {
+      const out: string[] = [];
+      for (const ligne of Array.from(document.querySelectorAll('.line-row'))) {
+        const els = Array.from(ligne.querySelectorAll('label, input, select, button'))
+          .map((e) => ({ t: (e.textContent || (e as HTMLInputElement).name || e.tagName).trim().slice(0, 20), r: e.getBoundingClientRect() }))
+          .filter((x) => x.r.width > 0);
+        for (let i = 0; i < els.length; i++)
+          for (let j = i + 1; j < els.length; j++) {
+            const a = els[i].r;
+            const b = els[j].r;
+            if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) out.push(`${els[i].t} / ${els[j].t}`);
+          }
+      }
+      return out;
+    });
+    expect(chevauchements, `chevauchements à ${largeur} px`).toEqual([]);
+    expect(await problemesDeMiseEnPage(page), `mise en page à ${largeur} px`).toEqual([]);
+  }
+});
