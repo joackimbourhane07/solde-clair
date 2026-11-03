@@ -1,7 +1,7 @@
 import type { AccountId, AppData, Cents, ISODate, Transaction } from '../types';
 import { earliestDate, isCarteRestaurant, signedAmount, transactionsInRange } from './budget';
-import { addDays } from './dates';
-import { sum } from './money';
+import { addDays, daysRemainingInMonth, monthOf } from './dates';
+import { divideCents, sum } from './money';
 
 /**
  * Comptes façon application bancaire : compte bancaire et carte restaurant.
@@ -83,4 +83,43 @@ export function operationsAVenir(data: AppData, filtre: FiltreCompte, today: ISO
 export function totaux(ops: Transaction[]): { entrees: Cents; sorties: Cents } {
   const signes = ops.map(signedAmount);
   return { entrees: sum(signes.filter((v) => v > 0)), sorties: Math.abs(sum(signes.filter((v) => v < 0))) };
+}
+
+/** Opérations prises en compte dans « À venir » du tableau de bord : aujourd'hui et les 3 prochains jours. */
+export const JOURS_A_VENIR_ACCUEIL = 3;
+
+export interface ResteAVivre {
+  /** Solde de « Mon compte » aujourd'hui (compte bancaire + carte restaurant). */
+  solde: Cents;
+  /** Jours restants dans le mois, aujourd'hui inclus. */
+  joursRestants: number;
+  /** Solde ÷ jours restants, arrondi vers le bas (jamais surestimé). */
+  parJour: Cents | null;
+  /** Détail cumulé depuis la première saisie (montants positifs, ajustements signés). */
+  detail: { depuis: ISODate; revenus: Cents; depenses: Cents; charges: Cents; epargne: Cents; ajustements: Cents };
+}
+
+/**
+ * « Il vous reste » du tableau de bord : exactement le solde de « Mon compte » (tout ce qui est arrivé
+ * moins tout ce qui est parti, depuis la première saisie). Les opérations prévues comptent le jour où elles arrivent.
+ */
+export function resteAVivre(data: AppData, today: ISODate): ResteAVivre {
+  const depuis = earliestDate(data, today);
+  const ops = transactionsInRange(data, depuis, today, today).filter(estPasse);
+  const total = (type: Transaction['type']) => sum(ops.filter((t) => t.type === type).map((t) => t.amount));
+  const solde = sum(ops.map(signedAmount));
+  const joursRestants = daysRemainingInMonth(monthOf(today), today);
+  return {
+    solde,
+    joursRestants,
+    parJour: joursRestants > 0 ? divideCents(solde, joursRestants) : null,
+    detail: {
+      depuis,
+      revenus: total('revenu'),
+      depenses: total('depense'),
+      charges: total('charge'),
+      epargne: total('epargne'),
+      ajustements: total('ajustement'),
+    },
+  };
 }

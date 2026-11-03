@@ -298,7 +298,17 @@ Sources : [iOS 26, toute page ajoutée à l’écran d’accueil s’ouvre en ap
 | Actions | 9 boutons qui ouvrent seulement une page ou un formulaire (`?ajouter=1`, `?ajuster=1`) ; aucune donnée modifiée |
 | « Pourquoi l’épargne apparaît-elle en bleu et non en rouge ? » | L’épargne versée s’affiche désormais en bleu (icône et montant) dans Mon compte, le tableau de bord, l’historique et le bilan : ce n’est pas une dépense |
 
-## 15. Sources consultées
+## 15. Retours de la propriétaire (7ᵉ série) et corrections
+
+| Retour | Correction |
+|---|---|
+| Poksy doit aussi apparaître sur la page d’accueil | Bouton et fenêtre sur la présentation, questions « Qu’est-ce que SoldeClair ? », « Est-ce gratuit ? », « Où sont enregistrées mes données ? » ; sans profil, pas de bouton vers des pages internes |
+| La prime du 26 octobre n’apparaît pas dans les revenus de novembre | **Règle du 20** : un revenu reçu à partir du 20 compte pour le mois suivant (réglable de 15 à 28, désactivable) ; repère « Reçu fin octobre » et message dans Revenus ; « Mon compte » garde la vraie date |
+| Tableau de bord 1 318 € alors que Mon compte affiche 787,08 € | « Il vous reste » = **exactement le solde de Mon compte** (choix de la propriétaire) ; « À venir » limité aux **3 prochains jours** ; estimation et simulateur partent du même solde ; l’ancien calcul devient « Bilan du mois » dans « Détail du mois » |
+| « carte déjeuner » comptée sur le compte bancaire | Reconnue comme carte restaurant (carte, chèque, titre déjeuner) |
+| Objectifs d’épargne trop vagues | Cartes illustrées interactives : 9 illustrations originales, anneau, jalons, versement rapide annulable, curseur « Et si je mettais X € par mois ? », grande carte si un seul objectif, idées illustrées si aucun |
+
+## 16. Sources consultées
 
 - Notion : [teardown de la page d'accueil (uirip)](https://uirip.pages.dev/blog/teardowns/notion), [analyse du design marketing](https://webtrends.pages.dev/posts/notion-marketing-design-analysis), [étude de design (Blake Crosley)](https://blakecrosley.com/blog/design-study-notion), [divulgation progressive (LogRocket)](https://blog.logrocket.com/ux-design/progressive-disclosure-ux-types-use-cases)
 - Stripe : [composant de paiements](https://docs.stripe.com/connect/supported-embedded-components/payments), [tableau des comptes et statuts](https://docs.stripe.com/connect/dashboard/viewing-all-accounts)

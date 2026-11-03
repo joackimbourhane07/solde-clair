@@ -1,14 +1,15 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import type { AccountId, CategoryKind, Expense, FixedCharge, Frequency, Income, ISODate, Priority, SavingsDeposit, SavingsGoal } from '../types';
+import type { AccountId, CategoryKind, Expense, FixedCharge, Frequency, GoalTheme, Income, ISODate, Priority, SavingsDeposit, SavingsGoal } from '../types';
 import { useApp } from '../state/AppState';
 import { centsToInput, parseAmount } from '../lib/money';
 import { isValidISODate, monthLabel, monthOf } from '../lib/dates';
-import { frequentCategories, isCarteRestaurant } from '../lib/budget';
+import { frequentCategories, isCarteRestaurant, jourBascule, moisDuRevenu } from '../lib/budget';
 import { usesCarteRestaurant } from '../lib/accounts';
 import { newId } from '../lib/id';
 import { FREQUENCY_LABELS } from '../lib/recurrence';
 import { makeCategory, PAYMENT_METHODS } from '../lib/categories';
-import { GOAL_EXAMPLES, PRIORITY_LABELS } from '../lib/goals';
+import { GOAL_EXAMPLES, GOAL_THEMES, PRIORITY_LABELS, THEME_LABELS, themeFromName } from '../lib/goals';
+import { IllustrationObjectif } from './objectifs/IllustrationObjectif';
 import { Button, MoneyField, SelectField, TextAreaField, TextField } from './ui';
 
 /* -------------------------------------------------------------------------- */
@@ -65,17 +66,23 @@ const FREQUENCIES = Object.keys(FREQUENCY_LABELS) as Frequency[];
  */
 function useConfirmation() {
   const { data, month, setMonth, notify } = useApp();
-  return (texte: string, date: ISODate, recurrent = false) => {
-    const m = monthOf(date);
+  /** `moisCompte` : mois du budget où compte l'opération (revenu de fin de mois → mois suivant). */
+  return (texte: string, date: ISODate, recurrent = false, moisCompte?: string) => {
+    const m = moisCompte ?? monthOf(date);
+    const jour = jourBascule(data);
+    // Revenu reçu à partir du 20 : il compte pour le mois suivant (on le dit, même s'il compte pour le mois affiché)
+    const decale = !recurrent && jour !== null && m !== monthOf(date);
     const autreMois = recurrent ? m > month : m !== month;
     if (!autreMois) {
-      notify(texte);
+      notify(decale ? `${texte} Reçu à partir du ${jour} : il compte pour ${monthLabel(m)}.` : texte);
       return;
     }
     // Formulation neutre (revenu, dépense, charge) : « Mois concerné : … ».
     const precision = recurrent
-      ? ` Première échéance en ${monthLabel(m)}.`
-      : m < month && data.settings.carryOver !== false
+      ? ` Première échéance comptée en ${monthLabel(m)}.`
+      : decale
+        ? ` Reçu à partir du ${jour} : il compte pour ${monthLabel(m)}.`
+        : m < month && data.settings.carryOver !== false
         ? ` Mois concerné : ${monthLabel(m)}. Le reste de ce mois est reporté sur les suivants.`
         : ` Mois concerné : ${monthLabel(m)} (pas ${monthLabel(month)}).`;
     notify(texte + precision, 'info', { label: `Voir ${monthLabel(m)}`, onClick: () => setMonth(m) });
@@ -315,7 +322,7 @@ export function IncomeForm({
         account: compte,
       },
     });
-    confirmer(initial ? 'Revenu modifié et enregistré.' : 'Revenu enregistré.', date, recurring);
+    confirmer(initial ? 'Revenu modifié et enregistré.' : 'Revenu enregistré.', date, recurring, moisDuRevenu(date, jourBascule(data)));
     onDone();
   };
 
@@ -490,15 +497,20 @@ export function ChargeForm({
 
 export function GoalForm({
   initial,
+  nomPropose,
   onDone,
   onCancel,
 }: {
   initial?: SavingsGoal;
+  /** Nom prérempli (idée d'objectif choisie dans la page). */
+  nomPropose?: string;
   onDone: () => void;
   onCancel: () => void;
 }) {
   const { dispatch, notify, today } = useApp();
-  const [name, setName] = useState(initial?.name ?? '');
+  const [name, setName] = useState(initial?.name ?? nomPropose ?? '');
+  // Illustration : « auto » = déduite du nom
+  const [theme, setTheme] = useState<GoalTheme | 'auto'>(initial?.theme ?? 'auto');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [target, setTarget] = useState(centsToInput(initial?.target));
   const [initialAmount, setInitialAmount] = useState(centsToInput(initial?.initialAmount ?? 0));
@@ -534,6 +546,7 @@ export function GoalForm({
         priority,
         monthlyContribution: mon ?? 0,
         createdAt: initial?.createdAt ?? today,
+        ...(theme !== 'auto' ? { theme } : {}),
       },
     });
     notify(initial ? 'Objectif modifié.' : 'Objectif créé.');
@@ -577,6 +590,22 @@ export function GoalForm({
         </SelectField>
       </div>
       <TextAreaField label="Description" optional value={description} onChange={(e) => setDescription(e.target.value)} maxLength={300} />
+      <fieldset className="fieldset choix-illustration">
+        <legend>Illustration</legend>
+        <div className="choix-illustration-liste">
+          {(['auto', ...GOAL_THEMES] as const).map((t) => {
+            const apercu = t === 'auto' ? themeFromName(name) : t;
+            return (
+              <label key={t} className={`choix-illustration-option ${theme === t ? 'actif' : ''}`}>
+                <input type="radio" name="theme-objectif" className="sr-only" checked={theme === t} onChange={() => setTheme(t)} />
+                <IllustrationObjectif theme={apercu} className="choix-illustration-image" />
+                <span>{t === 'auto' ? 'Automatique' : THEME_LABELS[t]}</span>
+              </label>
+            );
+          })}
+        </div>
+        <p className="field-hint">« Automatique » choisit l’image d’après le nom de l’objectif.</p>
+      </fieldset>
       <FormActions onCancel={onCancel} submitLabel={initial ? 'Enregistrer les modifications' : 'Créer l’objectif'} />
     </form>
   );

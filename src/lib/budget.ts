@@ -51,7 +51,7 @@ export function chargeStatus(charge: FixedCharge, date: ISODate, today: ISODate)
 /** Reconnaît la carte restaurant / les titres-restaurant dans un nom (catégorie, revenu, moyen de paiement). */
 export function isCarteRestaurant(nom: string): boolean {
   // « Restaurants » (catégorie de dépenses) ne doit pas être confondu avec la carte restaurant.
-  return /(?:cartes?|titres?|tickets?)[- ]?rest(?:o|aurant)s?\b|swile|edenred|pluxee|sodexo|up d[ée]j|bimpli|apetiz|conecs/i.test(nom);
+  return /(?:cartes?|titres?|tickets?|ch[eè]ques?)[- ]?(?:rest(?:o|aurant)s?|d[ée]jeuners?)\b|swile|edenred|pluxee|sodexo|up d[ée]j|bimpli|apetiz|conecs/i.test(nom);
 }
 
 export const PAIEMENT_CARTE_RESTAURANT = 'Carte restaurant';
@@ -63,11 +63,44 @@ export function signedAmount(t: Transaction): Cents {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Revenus de fin de mois : comptés pour le mois suivant                       */
+/* -------------------------------------------------------------------------- */
+
+export const JOUR_BASCULE_DEFAUT = 20;
+
+/**
+ * Jour à partir duquel un revenu compte pour le mois suivant (par défaut le 20),
+ * ou null si la règle est désactivée. Un salaire ou une prime reçus le 26 octobre servent en novembre.
+ */
+export function jourBascule(data: AppData): number | null {
+  const jour = data.settings.incomeShiftDay;
+  if (jour === null) return null;
+  return typeof jour === 'number' && Number.isInteger(jour) && jour >= 2 && jour <= 28 ? jour : JOUR_BASCULE_DEFAUT;
+}
+
+/** Mois du budget dans lequel compte un revenu reçu à cette date. */
+export function moisDuRevenu(date: ISODate, jour: number | null): MonthKey {
+  const mois = monthOf(date);
+  return jour !== null && parseISO(date).day >= jour ? addMonths(mois, 1) : mois;
+}
+
+/* -------------------------------------------------------------------------- */
 /* Transactions d'un mois                                                      */
 /* -------------------------------------------------------------------------- */
 
-/** Tous les mouvements d'un mois : revenus, charges fixes, dépenses et épargne. */
+/**
+ * Tous les mouvements comptés dans le budget d'un mois : revenus (règle du 20 comprise),
+ * charges fixes, dépenses, épargne et ajustements.
+ */
 export function monthTransactions(data: AppData, month: MonthKey, today: ISODate): Transaction[] {
+  return mouvementsDuMois(data, month, today, true);
+}
+
+/**
+ * Mouvements d'un mois. Avec `budget`, un revenu reçu à partir du jour de bascule compte pour le mois suivant ;
+ * sans, chaque mouvement reste à sa vraie date (relevé du compte, export, historique par dates).
+ */
+function mouvementsDuMois(data: AppData, month: MonthKey, today: ISODate, budget: boolean): Transaction[] {
   const cats = categoryMap(data);
   const name = (id: string | null) => (id ? cats.get(id)?.name ?? 'Catégorie supprimée' : 'Sans catégorie');
   const goalName = (id: string | null) =>
@@ -76,14 +109,19 @@ export function monthTransactions(data: AppData, month: MonthKey, today: ISODate
   const compteRevenu = (inc: AppData['incomes'][number]): AccountId =>
     inc.account ?? (isCarteRestaurant(name(inc.categoryId)) || isCarteRestaurant(inc.name) ? 'carte-restaurant' : 'compte');
 
+  const jour = budget ? jourBascule(data) : null;
+  // Avec la règle, un revenu de la fin du mois précédent compte ce mois-ci, et ceux de la fin de ce mois au suivant.
+  const moisSources = jour === null ? [month] : [addMonths(month, -1), month];
   for (const inc of data.incomes) {
-    const dates =
+    const dates = moisSources.flatMap((m) =>
       inc.recurring && inc.frequency
-        ? occurrencesInMonth(inc.date, inc.frequency, month, inc.endDate)
-        : monthOf(inc.date) === month
+        ? occurrencesInMonth(inc.date, inc.frequency, m, inc.endDate)
+        : monthOf(inc.date) === m
           ? [inc.date]
-          : [];
+          : [],
+    );
     for (const date of dates) {
+      if (jour !== null && moisDuRevenu(date, jour) !== month) continue;
       list.push({
         key: `rev-${inc.id}-${date}`,
         sourceId: inc.id,
@@ -180,7 +218,7 @@ export function transactionsInRange(data: AppData, from: ISODate, to: ISODate, t
   let month = monthOf(from);
   const endMonth = monthOf(to);
   while (month <= endMonth) {
-    for (const t of monthTransactions(data, month, today)) {
+    for (const t of mouvementsDuMois(data, month, today, false)) {
       if (t.date >= from && t.date <= to) result.push(t);
     }
     month = addMonths(month, 1);

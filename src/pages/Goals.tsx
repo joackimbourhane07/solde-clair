@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { SavingsDeposit, SavingsGoal } from '../types';
-import { goalProgress, PRIORITY_LABELS, sortGoals } from '../lib/goals';
+import { GOAL_EXAMPLES, goalProgress, sortGoals, themeFromName } from '../lib/goals';
 import { savingsBalanceByMonth } from '../lib/budget';
 import { defaultDateFor, formatDate, monthLabel, monthLabelShort, monthOf } from '../lib/dates';
+import { IllustrationObjectif } from '../components/objectifs/IllustrationObjectif';
+import { CarteObjectif } from '../components/objectifs/CarteObjectif';
 import { sum } from '../lib/money';
-import { Button, Card, ConfirmDialog, EmptyState, IconButton, Modal, Notice, PageHeader, ProgressBar, Stat } from '../components/ui';
+import { Button, Card, ConfirmDialog, EmptyState, IconButton, Modal, PageHeader, Stat } from '../components/ui';
 import { DepositForm, GoalForm } from '../components/forms';
 import { LineChart } from '../components/charts/Charts';
 
@@ -18,7 +20,13 @@ export function Goals() {
   const [deposit, setDeposit] = useState<{ goalId: string | null; initial?: SavingsDeposit } | null>(null);
   const [depositToDelete, setDepositToDelete] = useState<SavingsDeposit | null>(null);
   const [openHistory, setOpenHistory] = useState<string | null>(null);
-  // « Créer un objectif » depuis Poksy : #/objectifs?ajouter=1 ouvre le formulaire (rien n'est enregistré sans validation)
+  // Idée d'objectif choisie depuis l'état vide (le formulaire s'ouvre avec ce nom)
+  const [nomPropose, setNomPropose] = useState<string | null>(null);
+  const fermerFormulaire = () => {
+    setEditing(null);
+    setNomPropose(null);
+  };
+  // « Créer un objectif » depuis Poksy : #/objectifs?ajouter=1 ouvre le formulaire (rien n'est enregistré sans validation)
   const [params, setParams] = useSearchParams();
   useEffect(() => {
     if (params.get('ajouter') === '1') {
@@ -51,136 +59,56 @@ export function Goals() {
         }
       />
 
-      <div className="stats-grid stats-compact">
-        <Stat label={`Épargné en ${monthLabel(currentMonth)}`} value={fmt(savedThisMonth)} detail={target > 0 ? `Objectif mensuel : ${fmt(target)}` : undefined} />
-        <Stat label="Total épargné" value={fmt(totalSaved)} detail="Montants initiaux + versements" />
-        <Stat label="Objectifs en cours" value={String(goals.filter((g) => !goalProgress(g, data.savings, today).reached).length)} />
-      </div>
+      <section className="epargne-resume" aria-label="Résumé de votre épargne">
+        <IllustrationObjectif theme="projet" className="epargne-resume-illustration" />
+        <div className="stats-grid stats-compact">
+          <Stat
+            label={`Épargné en ${monthLabel(currentMonth)}`}
+            value={fmt(savedThisMonth)}
+            tone="epargne"
+            detail={target > 0 ? `Objectif mensuel : ${fmt(target)} (${Math.round((savedThisMonth * 100) / target)}\u00a0%)` : undefined}
+          />
+          <Stat label="Total épargné" value={fmt(totalSaved)} tone="epargne" detail="Montants initiaux + versements" />
+          <Stat label="Objectifs en cours" value={String(goals.filter((g) => !goalProgress(g, data.savings, today).reached).length)} />
+        </div>
+      </section>
 
       {goals.length === 0 ? (
-        <EmptyState
-          title="Aucun objectif pour l’instant"
-          action={
-            <Button variant="primaire" icon="plus" onClick={() => setEditing('new')}>
-              Créer mon premier objectif
-            </Button>
-          }
-        >
-          Un fonds d’urgence, un voyage, un ordinateur… Fixez un montant et suivez votre progression.
-        </EmptyState>
+        <div className="objectifs-vide">
+          <IllustrationObjectif theme="projet" className="objectifs-vide-illustration" />
+          <EmptyState
+            title="Aucun objectif pour l’instant"
+            action={
+              <Button variant="primaire" icon="plus" onClick={() => setEditing('new')}>
+                Créer mon premier objectif
+              </Button>
+            }
+          >
+            Un fonds d’urgence, un voyage, un ordinateur… Fixez un montant et suivez votre progression.
+          </EmptyState>
+          <div className="chips objectifs-idees" role="group" aria-label="Idées d’objectifs">
+            {GOAL_EXAMPLES.slice(0, 5).map((nom) => (
+              <button key={nom} type="button" className="chip" onClick={() => setNomPropose(nom)}>
+                <IllustrationObjectif theme={themeFromName(nom)} className="chip-illustration" />
+                {nom}
+              </button>
+            ))}
+          </div>
+        </div>
       ) : (
-        <div className="goal-grid">
-          {goals.map((g) => {
-            const p = goalProgress(g, data.savings, today);
-            const deposits = data.savings.filter((s) => s.goalId === g.id).sort((a, b) => b.date.localeCompare(a.date));
-            const verseCeMois = sum(deposits.filter((d) => monthOf(d.date) === currentMonth).map((d) => d.amount));
-            // Prochaine petite étape : l'effort du mois (celui qui permet de tenir la date si elle est menacée).
-            const etape = p.onTrack === false ? (p.monthlyNeeded ?? 0) : g.monthlyContribution || (p.monthlyNeeded ?? 0);
-            return (
-              <Card key={g.id} title={g.name} headingLevel={3} className="goal-card">
-                <p className="goal-meta">
-                  <span className={`tag tag-${g.priority}`}>{PRIORITY_LABELS[g.priority]}</span>
-                  {p.reached && <span className="tag tag-ok">✓ Objectif atteint</span>}
-                  {p.dateExceeded && <span className="tag tag-alerte">Date dépassée</span>}
-                </p>
-                {g.description && <p className="muted">{g.description}</p>}
-                <p className="goal-amounts">
-                  <strong>{fmt(p.current)}</strong> sur {fmt(g.target)}
-                </p>
-                <ProgressBar value={p.current} max={g.target} level="objectif" label={`Progression de ${g.name}`} valueText={`${p.pct}\u00a0%`} />
-                {!p.reached && (
-                  <p className="goal-step">
-                    {p.pct > 0 ? `Vous avez atteint ${p.pct}\u00a0% de votre objectif.` : 'Votre objectif commence ici.'}{' '}
-                    {verseCeMois > 0
-                      ? `Ce mois-ci, vous avez déjà mis ${fmt(verseCeMois)} de côté pour cet objectif.`
-                      : etape > 0
-                        ? `Prochaine étape : mettre ${fmt(etape)} de côté ce mois-ci.`
-                        : ''}
-                  </p>
-                )}
-                <dl className="goal-figures">
-                  <div>
-                    <dt>Reste à épargner</dt>
-                    <dd>{fmt(p.remaining)}</dd>
-                  </div>
-                  <div>
-                    <dt>Contribution prévue</dt>
-                    <dd>{g.monthlyContribution > 0 ? `${fmt(g.monthlyContribution)} / mois` : 'Non définie'}</dd>
-                  </div>
-                  {g.targetDate && (
-                    <>
-                      <div>
-                        <dt>Date souhaitée</dt>
-                        <dd>
-                          {formatDate(g.targetDate)}
-                          <span className="goal-sub">dans {p.monthsRemaining} mois</span>
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Nécessaire par mois</dt>
-                        <dd>{fmt(p.monthlyNeeded ?? 0)}</dd>
-                      </div>
-                    </>
-                  )}
-                  <div>
-                    <dt>Atteinte estimée</dt>
-                    <dd>
-                      {p.reached ? (
-                        'Déjà atteint'
-                      ) : p.estimatedDate ? (
-                        <>
-                          {monthLabel(monthOf(p.estimatedDate))}
-                          <span className="goal-sub">dans {p.monthsToReach} mois</span>
-                        </>
-                      ) : (
-                        'Indiquez une contribution mensuelle'
-                      )}
-                    </dd>
-                  </div>
-                </dl>
-                {p.onTrack === false && !p.reached && (
-                  <Notice tone="attention">
-                    {p.dateExceeded
-                      ? 'La date souhaitée est dépassée. Vous pouvez la repousser.'
-                      : `Pour tenir la date, prévoyez ${fmt(p.monthlyNeeded ?? 0)} par mois au lieu de ${fmt(g.monthlyContribution)}.`}
-                  </Notice>
-                )}
-                {p.onTrack === true && !p.reached && <Notice tone="succes">Votre contribution permet d’atteindre l’objectif à temps.</Notice>}
-                <div className="card-footer">
-                  <Button variant="secondaire" className="btn-small" icon="plus" onClick={() => setDeposit({ goalId: g.id })}>
-                    Ajouter un versement
-                  </Button>
-                  <Button
-                    variant="discret"
-                    className="btn-small"
-                    aria-expanded={openHistory === g.id}
-                    onClick={() => setOpenHistory(openHistory === g.id ? null : g.id)}
-                  >
-                    Versements ({deposits.length})
-                  </Button>
-                  <IconButton icon="edit" label={`Modifier l’objectif ${g.name}`} onClick={() => setEditing(g)} />
-                  <IconButton icon="trash" label={`Supprimer l’objectif ${g.name}`} onClick={() => setToDelete(g)} />
-                </div>
-                {openHistory === g.id && (
-                  <ul className="deposit-list">
-                    {deposits.length === 0 && <li className="muted">Aucun versement enregistré.</li>}
-                    {deposits.map((d) => (
-                      <li key={d.id}>
-                        <span>
-                          {formatDate(d.date)} – <strong>{fmt(d.amount)}</strong>
-                          {d.note && <span className="muted"> – {d.note}</span>}
-                        </span>
-                        <span>
-                          <IconButton icon="edit" label={`Modifier le versement du ${formatDate(d.date)}`} onClick={() => setDeposit({ goalId: g.id, initial: d })} />
-                          <IconButton icon="trash" label={`Supprimer le versement du ${formatDate(d.date)}`} onClick={() => setDepositToDelete(d)} />
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Card>
-            );
-          })}
+        <div className={`goal-grid ${goals.length === 1 ? 'goal-grid-seul' : ''}`}>
+          {goals.map((g) => (
+            <CarteObjectif
+              key={g.id}
+              g={g}
+              ouvrirVersement={(initial) => setDeposit({ goalId: g.id, initial })}
+              supprimerVersement={setDepositToDelete}
+              modifier={() => setEditing(g)}
+              supprimer={() => setToDelete(g)}
+              historiqueOuvert={openHistory === g.id}
+              basculerHistorique={() => setOpenHistory(openHistory === g.id ? null : g.id)}
+            />
+          ))}
         </div>
       )}
 
@@ -222,9 +150,14 @@ export function Goals() {
         />
       </Card>
 
-      {editing && (
-        <Modal title={editing === 'new' ? 'Nouvel objectif d’épargne' : 'Modifier l’objectif'} onClose={() => setEditing(null)} size="large">
-          <GoalForm initial={editing === 'new' ? undefined : editing} onDone={() => setEditing(null)} onCancel={() => setEditing(null)} />
+      {(editing || nomPropose) && (
+        <Modal title={editing && editing !== 'new' ? 'Modifier l’objectif' : 'Nouvel objectif d’épargne'} onClose={fermerFormulaire} size="large">
+          <GoalForm
+            initial={editing && editing !== 'new' ? editing : undefined}
+            nomPropose={nomPropose ?? undefined}
+            onDone={fermerFormulaire}
+            onCancel={fermerFormulaire}
+          />
         </Modal>
       )}
       {deposit && (

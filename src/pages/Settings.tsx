@@ -7,6 +7,7 @@ import { dayDiff, formatDate } from '../lib/dates';
 import { isDuplicateName, KIND_LABELS, makeCategory, PROFILE_LABELS } from '../lib/categories';
 import { buildDemoData, DEMO_PROFILES, type DemoProfile } from '../lib/demo';
 import { clearData, downloadFile, exportCSV, exportJSON, parseBackup } from '../lib/storage';
+import { JOUR_BASCULE_DEFAUT, jourBascule } from '../lib/budget';
 import { Button, Card, CheckboxField, ConfirmDialog, IconButton, Modal, MoneyField, Notice, PageHeader, SelectField, TextField } from '../components/ui';
 import { checkAmount } from '../components/forms';
 import { Icon } from '../components/Icon';
@@ -80,21 +81,49 @@ function ProfileSection() {
   );
 }
 
-/** Calcul du disponible : report du reste d'un mois sur le suivant (cumul). */
+/** Calcul du disponible : report du reste d'un mois sur le suivant (cumul) et revenus de fin de mois. */
 function CalculSection() {
   const { data, dispatch, notify } = useApp();
   const actif = data.settings.carryOver !== false;
+  const jour = jourBascule(data);
   return (
     <Card title="Calcul du disponible">
       <CheckboxField
         label="Reporter le reste d’un mois sur le suivant"
-        hint="Ce qui reste à la fin d’un mois (ou ce qui manque) s’ajoute au mois suivant. Utile si vous êtes payé en fin de mois : un salaire ou une prime reçus fin octobre comptent encore en novembre."
+        hint="Dans le bilan et le détail du mois, ce qui reste à la fin d’un mois (ou ce qui manque) s’ajoute au mois suivant. Le solde du tableau de bord et de « Mon compte », lui, cumule déjà tout."
         checked={actif}
         onChange={(e) => {
           dispatch({ type: 'setCarryOver', value: e.target.checked });
           notify(e.target.checked ? 'Report activé : le reste de chaque mois passe au suivant.' : 'Report désactivé : chaque mois est calculé à part.');
         }}
       />
+      <CheckboxField
+        label="Les revenus reçus en fin de mois comptent pour le mois suivant"
+        hint="Un salaire ou une prime reçus à partir du jour choisi servent au mois suivant et apparaissent dans ses revenus. « Mon compte » les montre toujours à leur vraie date."
+        checked={jour !== null}
+        onChange={(e) => {
+          dispatch({ type: 'setIncomeShiftDay', value: e.target.checked ? JOUR_BASCULE_DEFAUT : null });
+          notify(
+            e.target.checked
+              ? `Les revenus reçus à partir du ${JOUR_BASCULE_DEFAUT} comptent maintenant pour le mois suivant.`
+              : 'Chaque revenu compte maintenant dans le mois de sa date.',
+          );
+        }}
+      />
+      {jour !== null && (
+        <SelectField
+          label="À partir du"
+          value={String(jour)}
+          onChange={(e) => dispatch({ type: 'setIncomeShiftDay', value: Number(e.target.value) })}
+          hint="Jour du mois à partir duquel un revenu compte pour le mois suivant."
+        >
+          {Array.from({ length: 14 }, (_, i) => i + 15).map((j) => (
+            <option key={j} value={j}>
+              {j} du mois
+            </option>
+          ))}
+        </SelectField>
+      )}
     </Card>
   );
 }

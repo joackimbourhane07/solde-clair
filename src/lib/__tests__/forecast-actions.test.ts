@@ -10,24 +10,27 @@ const fmt = (c: number) => formatMoney(c).replace(/ /g, ' ');
 describe('estimation du disponible à 7, 15 et 30 jours', () => {
   // Au 12 novembre : 1 700,50 € reçus − 645,00 € de charges − 118,00 € de dépenses − 100,00 € d'épargne = 837,50 €
   // Rythme : 118,00 € sur 12 jours = 9,83 € par jour
-  it('part du disponible du jour, ajoute les revenus prévus, retire les charges et le rythme des dépenses', () => {
+  // Point de départ : le solde de « Mon compte » le 12 novembre (tous les mouvements passés depuis mars)
+  const SOLDE = 450000 + 30000 + 20050 - 12000 - 9000 - 180000 - 3198 - 21800 - 15000;
+
+  it('part du solde de « Mon compte », ajoute les revenus prévus, retire les charges et le rythme des dépenses', () => {
     const f = balanceForecast(fixture(), TODAY);
-    expect(f.start).toBe(83750);
+    expect(f.start).toBe(SOLDE);
     expect(f.basis).toBe('rythme');
     expect(f.dailyVariable).toBe(983);
     expect(f.points).toEqual([
       // 19 novembre : rien de prévu
-      { days: 7, date: '2026-11-19', balance: 83750 - 983 * 7 },
+      { days: 7, date: '2026-11-19', balance: SOLDE - 983 * 7 },
       // 27 novembre : forfait du 20
-      { days: 15, date: '2026-11-27', balance: 83750 - 1599 - 983 * 15 },
+      { days: 15, date: '2026-11-27', balance: SOLDE - 1599 - 983 * 15 },
       // 12 décembre : forfait, salaire du 1er, loyer du 5
-      { days: 30, date: '2026-12-12', balance: 83750 - 1599 + 150000 - 60000 - 983 * 30 },
+      { days: 30, date: '2026-12-12', balance: SOLDE - 1599 + 150000 - 60000 - 983 * 30 },
     ]);
   });
 
   it('repère le point le plus bas avant le prochain revenu', () => {
     const f = balanceForecast(fixture(), TODAY);
-    expect(f.lowest).toEqual({ days: 18, date: '2026-11-30', balance: 83750 - 1599 - 983 * 18 });
+    expect(f.lowest).toEqual({ days: 18, date: '2026-11-30', balance: SOLDE - 1599 - 983 * 18 });
   });
 
   it('liste les revenus et charges prévus dans l’ordre des dates', () => {

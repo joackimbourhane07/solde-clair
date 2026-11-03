@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import type { Income } from '../types';
-import { carryOverInto, categoryName, monthTransactions } from '../lib/budget';
+import { carryOverInto, categoryName, jourBascule, moisDuRevenu, monthTransactions, transactionsInRange } from '../lib/budget';
 import { usesCarteRestaurant } from '../lib/accounts';
-import { defaultDateFor, firstDay, formatDate, monthLabel, monthOf, ofMonth } from '../lib/dates';
+import { addMonths, defaultDateFor, firstDay, formatDate, lastDay, monthLabel, monthOf, ofMonth, parseISO } from '../lib/dates';
 import { sum } from '../lib/money';
 import { FREQUENCY_LABELS } from '../lib/recurrence';
 import { Button, Card, CheckboxField, ConfirmDialog, EmptyState, IconButton, Modal, MonthSwitcher, Notice, PageHeader, Stat } from '../components/ui';
@@ -15,7 +15,7 @@ export function Incomes() {
   const [editing, setEditing] = useState<Income | 'new' | null>(null);
   const [toDelete, setToDelete] = useState<Income | null>(null);
   const [showAll, setShowAll] = useState(false);
-  // « Ajouter un revenu » depuis Poksy : #/revenus?ajouter=1 ouvre le formulaire (rien n'est enregistré sans validation)
+  // « Ajouter un revenu » depuis Poksy : #/revenus?ajouter=1 ouvre le formulaire (rien n'est enregistré sans validation)
   const [params, setParams] = useSearchParams();
   useEffect(() => {
     if (params.get('ajouter') === '1') {
@@ -32,12 +32,23 @@ export function Incomes() {
   const idsThisMonth = new Set(occurrences.map((t) => t.sourceId));
   const list = (showAll ? data.incomes : data.incomes.filter((i) => idsThisMonth.has(i.id))).slice().sort((a, b) => b.amount - a.amount);
   const report = useMemo(() => carryOverInto(data, month, today), [data, month, today]);
+  // Règle du 20 : un revenu reçu à partir de ce jour compte pour le mois suivant
+  const jour = jourBascule(data);
+  const finDeMoisCeMois = useMemo(
+    () =>
+      jour === null
+        ? []
+        : transactionsInRange(data, firstDay(month), lastDay(month), today).filter((t) => t.type === 'revenu' && parseISO(t.date).day >= jour),
+    [data, month, today, jour],
+  );
+  const recusLeMoisPrecedent = occurrences.filter((t) => monthOf(t.date) !== month);
   /** Pourquoi un revenu n'apparaît pas dans les totaux du mois affiché. */
   const horsDuMois = (inc: Income): { texte: string; mois: string } | null => {
     if (idsThisMonth.has(inc.id)) return null;
     if (inc.recurring && inc.endDate && inc.endDate < firstDay(month)) return { texte: `Terminé le ${formatDate(inc.endDate)}`, mois: monthOf(inc.endDate) };
-    if (inc.recurring) return { texte: `À partir de ${monthLabel(monthOf(inc.date))}`, mois: monthOf(inc.date) };
-    return { texte: `Compté en ${monthLabel(monthOf(inc.date))}`, mois: monthOf(inc.date) };
+    const m = moisDuRevenu(inc.date, jour);
+    if (inc.recurring) return { texte: `À partir de ${monthLabel(m)}`, mois: m };
+    return { texte: `Compté en ${monthLabel(m)}`, mois: m };
   };
   // Carte restaurant : total de toutes les sources, puis détail compte bancaire / carte restaurant
   const avecCarte = usesCarteRestaurant(data);
@@ -70,18 +81,18 @@ export function Incomes() {
           </>
         )}
       </div>
-      {report !== 0 && (
+      {jour !== null && (recusLeMoisPrecedent.length > 0 || finDeMoisCeMois.length > 0) && (
         <Notice>
-          {report > 0 ? (
-            <>
-              Le reste des mois précédents (<strong>+ {fmt(report)}</strong>) s’ajoute à ces revenus dans votre disponible du tableau de bord.
-            </>
-          ) : (
-            <>
-              Le dépassement des mois précédents (<strong>− {fmt(-report)}</strong>) est retiré de votre disponible du tableau de bord.
-            </>
-          )}
+          Les revenus reçus à partir du {jour} comptent pour le mois suivant
+          {recusLeMoisPrecedent.length > 0 ? ` : ${recusLeMoisPrecedent.map((t) => `${t.label} (${formatDate(t.date)})`).join(', ')} ${recusLeMoisPrecedent.length > 1 ? 'sont comptés' : 'est compté'} ici` : ''}
+          {finDeMoisCeMois.length > 0 ? `${recusLeMoisPrecedent.length > 0 ? ' ; ' : ' : '}${finDeMoisCeMois.map((t) => `${t.label} (${formatDate(t.date)})`).join(', ')} ${finDeMoisCeMois.length > 1 ? 'compteront' : 'comptera'} pour ${monthLabel(addMonths(month, 1))}` : ''}
+          . Réglable dans les paramètres.
         </Notice>
+      )}
+      {report !== 0 && (
+        <p className="muted petit-texte">
+          {report > 0 ? `Reste des mois précédents : + ${fmt(report)}` : `Dépassement des mois précédents : − ${fmt(-report)}`}, déjà compris dans le solde de « Mon compte » et du tableau de bord.
+        </p>
       )}
       <Card>
         <CheckboxField label="Afficher tous les revenus enregistrés (tous les mois)" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
@@ -110,6 +121,9 @@ export function Incomes() {
                         {inc.recurring ? FREQUENCY_LABELS[inc.frequency ?? 'mensuel'] : 'Exceptionnel'}
                       </span>
                       {hors && <span className="tag tag-autre-mois">{hors.texte}</span>}
+                      {occ.some((o) => monthOf(o.date) !== month) && (
+                        <span className="tag tag-autre-mois">Reçu fin {monthLabel(monthOf(occ.find((o) => monthOf(o.date) !== month)!.date), false)}</span>
+                      )}
                       {avecCarte && (occ[0]?.account ?? (inc.account || null)) === 'carte-restaurant' && <span className="tag tag-carte">Carte restaurant</span>}
                     </p>
                     <p className="item-meta">

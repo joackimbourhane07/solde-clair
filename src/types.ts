@@ -107,7 +107,11 @@ export interface SavingsGoal {
   priority: Priority;
   monthlyContribution: Cents;
   createdAt: ISODate;
+  /** Illustration choisie ; absente : déduite du nom (« Voyage » → voyage…). */
+  theme?: GoalTheme;
 }
+
+export type GoalTheme = 'urgence' | 'voyage' | 'vehicule' | 'etudes' | 'logement' | 'tech' | 'fete' | 'sante' | 'projet';
 
 /** Versement d'épargne (vers un objectif ou en épargne libre). */
 export interface SavingsDeposit {
@@ -132,6 +136,11 @@ export interface Settings {
   dismissedActions?: string[];
   /** Reporter le reste d'un mois sur le suivant (cumul). Actif si absent. */
   carryOver?: boolean;
+  /**
+   * Jour à partir duquel un revenu compte pour le mois suivant (salaire ou prime de fin de mois).
+   * Absent : le 20 (réglage par défaut) ; null : règle désactivée.
+   */
+  incomeShiftDay?: number | null;
 }
 
 export interface AppData {

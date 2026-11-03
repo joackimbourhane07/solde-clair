@@ -28,12 +28,12 @@ function avecCarte(): AppData {
 
 describe('carte restaurant : reconnaissance', () => {
   it('reconnaît les noms courants des titres-restaurant', () => {
-    for (const nom of ['Carte restaurant', 'Cartes restaurants', 'Titres-restaurant', 'ticket resto', 'Swile', 'Edenred', 'Pluxee', 'Up Déjeuner', 'Bimpli'])
+    for (const nom of ['Carte restaurant', 'Cartes restaurants', 'Titres-restaurant', 'ticket resto', 'Swile', 'Edenred', 'Pluxee', 'Up Déjeuner', 'Bimpli', 'carte déjeuner', 'Carte Dejeuner', 'Chèque déjeuner', 'titres-déjeuner'])
       expect(isCarteRestaurant(nom), nom).toBe(true);
   });
 
   it('ne confond pas avec un restaurant ou la carte bancaire', () => {
-    for (const nom of ['Restaurant', 'Restaurants', 'Carte bancaire', 'Espèces', 'Salaire', ''])
+    for (const nom of ['Restaurant', 'Restaurants', 'Carte bancaire', 'Espèces', 'Salaire', 'Déjeuner', 'Petit-déjeuner', ''])
       expect(isCarteRestaurant(nom), nom).toBe(false);
   });
 

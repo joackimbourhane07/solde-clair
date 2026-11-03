@@ -126,7 +126,7 @@ describe('Poksy : fenêtre de discussion', () => {
     await user.tab();
     expect(within(fenetre).getByRole('button', { name: t('Comment est calculé mon reste à vivre ?') })).toHaveFocus();
     await user.keyboard('{Enter}');
-    expect(norm(derniereReponse(fenetre).textContent)).toContain('Votre reste à vivre correspond');
+    expect(norm(derniereReponse(fenetre).textContent)).toContain('Votre reste à vivre est le solde de « Mon compte »');
   });
 
   it('les six questions rapides donnent chacune une réponse', async () => {
@@ -162,8 +162,8 @@ describe('Poksy : fenêtre de discussion', () => {
     const user = renderApp();
     const fenetre = await ouvrirPoksy(user);
     await user.click(within(fenetre).getByRole('button', { name: t('Comment est calculé mon reste à vivre ?') }));
-    // Même montant que la phrase principale du tableau de bord (821,51 € → 821 €)
-    expect(norm(derniereReponse(fenetre).textContent)).toContain('Ce mois-ci, il vous reste 821 €.');
+    // Même montant que la phrase principale du tableau de bord : le solde de « Mon compte » (2 590,52 € → 2 590 €)
+    expect(norm(derniereReponse(fenetre).textContent)).toContain('Aujourd’hui, il vous reste 2 590 €.');
   });
 
   it('montants masqués : Poksy ne les dévoile pas', async () => {

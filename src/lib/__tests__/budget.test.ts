@@ -246,7 +246,15 @@ describe('report du reste d’un mois sur le suivant (cumul)', () => {
   it('une prime reçue fin octobre et non dépensée compte encore en novembre', () => {
     const d = avecReport();
     d.incomes = [...d.incomes, { id: 'prime', name: 'Prime', amount: 100000, date: '2026-10-26', categoryId: 'c-autre-rev', recurring: false, frequency: null, endDate: null, note: '' }];
-    expect(carryOverInto(d, '2026-11', TODAY)).toBe(REPORT_NOVEMBRE + 100000);
+    const avant = monthSummary(avecReport(), '2026-11', TODAY).available;
+    // Règle du 20 (par défaut) : la prime du 26 octobre est un revenu de novembre
+    expect(carryOverInto(d, '2026-11', TODAY)).toBe(REPORT_NOVEMBRE);
+    expect(monthSummary(d, '2026-11', TODAY).income).toBe(170050 + 100000);
+    expect(monthSummary(d, '2026-11', TODAY).available).toBe(avant + 100000);
+    // Sans la règle : elle reste en octobre et arrive par le report (nouvel objet : les calculs sont mis en cache)
+    const sans = { ...d, settings: { ...d.settings, incomeShiftDay: null } };
+    expect(carryOverInto(sans, '2026-11', TODAY)).toBe(REPORT_NOVEMBRE + 100000);
+    expect(monthSummary(sans, '2026-11', TODAY).available).toBe(avant + 100000);
   });
 
   it('un dépassement est reporté aussi', () => {

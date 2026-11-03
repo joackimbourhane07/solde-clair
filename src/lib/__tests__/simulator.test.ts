@@ -2,31 +2,33 @@ import { describe, expect, it } from 'vitest';
 import { simulatePurchase } from '../simulator';
 import { fixture, TODAY } from '../../test/fixtures';
 
-// Rappel : solde disponible = 821,51 €, 19 jours restants, 50 € d’épargne encore prévus ce mois-ci.
+// Point de départ : le solde de « Mon compte » (2 590,52 €), comme « Il vous reste » du tableau de bord ;
+// 19 jours restants, 50 € d’épargne encore prévus ce mois-ci.
+const SOLDE = 259052;
 
 describe('simulateur d’achat', () => {
   it('achat modéré : situation confortable', () => {
     const r = simulatePurchase(fixture(), 10000, null, TODAY);
-    expect(r.availableBefore).toBe(82151);
-    expect(r.availableAfter).toBe(72151);
-    expect(r.dailyBefore).toBe(4323);
-    expect(r.dailyAfter).toBe(Math.trunc(72151 / 19));
+    expect(r.availableBefore).toBe(SOLDE);
+    expect(r.availableAfter).toBe(SOLDE - 10000);
+    expect(r.dailyBefore).toBe(Math.trunc(SOLDE / 19));
+    expect(r.dailyAfter).toBe(Math.trunc((SOLDE - 10000) / 19));
     expect(r.savingsImpact).toBe(0);
     expect(r.verdict).toBe('confortable');
   });
 
   it('achat qui entame l’épargne prévue : prudence', () => {
-    const r = simulatePurchase(fixture(), 79000, null, TODAY);
+    const r = simulatePurchase(fixture(), SOLDE - 3151, null, TODAY);
     expect(r.availableAfter).toBe(3151);
     expect(r.savingsPossibleBefore).toBe(5000);
     expect(r.savingsPossibleAfter).toBe(3151);
     expect(r.savingsImpact).toBe(1849);
     expect(r.verdict).toBe('prudence');
-    expect(r.goals[0]).toMatchObject({ name: 'Voyage', monthsOfContribution: 7.9, delayMonths: 1 });
+    expect(r.goals[0]).toMatchObject({ name: 'Voyage', monthsOfContribution: 25.6, delayMonths: 1 });
   });
 
   it('achat qui rend le solde négatif : déséquilibre', () => {
-    const r = simulatePurchase(fixture(), 90000, null, TODAY);
+    const r = simulatePurchase(fixture(), SOLDE + 7849, null, TODAY);
     expect(r.availableAfter).toBe(-7849);
     expect(r.dailyAfter).toBeLessThan(0);
     expect(r.verdict).toBe('desequilibre');
@@ -46,7 +48,7 @@ describe('simulateur d’achat', () => {
   });
 
   it('achat supérieur à la moitié du solde : prudence', () => {
-    const r = simulatePurchase(fixture(), 42000, null, TODAY);
+    const r = simulatePurchase(fixture(), 130000, null, TODAY);
     expect(r.savingsImpact).toBe(0);
     expect(r.verdict).toBe('prudence');
   });

@@ -295,7 +295,7 @@ export function Stat({
   label: string;
   value: ReactNode;
   detail?: ReactNode;
-  tone?: 'positif' | 'negatif' | 'neutre' | 'entree' | 'sortie';
+  tone?: 'positif' | 'negatif' | 'neutre' | 'entree' | 'sortie' | 'epargne';
 }) {
   return (
     <div className={`stat ${tone ? `stat-${tone}` : ''}`}>
