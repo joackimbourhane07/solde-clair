@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { simulatePurchase } from '../simulator';
 import { fixture, TODAY } from '../../test/fixtures';
 
-// Point de départ : le solde de « Mon compte » (2 590,52 €), comme « Il vous reste » du tableau de bord ;
+// Point de départ : le solde de « Mon compte » (2 590,52 €), comme « Il te reste » du tableau de bord ;
 // 19 jours restants, 50 € d’épargne encore prévus ce mois-ci.
 const SOLDE = 259052;
 

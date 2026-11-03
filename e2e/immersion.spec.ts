@@ -17,7 +17,7 @@ test('aucun emoji dans l’interface : présentation, toutes les pages, Poksy ou
   }
   await page.getByRole('button', { name: 'Ouvrir l’aide de Poksy' }).click();
   const fenetre = page.getByRole('dialog', { name: 'Poksy' });
-  await fenetre.getByRole('button', { name: 'Voir plus de questions' }).click();
+  await fenetre.getByRole('button', { name: 'Plus de questions' }).click();
   textes.push(await fenetre.innerText());
   const trouves = textes.flatMap((t) => t.match(EMOJI) ?? []);
   expect(trouves).toEqual([]);
@@ -104,7 +104,7 @@ test('présentation : démonstrations interactives au clavier et à la souris', 
   await expect.poll(() => piste.evaluate((el) => el.scrollLeft)).toBeGreaterThan(50);
 
   // Profils : onglets accessibles (flèches du clavier)
-  const onglets = page.getByRole('tablist', { name: 'Choisissez une situation' });
+  const onglets = page.getByRole('tablist', { name: 'Choisis une situation' });
   await onglets.getByRole('tab', { name: 'Étudiant(e)' }).focus();
   await page.keyboard.press('ArrowRight');
   await expect(onglets.getByRole('tab', { name: 'Alternant(e)' })).toHaveAttribute('aria-selected', 'true');
@@ -186,7 +186,7 @@ test('interactivité : montants rapides, élément récent, annuler une suppress
   await expect(page.locator('.hero-text')).toContainText('par semaine');
   // Montants rapides : 10 + 5 = 15 €
   await page.locator('.bottom-nav').getByRole('button', { name: 'Ajouter une dépense' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Nouvelle dépense' });
+  const dialog = page.getByRole('dialog', { name: 'Ajouter' });
   await dialog.getByRole('button', { name: /^Ajouter 10/ }).click();
   await dialog.getByRole('button', { name: /^Ajouter 5,00/ }).click();
   await expect(dialog.getByLabel(/^Montant/)).toHaveValue('15,00');

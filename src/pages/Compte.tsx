@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { sommesBloquees } from '../lib/plan';
 import { useApp } from '../state/AppState';
 import type { AccountId, Transaction } from '../types';
-import { accountBalance, ACCOUNT_LABELS, operationsAVenir, releve, totaux, usesCarteRestaurant, type FiltreCompte } from '../lib/accounts';
+import { accountBalance, ACCOUNT_LABELS, comptesUtilises, operationsAVenir, releve, totaux, type FiltreCompte } from '../lib/accounts';
 import { earliestDate, signedAmount } from '../lib/budget';
 import { addDays, addMonths, dayHeader, firstDay, monthLabel, monthOf, ofMonth, relativeDay } from '../lib/dates';
 import { centsToInput, parseAmount, sum } from '../lib/money';
@@ -35,7 +35,17 @@ const ICONES: Record<Transaction['type'], string> = {
 
 /** Détail d'une opération : catégorie, moyen de paiement, compte (séparés par un tiret). */
 function details(t: Transaction, avecCompte: boolean): string {
-  const morceaux = [t.type === 'epargne' ? 'Vers l’épargne' : t.type === 'ajustement' ? 'Correction du solde' : t.categoryName];
+  const morceaux = [
+    t.type === 'epargne'
+      ? 'Vers l’épargne'
+      : t.type === 'ajustement'
+        ? t.label === 'Recharge Izly'
+          ? t.amount < 0
+            ? 'Vers Izly'
+            : 'Depuis le compte bancaire'
+          : 'Correction du solde'
+        : t.categoryName,
+  ];
   if (t.paymentMethod) morceaux.push(t.paymentMethod);
   if (t.type === 'charge') morceaux.push('Prélèvement');
   // Le compte n'est précisé que s'il n'est pas déjà évident (pas de « Carte restaurant – Carte restaurant »)
@@ -51,7 +61,7 @@ function IconeOperation({ t }: { t: Transaction }) {
       className={`operation-icone ${t.type === 'epargne' ? 'sens-epargne' : signedAmount(t) >= 0 ? 'sens-entree' : 'sens-sortie'}`}
       aria-hidden="true"
     >
-      <Icon name={ICONES[t.type]} size={18} />
+      <Icon name={t.account === 'izly' ? 'campus' : ICONES[t.type]} size={18} />
     </span>
   );
 }
@@ -94,7 +104,7 @@ function AjusterSolde({ comptes, onClose }: { comptes: AccountId[]; onClose: () 
     const reels: Partial<Record<AccountId, number>> = {};
     for (const c of comptes) {
       const v = parseAmount(valeurs[c] ?? '');
-      if (v === null || v < 0) errs[c] = 'Indiquez un montant, par exemple 1 250,40.';
+      if (v === null || v < 0) errs[c] = 'Indique un montant, par exemple 1 250,40.';
       else reels[c] = negatifs[c] ? -v : v;
     }
     setErreurs(errs);
@@ -106,7 +116,7 @@ function AjusterSolde({ comptes, onClose }: { comptes: AccountId[]; onClose: () 
       dispatch({ type: 'upsert', collection: 'adjustments', item: { id: newId('aju'), account: c, date: today, amount: ecart, note: '' } });
       n += 1;
     }
-    notify(n === 0 ? 'Les soldes étaient déjà justes : rien à corriger.' : 'Solde ajusté : SoldeClair part maintenant de votre solde réel.');
+    notify(n === 0 ? 'Les soldes étaient déjà justes : rien à corriger.' : 'Solde ajusté : SoldeClair part maintenant de ton solde réel.');
     onClose();
   };
 
@@ -114,7 +124,7 @@ function AjusterSolde({ comptes, onClose }: { comptes: AccountId[]; onClose: () 
     <Modal title="Ajuster le solde" onClose={onClose}>
       <form onSubmit={valider} noValidate className="form">
         <p className="muted">
-          Indiquez le solde affiché aujourd’hui par votre banque{comptes.length > 1 ? ' et par votre carte restaurant' : ''}. SoldeClair ajoute un
+          Indique le solde affiché aujourd’hui par ta banque{comptes.length > 1 ? ' et par ta carte restaurant' : ''}. SoldeClair ajoute un
           « ajustement du solde » pour combler l’écart (une dépense oubliée, l’argent déjà présent avant de commencer…).
         </p>
         {comptes.map((c) => (
@@ -146,9 +156,62 @@ function AjusterSolde({ comptes, onClose }: { comptes: AccountId[]; onClose: () 
   );
 }
 
+/** Recharge Izly : l'argent passe du compte bancaire au porte-monnaie Izly (suivi manuel). */
+function RechargeIzly({ onClose }: { onClose: () => void }) {
+  const { dispatch, today, notify, fmt } = useApp();
+  const [montant, setMontant] = useState('');
+  const [date, setDate] = useState(today);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const valider = (e: FormEvent) => {
+    e.preventDefault();
+    const v = parseAmount(montant);
+    if (v === null || v <= 0) {
+      setErreur('Indique un montant, par exemple 20.');
+      return;
+    }
+    const lien = newId('rec');
+    dispatch({
+      type: 'upsert',
+      collection: 'adjustments',
+      item: { id: newId('aju'), account: 'compte', date, amount: -v, note: 'Recharge Izly', recharge: true, lien },
+    });
+    dispatch({
+      type: 'upsert',
+      collection: 'adjustments',
+      item: { id: newId('aju'), account: 'izly', date, amount: v, note: 'Recharge Izly', recharge: true, lien },
+    });
+    notify(`Izly rechargé de ${fmt(v)}.`);
+    onClose();
+  };
+  return (
+    <Modal title="Recharger Izly" onClose={onClose}>
+      <form onSubmit={valider} noValidate className="form">
+        <div className="form-grid">
+          <MoneyField label="Montant" value={montant} onChange={(e) => setMontant(e.target.value)} error={erreur} />
+          <TextField label="Date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+        <p className="field-hint">Passe du compte bancaire à Izly. Suivi manuel, aucun accès à ton compte Izly.</p>
+        <div className="form-actions">
+          <Button variant="secondaire" onClick={onClose}>
+            Annuler
+          </Button>
+          <button type="submit" className="btn btn-primaire">
+            <span>Recharger</span>
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
 export function Compte() {
   const { data, today, fmt, dispatch, notify } = useApp();
-  const avecCarte = usesCarteRestaurant(data);
+  const comptes = comptesUtilises(data);
+  const avecCarte = comptes.length > 1;
+  const avecIzly = comptes.includes('izly');
+  // Recharge Izly proposée aux étudiants et alternants, ou dès qu'Izly sert
+  const proposerIzly = avecIzly || data.profile?.type === 'etudiant' || data.profile?.type === 'alternant';
+  const [recharger, setRecharger] = useState(false);
   const [filtre, setFiltre] = useState<FiltreCompte>('tout');
   const [mois, setMois] = useState(1);
   const [recherche, setRecherche] = useState('');
@@ -173,11 +236,10 @@ export function Compte() {
   };
   const [aSupprimer, setASupprimer] = useState<Transaction | null>(null);
 
-  const actif: FiltreCompte = avecCarte ? filtre : 'compte';
+  const actif: FiltreCompte = avecCarte && (filtre === 'tout' || comptes.includes(filtre)) ? filtre : avecCarte ? 'tout' : 'compte';
   const debut = firstDay(addMonths(monthOf(today), -(mois - 1)));
   const solde = useMemo(() => accountBalance(data, actif, today, today), [data, actif, today]);
-  const soldeCompte = useMemo(() => accountBalance(data, 'compte', today, today), [data, today]);
-  const soldeCarte = useMemo(() => accountBalance(data, 'carte-restaurant', today, today), [data, today]);
+  const soldes = useMemo(() => comptes.map((c) => [c, accountBalance(data, c, today, today)] as const), [data, today, comptes.join()]);
   const aVenir = useMemo(() => operationsAVenir(data, actif, today, 30), [data, actif, today]);
   const soldePrevu = solde + sum(aVenir.map(signedAmount));
   // Sommes bloquées (caution, dépôt de garantie) : comprises dans le solde mais pas disponibles
@@ -205,31 +267,26 @@ export function Compte() {
     <div className="page">
       <PageHeader
         title="Mon compte"
-        description="Tout ce qui entre et tout ce qui sort, jour par jour, comme sur une application bancaire."
+        description="Entrées et sorties, jour par jour."
         actions={
-          <Button variant="secondaire" icon="edit" onClick={() => setAjuster(true)}>
-            Ajuster le solde
-          </Button>
+          <>
+            {proposerIzly && (
+              <Button variant="secondaire" icon="campus" onClick={() => setRecharger(true)}>
+                Recharger Izly
+              </Button>
+            )}
+            <Button variant="secondaire" icon="edit" onClick={() => setAjuster(true)}>
+              Ajuster le solde
+            </Button>
+          </>
         }
       />
 
       {avecCarte && (
         <div className="chips" role="group" aria-label="Compte affiché">
-          {(
-            [
-              ['tout', 'Tout'],
-              ['compte', 'Compte bancaire'],
-              ['carte-restaurant', 'Carte restaurant'],
-            ] as [FiltreCompte, string][]
-          ).map(([v, l]) => (
-            <button
-              key={v}
-              type="button"
-              className={`chip ${filtre === v ? 'chip-on' : ''}`}
-              aria-pressed={filtre === v}
-              onClick={() => setFiltre(v)}
-            >
-              {l}
+          {(['tout', ...comptes] as FiltreCompte[]).map((v) => (
+            <button key={v} type="button" className={`chip ${actif === v ? 'chip-on' : ''}`} aria-pressed={actif === v} onClick={() => setFiltre(v)}>
+              {v === 'tout' ? 'Tout' : ACCOUNT_LABELS[v]}
             </button>
           ))}
         </div>
@@ -254,22 +311,17 @@ export function Compte() {
         )}
         {actif === 'tout' && avecCarte && (
           <dl className="solde-detail">
-            <div>
-              <dt>Compte bancaire</dt>
-              <dd className={soldeCompte < 0 ? 'montant-moins' : 'montant-plus'}>{soldeCompte < 0 ? `− ${fmt(-soldeCompte)}` : fmt(soldeCompte)}</dd>
-            </div>
-            <div>
-              <dt>Carte restaurant</dt>
-              <dd className={soldeCarte < 0 ? 'montant-moins' : 'montant-plus'}>{soldeCarte < 0 ? `− ${fmt(-soldeCarte)}` : fmt(soldeCarte)}</dd>
-            </div>
+            {soldes.map(([c, v]) => (
+              <div key={c}>
+                <dt>{ACCOUNT_LABELS[c]}</dt>
+                <dd className={v < 0 ? 'montant-moins' : 'montant-plus'}>{v < 0 ? `− ${fmt(-v)}` : fmt(v)}</dd>
+              </div>
+            ))}
           </dl>
         )}
         {(data.adjustments ?? []).length === 0 && (
           <div className="solde-astuce">
-            <p>
-              SoldeClair part de 0 € et ajoute chaque revenu le jour où il est versé (voir « À venir »). Pour afficher l’argent déjà présent sur votre
-              compte{avecCarte ? ' et votre carte restaurant' : ''}, indiquez une fois le solde affiché par votre banque.
-            </p>
+            <p>Le solde part de 0 €. Indique une fois le montant affiché par ta banque{avecCarte ? ' et ta carte restaurant' : ''}.</p>
             <Button variant="secondaire" className="btn-small" icon="edit" onClick={() => setAjuster(true)}>
               Indiquer mon solde réel
             </Button>
@@ -368,7 +420,7 @@ export function Compte() {
             </div>
             {joursFiltres.length === 0 ? (
               <EmptyState title={q ? 'Aucune opération trouvée' : 'Aucune opération pour l’instant'}>
-                {q ? 'Essayez un autre mot.' : 'Vos revenus, dépenses et prélèvements apparaîtront ici, jour par jour.'}
+                {q ? 'Essaie un autre mot.' : 'Tes revenus, dépenses et prélèvements apparaîtront ici, jour par jour.'}
               </EmptyState>
             ) : (
               <div className="releve">
@@ -408,20 +460,22 @@ export function Compte() {
         )}
       </section>
 
-      {ajuster && <AjusterSolde comptes={avecCarte ? ['compte', 'carte-restaurant'] : ['compte']} onClose={() => setAjuster(false)} />}
+      {ajuster && <AjusterSolde comptes={comptes} onClose={() => setAjuster(false)} />}
+      {recharger && <RechargeIzly onClose={() => setRecharger(false)} />}
       {aSupprimer && (
         <ConfirmDialog
           title="Supprimer cet ajustement ?"
-          message="Le solde sera de nouveau calculé uniquement à partir de vos saisies."
+          message="Le solde sera de nouveau calculé uniquement à partir de tes saisies."
           onCancel={() => setASupprimer(null)}
           onConfirm={() => {
             const ajustement = (data.adjustments ?? []).find((a) => a.id === aSupprimer.sourceId);
-            dispatch({ type: 'remove', collection: 'adjustments', id: aSupprimer.sourceId });
-            notify(
-              'Ajustement supprimé.',
-              'succes',
-              ajustement ? { label: 'Annuler', onClick: () => dispatch({ type: 'upsert', collection: 'adjustments', item: ajustement }) } : undefined,
-            );
+            // Une recharge Izly est faite de deux mouvements liés : ils partent ensemble
+            const lies = ajustement?.lien ? (data.adjustments ?? []).filter((a) => a.lien === ajustement.lien) : ajustement ? [ajustement] : [];
+            for (const a of lies) dispatch({ type: 'remove', collection: 'adjustments', id: a.id });
+            notify(ajustement?.recharge ? 'Recharge supprimée.' : 'Ajustement supprimé.', 'succes', {
+              label: 'Annuler',
+              onClick: () => lies.forEach((a) => dispatch({ type: 'upsert', collection: 'adjustments', item: a })),
+            });
             setASupprimer(null);
           }}
         />

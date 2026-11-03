@@ -45,7 +45,7 @@ for (const viewport of [
     // Accueil : carte « Mon objectif » et repères
     await aller(page, '');
     await expect(page.getByRole('heading', { name: 'Mon objectif : Épargne de fin de contrat' })).toBeVisible();
-    await expect(page.getByRole('region', { name: 'Repères pour vous' })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Repères pour toi' })).toBeVisible();
     expect(await problemesDeMiseEnPage(page), 'Mise en page de l’accueil').toEqual([]);
     expect(erreurs, 'Erreurs dans la console').toEqual([]);
   });

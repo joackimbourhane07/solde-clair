@@ -335,6 +335,12 @@ strong {
 
 .app {
   min-height: 100vh;
+  min-height: 100dvh;
+}
+
+:root {
+  /* Hauteur réelle de la barre du bas (liens de 60 px + bordure) */
+  --barre-bas: 61px;
 }
 
 .sidebar {
@@ -377,7 +383,7 @@ strong {
 }
 
 .main {
-  padding: 20px 16px calc(96px + env(safe-area-inset-bottom));
+  padding: 20px 16px calc(var(--barre-bas) + env(safe-area-inset-bottom) + 16px);
   max-width: 1220px;
   margin: 0 auto;
   outline: none;
@@ -392,6 +398,14 @@ strong {
   background: var(--surface);
   border-top: var(--dp-border-hairline) solid var(--border);
   padding-bottom: env(safe-area-inset-bottom);
+  /* Calque propre : la barre ne bouge pas avec le contenu pendant le défilement */
+  transform: translateZ(0);
+  transition: transform 160ms ease;
+}
+
+/* Clavier ouvert : la barre s'efface (sinon, sur iOS, elle remonte au-dessus du clavier et masque les champs) */
+:root.clavier-ouvert .bottom-nav {
+  transform: translateY(110%);
 }
 
 .bottom-nav ul {
@@ -488,7 +502,9 @@ strong {
   color: var(--text-2);
   text-decoration: none;
   font-weight: 500;
-  transition: background-color var(--transition), color var(--transition);
+  transition:
+    background-color var(--transition),
+    color var(--transition);
 }
 
 .nav-link:hover {
@@ -514,6 +530,7 @@ strong {
     position: sticky;
     top: 0;
     height: 100vh;
+    height: 100dvh;
     padding: 24px 16px;
     background: var(--bg-tint);
     border-right: var(--dp-border-hairline) solid var(--border);
@@ -719,7 +736,6 @@ strong {
   position: relative;
   min-width: 0;
 }
-
 
 .hero-panel {
   position: relative;
@@ -966,8 +982,10 @@ strong {
   height: 0.8em;
   margin-right: 0.25em;
   background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4 2.5 20h19L12 4Zm0 6v4.5m0 3h.01'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4 2.5 20h19L12 4Zm0 6v4.5m0 3h.01'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4 2.5 20h19L12 4Zm0 6v4.5m0 3h.01'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4 2.5 20h19L12 4Zm0 6v4.5m0 3h.01'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 
 .icone-texte {
@@ -1182,7 +1200,9 @@ strong {
   border-radius: var(--radius-field);
   background: var(--bg);
   color: var(--text);
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
   font: inherit;
   font-size: 1rem; /* évite le zoom automatique sur iOS */
 }
@@ -1283,7 +1303,9 @@ textarea.input {
   color: var(--fill-doux-texte);
   font-weight: 500;
   cursor: pointer;
-  transition: background-color var(--transition), color var(--transition);
+  transition:
+    background-color var(--transition),
+    color var(--transition);
 }
 
 .radio:hover {
@@ -1393,7 +1415,9 @@ textarea.input {
   border: 0;
   background: var(--fill-doux);
   color: var(--fill-doux-texte);
-  transition: background-color var(--transition), color var(--transition);
+  transition:
+    background-color var(--transition),
+    color var(--transition);
   font: inherit;
   font-size: 0.9rem;
   font-weight: 500;
@@ -2005,7 +2029,9 @@ ol.rank-list li > span {
   line-height: 1.2;
   border: 0;
   border-radius: var(--dp-radius-control);
-  transition: background-color var(--transition), color var(--transition);
+  transition:
+    background-color var(--transition),
+    color var(--transition);
   background: transparent;
   color: var(--text-2);
   font: inherit;
@@ -2368,21 +2394,59 @@ ol.rank-list li > span {
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(3, 5, 9, 0.72);
+  background: rgba(3, 5, 9, 0.62);
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  /* Téléphone : la fenêtre flotte au-dessus de la barre système et du clavier */
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom) + var(--clavier, 0px));
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
-  width: 100%;
-  max-height: 92vh;
-  overflow-y: auto;
-  border-radius: 12px 12px 0 0;
+  width: min(560px, 100%);
+  /* Jamais plus haute que la zone visible (barres du navigateur et clavier déduits) */
+  max-height: calc(var(--vv-hauteur, 100dvh) - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  border-radius: 20px;
   border: var(--dp-border-hairline) solid var(--border);
-  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
   box-shadow: var(--shadow-fenetre);
+  overflow: hidden;
+  touch-action: auto;
+}
+
+/* Le contenu défile à l'intérieur ; l'en-tête reste visible */
+.modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 16px 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Les boutons d'action restent accessibles en bas de la fenêtre, même avec un long formulaire */
+.modal-body .form-actions {
+  position: sticky;
+  bottom: -16px;
+  margin: 8px -16px -16px;
+  padding: 12px 16px calc(12px);
+  background: var(--surface);
+  border-top: var(--dp-border-hairline) solid var(--border);
+  z-index: 1;
+}
+
+.modal-poignee {
+  align-self: center;
+  width: 40px;
+  height: 4px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: var(--border-strong);
 }
 
 @media (min-width: 640px) {
@@ -2392,13 +2456,34 @@ ol.rank-list li > span {
   }
 
   .modal {
-    max-width: 560px;
+    max-height: calc(var(--vv-hauteur, 100dvh) - 48px);
     border-radius: var(--dp-radius-panel);
-    padding: 22px;
+  }
+
+  .modal-poignee {
+    display: none;
+  }
+
+  .modal-body {
+    padding: 0 22px 22px;
+  }
+
+  .modal-body .form-actions {
+    bottom: -22px;
+    margin: 8px -22px -22px;
+    padding: 14px 22px;
   }
 
   .modal-large {
-    max-width: 720px;
+    width: min(720px, 100%);
+  }
+}
+
+/* Paysage sur téléphone (peu de hauteur) : la fenêtre se centre et prend toute la hauteur utile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .modal-backdrop {
+    align-items: center;
+    padding-top: calc(8px + env(safe-area-inset-top));
   }
 }
 
@@ -2407,7 +2492,14 @@ ol.rank-list li > span {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
-  margin-bottom: 14px;
+  padding: 10px 8px 10px 16px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .modal-header {
+    padding: 16px 14px 12px 22px;
+  }
 }
 
 .modal-header h2 {
@@ -2435,6 +2527,7 @@ ol.rank-list li > span {
 
 .onboarding {
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .onboarding-header {
@@ -2531,7 +2624,6 @@ ol.rank-list li > span {
   white-space: nowrap;
 }
 
-
 .choice-grid {
   display: grid;
   gap: 8px;
@@ -2548,7 +2640,9 @@ ol.rank-list li > span {
   border-radius: var(--dp-radius-control);
   background: var(--fill-doux);
   color: var(--fill-doux-texte);
-  transition: background-color var(--transition), color var(--transition);
+  transition:
+    background-color var(--transition),
+    color var(--transition);
   cursor: pointer;
   font-weight: 500;
 }
@@ -2952,6 +3046,7 @@ ol.rank-list li > span {
 
 .chargement {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg);
 }
 
@@ -3358,7 +3453,9 @@ ol.rank-list li > span {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--transition), color var(--transition);
+  transition:
+    background-color var(--transition),
+    color var(--transition);
 }
 
 .bulle:hover {
@@ -3524,7 +3621,6 @@ ol.rank-list li > span {
   font-weight: 500;
   overflow-wrap: anywhere;
 }
-
 
 /* Étapes d'installation (paramètres) */
 .etapes-installation {
@@ -3882,5 +3978,21 @@ ol.rank-list li > span {
 @media (min-width: 760px) {
   .line-row-plein {
     grid-column: 1 / span 2;
+  }
+}
+
+/* Téléphone : dans une fenêtre, les deux boutons se partagent la largeur sur une seule ligne */
+@media (max-width: 639px) {
+  .modal-body .form-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .modal-body .form-actions > .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }

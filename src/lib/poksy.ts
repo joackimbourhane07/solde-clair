@@ -73,12 +73,12 @@ export interface Fiche {
   pages?: PageKey[];
 }
 
-export const PRESENTATION = 'Poksy vous aide à comprendre votre budget, simplement.';
+export const PRESENTATION = 'Poksy t’aide à comprendre ton budget, simplement.';
 
-export const MENTION = 'Poksy fonctionne sur votre appareil et ne remplace pas un conseiller financier professionnel.';
+export const MENTION = 'Poksy fonctionne sur ton appareil et ne remplace pas un conseiller financier professionnel.';
 
 export const REPONSE_INTROUVABLE =
-  'Je n’ai pas encore trouvé la réponse exacte. Vous pouvez choisir une question proposée ou consulter la rubrique correspondante dans SoldeClair.';
+  'Je n’ai pas encore trouvé la réponse exacte. Tu peux choisir une question proposée ou consulter la rubrique correspondante dans SoldeClair.';
 
 /* -------------------------------------------------------------------------- */
 /* Fiches                                                                      */
@@ -89,8 +89,7 @@ export const FICHES: Fiche[] = [
   {
     id: 'securite',
     question: 'Dois-je donner mes codes bancaires ?',
-    reponse:
-      'Ne saisissez jamais de mot de passe, de code, de numéro de carte ni de coordonnées bancaires, ni ici ni ailleurs dans SoldeClair. Poksy et SoldeClair n’en ont jamais besoin. Vous notez vous-même vos opérations.',
+    reponse: 'Ne saisis jamais de mot de passe, de code ni de numéro de carte. SoldeClair n’en a jamais besoin. Tu notes toi-même tes opérations.',
     motsCles: [
       'mot de passe',
       'mdp',
@@ -110,11 +109,11 @@ export const FICHES: Fiche[] = [
     id: 'reste-a-vivre',
     question: 'Comment est calculé mon reste à vivre ?',
     reponse: (ctx) =>
-      'Votre reste à vivre est le solde de « Mon compte » : tout l’argent reçu, moins vos dépenses, vos charges prélevées et l’épargne versée, depuis votre première saisie. Une opération prévue compte le jour où elle arrive ; celles des 3 prochains jours sont listées dans « À venir ». Appuyez sur « Comment est-ce calculé ? » dans le tableau de bord pour voir le détail avec vos montants.' +
+      'Ton reste à vivre est le solde de « Mon compte » : l’argent reçu, moins tes dépenses, charges et épargne. Une opération prévue compte le jour où elle arrive. Appuie sur « Comment est-ce calculé ? » dans le tableau de bord pour le détail.' +
       (ctx.resteAVivre
         ? ctx.resteNegatif
-          ? ` Aujourd’hui, votre solde est de ${ctx.resteAVivre}.`
-          : ` Aujourd’hui, il vous reste ${ctx.resteAVivre}.`
+          ? ` Aujourd’hui, ton solde est de ${ctx.resteAVivre}.`
+          : ` Aujourd’hui, il te reste ${ctx.resteAVivre}.`
         : ''),
     action: 'tableau',
     motsCles: [
@@ -132,7 +131,7 @@ export const FICHES: Fiche[] = [
     id: 'par-jour',
     question: 'Comment est calculé mon disponible quotidien ?',
     reponse: (ctx) =>
-      'Votre disponible quotidien est votre reste à vivre (le solde de « Mon compte ») divisé par le nombre de jours restants dans le mois, aujourd’hui compris. Il est arrondi vers le bas pour ne jamais surestimer ce qu’il vous reste.' +
+      'Ton reste à vivre, divisé par les jours restants du mois. Arrondi vers le bas, pour ne jamais surestimer.' +
       (ctx.parJour && ctx.joursRestants
         ? ` Aujourd’hui : environ ${ctx.parJour} par jour pendant ${ctx.joursRestants} jour${ctx.joursRestants > 1 ? 's' : ''}.`
         : ''),
@@ -142,8 +141,7 @@ export const FICHES: Fiche[] = [
   {
     id: 'ajouter-depense',
     question: 'Comment ajouter une dépense ?',
-    reponse:
-      'Appuyez sur le bouton « + », saisissez le montant, choisissez une catégorie puis validez. Sur ordinateur, ce bouton s’appelle « Ajouter une dépense ». La dépense est ajoutée à votre historique et votre montant disponible est recalculé.',
+    reponse: 'Appuie sur « + », saisis le montant, choisis une catégorie, valide. Ton disponible est recalculé aussitôt.',
     action: 'depense',
     motsCles: [
       'ajouter une depense',
@@ -161,15 +159,13 @@ export const FICHES: Fiche[] = [
   {
     id: 'fixe-variable',
     question: 'Quelle différence entre charge fixe et dépense variable ?',
-    reponse:
-      'Une charge fixe revient régulièrement avec un montant généralement prévisible, comme le loyer ou un abonnement. Une dépense variable peut changer chaque mois, comme les courses, le carburant ou les loisirs.',
+    reponse: 'Une charge fixe revient chaque mois : loyer, abonnement. Une dépense variable change : courses, sorties.',
     motsCles: ['charge fixe et depense variable', 'fixe et variable', 'fixe ou variable', 'difference entre'],
   },
   {
     id: 'ajuster-solde',
     question: 'Comment ajuster mon solde ?',
-    reponse:
-      'Ouvrez la page « Mon compte », puis appuyez sur « Ajuster le solde ». Indiquez le montant réellement affiché par votre banque. SoldeClair enregistre une correction datée sans supprimer vos anciennes opérations.',
+    reponse: 'Ouvre « Mon compte », puis « Ajuster le solde ». Indique le montant réellement affiché par ta banque. Tes opérations restent intactes.',
     action: 'ajuster',
     motsCles: [
       'ajuster',
@@ -187,8 +183,7 @@ export const FICHES: Fiche[] = [
   {
     id: 'creer-objectif',
     question: 'Comment créer un objectif d’épargne ?',
-    reponse:
-      'Ouvrez « Objectifs d’épargne » et appuyez sur « Nouvel objectif ». Donnez un nom, un montant cible et, si vous le souhaitez, une date. SoldeClair calcule ensuite combien mettre de côté chaque mois.',
+    reponse: 'Ouvre « Objectifs », puis « Nouvel objectif ». Donne un nom, un montant, une date si tu veux. SoldeClair calcule l’effort par mois.',
     action: 'objectif',
     motsCles: ['creer un objectif', 'nouvel objectif', 'objectif', 'epargne', 'economiser', 'mettre de cote pour', 'projet'],
     pages: ['objectifs'],
@@ -196,8 +191,7 @@ export const FICHES: Fiche[] = [
   {
     id: 'donnees-ou',
     question: 'Où sont enregistrées mes données ?',
-    reponse:
-      'Vos données sont enregistrées uniquement dans le navigateur de l’appareil utilisé. Elles ne sont pas envoyées à une banque ni stockées dans un compte SoldeClair. Pensez à exporter régulièrement une sauvegarde.',
+    reponse: 'Tes données restent dans ce navigateur, sur cet appareil. Rien n’est envoyé. Pense à exporter une sauvegarde.',
     action: 'sauvegarde',
     motsCles: [
       'ou sont enregistrees',
@@ -220,15 +214,14 @@ export const FICHES: Fiche[] = [
     id: 'soldeclair-quoi',
     question: 'Qu’est-ce que SoldeClair ?',
     reponse:
-      'SoldeClair est une application gratuite pour suivre votre budget personnel : revenus, dépenses, charges fixes, épargne et ce qu’il vous reste pour finir le mois. Vous saisissez vous-même vos opérations, sans lien avec votre banque. Appuyez sur « Commencer » pour créer votre profil, ou essayez un profil de démonstration.',
+      'Une application gratuite pour suivre ton budget. Tu notes tes opérations, sans lien avec ta banque. Appuie sur « Commencer » ou essaie une démonstration.',
     motsCles: ['soldeclair', 'c est quoi', 'a quoi sert', 'presentation', 'comment ca marche', 'commencer'],
     pages: ['presentation'],
   },
   {
     id: 'gratuit',
     question: 'Est-ce gratuit ?',
-    reponse:
-      'Oui, SoldeClair est entièrement gratuit, sans publicité et sans compte à créer. Rien n’est vendu ni partagé : vos données restent sur votre appareil.',
+    reponse: 'Oui, SoldeClair est entièrement gratuit. Sans publicité, sans compte. Tes données restent sur ton appareil.',
     motsCles: ['gratuit', 'payant', 'prix', 'cout', 'abonnement soldeclair', 'publicite', 'payer'],
     pages: ['presentation'],
   },
@@ -237,7 +230,7 @@ export const FICHES: Fiche[] = [
     id: 'solde-banque',
     question: 'Pourquoi mon solde ne correspond-il pas à ma banque ?',
     reponse: (ctx) =>
-      'SoldeClair ne connaît que ce que vous avez saisi : il part de 0 € et ajoute chaque revenu le jour de son versement. L’argent déjà présent sur votre compte ou une dépense oubliée crée donc un écart. Dans « Mon compte », « Ajuster le solde » permet de repartir du montant affiché par votre banque.' +
+      'SoldeClair part de 0 € et ne connaît que tes saisies. Une dépense oubliée crée un écart. « Ajuster le solde » repart du montant de ta banque.' +
       (ctx.ajustementFait === false ? ' Aucun solde réel n’a encore été indiqué.' : ''),
     action: 'ajuster',
     motsCles: [
@@ -258,17 +251,24 @@ export const FICHES: Fiche[] = [
   {
     id: 'ajustement-quoi',
     question: 'Qu’est-ce qu’un ajustement de solde ?',
-    reponse:
-      'Un ajustement est une correction du solde, datée du jour. Il comble l’écart entre le solde calculé par SoldeClair et le solde réel de votre banque. Il apparaît dans vos opérations et peut être supprimé à tout moment.',
+    reponse: 'Une correction datée du solde. Elle comble l’écart avec ta banque. Tu peux la supprimer à tout moment.',
     action: 'ajuster',
     motsCles: ['ajustement', 'ajustement de solde', 'correction du solde', 'c est quoi un ajustement'],
     pages: ['compte'],
   },
   {
+    id: 'izly',
+    question: 'Comment suivre mes dépenses Izly ?',
+    reponse:
+      'Appuie sur « + », puis « Izly ». Choisis un achat campus et le montant. Suivi manuel, aucun accès à ton compte Izly. « Recharger Izly » dans « Mon compte » déplace l’argent de ta banque.',
+    action: 'depense',
+    motsCles: ['izly', 'crous', 'resto u', 'restaurant universitaire', 'cafeteria', 'laverie', 'campus', 'recharge izly', 'recharger izly'],
+  },
+  {
     id: 'carte-restaurant',
     question: 'Pourquoi la carte restaurant est-elle séparée ?',
     reponse:
-      'La carte restaurant a son propre solde, comme un deuxième compte. Les revenus « Carte restaurant » y sont versés et les dépenses payées avec elle en sont retirées. Le solde total de « Mon compte » additionne votre compte bancaire et votre carte restaurant.',
+      'La carte restaurant a son propre solde, comme un deuxième compte. Les repas payés avec elle en sont retirés. « Mon compte » additionne les deux.',
     motsCles: [
       'carte restaurant',
       'carte resto',
@@ -288,15 +288,13 @@ export const FICHES: Fiche[] = [
   {
     id: 'masquer',
     question: 'Comment masquer les montants ?',
-    reponse:
-      'Appuyez sur l’icône en forme d’œil, en haut de l’écran sur téléphone ou en bas du menu sur ordinateur. Tous les montants sont remplacés par « ••• € ». Appuyez de nouveau pour les afficher.',
+    reponse: 'Appuie sur l’icône en forme d’œil. Les montants deviennent « ••• € ». Appuie de nouveau pour les revoir.',
     motsCles: ['masquer', 'masquer les montants', 'cacher', 'cacher les montants', 'oeil', 'discret', 'en public', 'afficher les montants'],
   },
   {
     id: 'a-venir',
     question: 'Que sont les opérations à venir ?',
-    reponse:
-      'Dans « Mon compte », la bulle « À venir » liste les prélèvements et revenus prévus dans les 30 prochains jours, ainsi que les charges passées pas encore payées. Le tableau de bord, lui, montre celles des 3 prochains jours. Elles ne font pas encore partie de votre solde : elles comptent le jour où elles arrivent.',
+    reponse: 'Dans « Mon compte », la bulle « À venir » liste les 30 prochains jours. Ces opérations comptent le jour où elles arrivent.',
     motsCles: ['a venir', 'operations a venir', 'prevu', 'prevues', 'prochains jours', 'prochain prelevement', 'bulle'],
     pages: ['compte'],
   },
@@ -305,24 +303,21 @@ export const FICHES: Fiche[] = [
   {
     id: 'ajouter-revenu',
     question: 'Comment ajouter un revenu ?',
-    reponse:
-      'Ouvrez « Revenus » et appuyez sur « Ajouter un revenu ». Indiquez le nom, le montant, la date et s’il revient chaque mois ou non. Il est ensuite compté dans le budget du mois concerné.',
+    reponse: 'Ouvre « Revenus », puis « Ajouter un revenu ». Indique le montant, la date et la fréquence. Il est compté dans le mois concerné.',
     action: 'revenu',
     motsCles: ['ajouter un revenu', 'nouveau revenu', 'revenu', 'salaire', 'paie', 'paye', 'allocation', 'bourse', 'virement recu', 'argent recu'],
   },
   {
     id: 'modifier-operation',
     question: 'Comment modifier une opération ?',
-    reponse:
-      'Dans la liste concernée (Dépenses, Revenus ou Charges fixes), appuyez sur l’icône en forme de crayon à côté de l’opération. Modifiez ce qui est nécessaire, puis enregistrez. Les totaux sont recalculés automatiquement.',
+    reponse: 'Appuie sur le crayon à côté de l’opération. Modifie, puis enregistre. Les totaux se mettent à jour.',
     motsCles: ['modifier', 'modifier une operation', 'changer une operation', 'corriger une operation', 'erreur de saisie', 'crayon', 'editer'],
     pages: ['depenses'],
   },
   {
     id: 'supprimer-operation',
     question: 'Comment supprimer une opération ?',
-    reponse:
-      'Dans la liste concernée, appuyez sur l’icône en forme de corbeille à côté de l’opération. SoldeClair vous demande de confirmer avant de supprimer. Pour un revenu ou une charge qui revient chaque mois, indiquez plutôt une date de fin si vous voulez garder les mois passés.',
+    reponse: 'Appuie sur la corbeille à côté de l’opération, puis confirme. Pour une opération récurrente, mets plutôt une date de fin.',
     motsCles: [
       'supprimer une operation',
       'supprimer une depense',
@@ -337,7 +332,7 @@ export const FICHES: Fiche[] = [
     id: 'revenu-exceptionnel',
     question: 'Qu’est-ce qu’un revenu exceptionnel ?',
     reponse:
-      'Un revenu exceptionnel n’arrive qu’une fois, comme une prime, un remboursement ou une vente. Il compte dans le mois de sa date, ou dans le mois suivant s’il arrive à partir du 20. Choisissez « Exceptionnel » dans le formulaire du revenu.',
+      'Un revenu unique : prime, remboursement, vente. Choisis « Exceptionnel » dans le formulaire. Reçu à partir du 20, il compte le mois suivant.',
     action: 'revenu',
     motsCles: ['revenu exceptionnel', 'exceptionnel', 'ponctuel', 'une seule fois', 'prime', 'remboursement', 'vente'],
   },
@@ -345,7 +340,7 @@ export const FICHES: Fiche[] = [
     id: 'fin-de-mois',
     question: 'Pourquoi un revenu compte-t-il pour le mois suivant ?',
     reponse:
-      'Un revenu reçu à partir du 20 sert au mois suivant : un salaire ou une prime de fin octobre apparaît dans les revenus de novembre. « Mon compte » le montre toujours à sa vraie date. Si votre salaire récurrent commence à la prochaine paie (le 28 novembre par exemple), indiquez aussi le « Dernier versement déjà reçu » (le 28 octobre) dans le formulaire du revenu : novembre aura bien son salaire. Vous pouvez changer ce jour ou désactiver la règle dans les paramètres.',
+      'Un revenu reçu à partir du 20 compte pour le mois suivant. « Mon compte » le montre à sa vraie date. Tu peux changer ce jour dans les paramètres.',
     action: 'parametres',
     motsCles: [
       'mois suivant',
@@ -364,15 +359,13 @@ export const FICHES: Fiche[] = [
   {
     id: 'recurrent',
     question: 'Comment fonctionne une opération récurrente ?',
-    reponse:
-      'Une opération récurrente revient toute seule selon la fréquence choisie : chaque semaine, chaque mois, chaque année… C’est le cas des salaires et des charges fixes. Vous pouvez indiquer une date de fin pour l’arrêter.',
+    reponse: 'Une opération récurrente revient toute seule : chaque semaine, mois ou année. Ajoute une date de fin pour l’arrêter.',
     motsCles: ['recurrent', 'recurrente', 'operation recurrente', 'frequence', 'repetition', 'tous les mois', 'automatiquement', 'date de fin'],
   },
   {
     id: 'choisir-categorie',
     question: 'Comment choisir une catégorie ?',
-    reponse:
-      'Choisissez la catégorie qui décrit le mieux la dépense : alimentation, transport, loisirs… Les catégories que vous utilisez le plus sont proposées en un geste dans le formulaire. Vous pouvez aussi en créer une avec « + Nouvelle catégorie… ».',
+    reponse: 'Choisis la catégorie la plus proche. Tes catégories fréquentes sont en tête. « + Nouvelle catégorie… » en crée une.',
     action: 'depense',
     motsCles: ['categorie', 'choisir une categorie', 'nouvelle categorie', 'creer une categorie', 'classer'],
     pages: ['depenses'],
@@ -382,23 +375,20 @@ export const FICHES: Fiche[] = [
   {
     id: 'charge-fixe',
     question: 'Qu’est-ce qu’une charge fixe ?',
-    reponse:
-      'Une charge fixe est une dépense qui revient régulièrement avec un montant prévisible : loyer, abonnement, assurance, forfait téléphone… Ajoutez-la une fois dans « Charges fixes » : elle sera comptée automatiquement à chaque échéance.',
+    reponse: 'Une dépense qui revient : loyer, forfait, assurance. Ajoute-la une fois dans « Charges fixes ». Elle compte à chaque échéance.',
     motsCles: ['charge fixe', 'charges fixes', 'loyer', 'abonnement', 'assurance', 'facture', 'prelevement', 'forfait'],
   },
   {
     id: 'depense-variable',
     question: 'Qu’est-ce qu’une dépense variable ?',
-    reponse:
-      'Une dépense variable change d’un mois à l’autre : courses, carburant, sorties, loisirs… Vous l’ajoutez au moment où vous la faites, avec le bouton « + ». Les budgets par catégorie suivent ces dépenses.',
+    reponse: 'Une dépense qui change chaque mois : courses, sorties. Ajoute-la avec « + » quand tu la fais.',
     action: 'depense',
     motsCles: ['depense variable', 'depenses variables', 'variable', 'courses', 'carburant', 'loisirs'],
   },
   {
     id: 'creer-limite',
     question: 'Comment créer une limite par catégorie ?',
-    reponse:
-      'Ouvrez « Budgets par catégorie ». Appuyez sur « Fixer une limite » à côté d’une catégorie, puis indiquez le montant maximum à dépenser par mois. SoldeClair suit ensuite vos dépenses dans cette catégorie.',
+    reponse: 'Ouvre « Budgets », puis « Fixer une limite » à côté d’une catégorie. Indique le maximum par mois. SoldeClair suit tes dépenses.',
     action: 'budgets',
     motsCles: [
       'creer une limite',
@@ -415,8 +405,7 @@ export const FICHES: Fiche[] = [
   {
     id: 'alertes',
     question: 'Que signifient les alertes à 75 %, 90 % et 100 % ?',
-    reponse:
-      'À 75 % de la limite, SoldeClair signale que vous approchez du maximum. À 90 %, l’alerte devient plus visible. À 100 %, la catégorie a dépassé la limite prévue, et vous pouvez consulter les opérations concernées. Chaque alerte est indiquée par un texte et une icône.',
+    reponse: 'À 75 % de la limite, un signal discret. À 90 %, il devient visible. À 100 %, la limite est dépassée.',
     action: 'budgets',
     motsCles: ['alerte', 'alertes', 'signifient les alertes', '75', '90', '100', 'depasse', 'depassement', 'limite depassee'],
     pages: ['budgets'],
@@ -424,8 +413,7 @@ export const FICHES: Fiche[] = [
   {
     id: 'modifier-budget',
     question: 'Comment modifier un budget ?',
-    reponse:
-      'Dans « Budgets par catégorie », appuyez sur l’icône en forme de crayon à côté de la limite. Changez le montant, puis enregistrez. Laissez le champ vide ou à 0 pour retirer la limite.',
+    reponse: 'Dans « Budgets », appuie sur le crayon. Change le montant, puis enregistre. Mets 0 pour retirer la limite.',
     action: 'budgets',
     motsCles: [
       'modifier un budget',
@@ -441,8 +429,7 @@ export const FICHES: Fiche[] = [
   {
     id: 'rouge',
     question: 'Pourquoi une dépense apparaît-elle en rouge ?',
-    reponse:
-      'Le rouge indique simplement l’argent qui sort : dépenses, charges et prélèvements. Le vert indique l’argent qui entre et un solde positif. Ce n’est pas un jugement, et un signe « − » ou « + » accompagne toujours le montant.',
+    reponse: 'Le rouge montre l’argent qui sort. Le vert, l’argent qui entre. Ce n’est pas un jugement.',
     motsCles: ['rouge', 'en rouge', 'couleur', 'couleurs', 'vert', 'pourquoi rouge'],
   },
 
@@ -450,16 +437,14 @@ export const FICHES: Fiche[] = [
   {
     id: 'versement',
     question: 'Comment ajouter un versement ?',
-    reponse:
-      'Ouvrez « Objectifs d’épargne » et appuyez sur « Ajouter un versement » sous l’objectif concerné. Indiquez le montant et la date. La progression de l’objectif est mise à jour aussitôt.',
+    reponse: 'Dans « Objectifs », appuie sur « Ajouter un versement ». Indique le montant et la date. La progression se met à jour.',
     motsCles: ['versement', 'ajouter un versement', 'verser', 'alimenter', 'mettre de cote', 'epargner', 'mettre de l argent'],
     pages: ['objectifs'],
   },
   {
     id: 'mensuel-necessaire',
     question: 'Comment est calculé le montant mensuel nécessaire ?',
-    reponse:
-      'SoldeClair divise le montant qu’il reste à épargner par le nombre de mois jusqu’à la date souhaitée. Le résultat est arrondi au centime supérieur pour arriver à temps. Sans date souhaitée, SoldeClair estime plutôt la date d’arrivée à partir de votre contribution mensuelle.',
+    reponse: 'Le reste à épargner, divisé par les mois restants. Arrondi au centime supérieur. Sans date, SoldeClair estime la date d’arrivée.',
     motsCles: [
       'montant mensuel',
       'montant mensuel necessaire',
@@ -473,16 +458,14 @@ export const FICHES: Fiche[] = [
   {
     id: 'progression',
     question: 'Comment est calculée la progression ?',
-    reponse:
-      'La progression additionne le montant déjà disponible au départ et tous vos versements, puis compare ce total au montant cible. Par exemple, 350 € sur 1 000 € donnent 35 %.',
+    reponse: 'Le montant de départ plus tes versements, comparé au montant visé. Par exemple, 350 € sur 1 000 € donnent 35 %.',
     motsCles: ['progression', 'avancement', 'pourcentage atteint', 'atteint', 'pourcentage'],
     pages: ['objectifs'],
   },
   {
     id: 'epargne-bleu',
     question: 'Pourquoi l’épargne apparaît-elle en bleu et non en rouge ?',
-    reponse:
-      'L’épargne n’est pas une dépense : cet argent reste à vous, mis de côté pour vos objectifs. Le bleu la distingue donc des dépenses, en rouge. Elle est quand même retirée de votre reste à vivre du mois, car elle n’est plus disponible pour vos dépenses.',
+    reponse: 'L’épargne n’est pas une dépense : cet argent reste à toi. Le bleu la distingue. Elle sort quand même de ton disponible du mois.',
     motsCles: ['epargne en bleu', 'bleu', 'en bleu', 'pourquoi bleu', 'couleur de l epargne'],
   },
 
@@ -490,40 +473,35 @@ export const FICHES: Fiche[] = [
   {
     id: 'simulateur-but',
     question: 'À quoi sert le simulateur d’achat ?',
-    reponse:
-      'Le simulateur d’achat montre l’effet d’un achat avant de le faire : solde restant, nouveau disponible par jour, épargne du mois et objectifs. Indiquez le montant et, si vous le souhaitez, la catégorie. Le résultat reste une indication budgétaire.',
+    reponse: 'Le simulateur montre l’effet d’un achat avant de payer. Indique le prix. Tu vois ton solde, ton disponible et tes objectifs.',
     action: 'simulateur',
     motsCles: ['simulateur', 'simulateur d achat', 'simuler', 'simulation', 'tester un achat'],
   },
   {
     id: 'simulateur-modifie',
     question: 'Est-ce que le simulateur modifie réellement mon budget ?',
-    reponse:
-      'Non. Le simulateur ne fait que calculer : rien n’est enregistré et votre budget ne change pas. Pour noter un achat réellement fait, ajoutez une dépense.',
+    reponse: 'Non. Le simulateur calcule seulement : rien n’est enregistré. Pour un vrai achat, ajoute une dépense.',
     action: 'simulateur',
     motsCles: ['simulateur modifie', 'modifie reellement', 'change mon budget', 'enregistre l achat', 'simulation enregistree'],
   },
   {
     id: 'prudence',
     question: 'Que signifie « possible avec prudence » ?',
-    reponse:
-      '« Achat possible avec prudence » signifie que l’achat reste possible, mais qu’il entame l’épargne prévue du mois, fait dépasser la limite d’une catégorie ou utilise plus de la moitié de votre solde disponible. C’est un signal pour prendre le temps de vérifier, pas une interdiction.',
+    reponse: 'L’achat reste possible, mais il touche ton épargne, une limite ou la moitié de ton disponible. C’est un signal, pas une interdiction.',
     action: 'simulateur',
     motsCles: ['prudence', 'avec prudence', 'possible avec prudence', 'confortable', 'desequilibrer', 'appreciation'],
   },
   {
     id: 'impact',
     question: 'Comment est calculé l’impact d’un achat ?',
-    reponse:
-      'SoldeClair retire le prix de l’achat de votre solde (celui de « Mon compte »), puis recalcule le disponible par jour jusqu’à la fin du mois. Il vérifie aussi votre épargne du mois, vos objectifs et la limite de la catégorie choisie.',
+    reponse: 'SoldeClair retire le prix de ton solde. Il recalcule ton disponible par jour. Il vérifie aussi ton épargne et ta limite.',
     action: 'simulateur',
     motsCles: ['impact', 'impact d un achat', 'effet d un achat', 'calcul de l impact'],
   },
   {
     id: 'decision-achat',
     question: 'Puis-je acheter cet article ?',
-    reponse:
-      'Poksy ne peut pas décider à votre place. Utilisez le simulateur d’achat pour voir l’impact sur votre solde, votre disponible quotidien et votre objectif d’épargne. Le résultat reste une indication budgétaire.',
+    reponse: 'Poksy ne décide pas à ta place. Le simulateur montre l’effet sur ton solde et ton épargne. Ce n’est qu’une indication.',
     action: 'simulateur',
     motsCles: ['acheter', 'puis je acheter', 'je peux acheter', 'dois je acheter', 'les moyens', 'raisonnable', 'craquer'],
   },
@@ -532,8 +510,7 @@ export const FICHES: Fiche[] = [
   {
     id: 'banque-acces',
     question: 'SoldeClair peut-il accéder à mon compte bancaire ?',
-    reponse:
-      'Non. SoldeClair n’est relié à aucune banque et ne demande jamais vos identifiants, mots de passe ou numéros de carte. Vous saisissez vous-même vos opérations, et « Ajuster le solde » permet de recaler le solde.',
+    reponse: 'Non. SoldeClair n’est relié à aucune banque et ne demande jamais tes identifiants. Tu notes toi-même tes opérations.',
     motsCles: [
       'acceder a mon compte bancaire',
       'acces a mon compte',
@@ -549,15 +526,13 @@ export const FICHES: Fiche[] = [
   {
     id: 'amis-voir',
     question: 'Mes amis peuvent-ils voir mon budget ?',
-    reponse:
-      'Non. Vos données restent dans le navigateur de votre appareil : personne d’autre ne peut les voir, même avec le même lien. Ne partagez pas votre fichier de sauvegarde, car il contient tout votre budget.',
+    reponse: 'Non. Tes données restent sur ton appareil. Personne d’autre ne les voit. Ne partage pas ton fichier de sauvegarde.',
     motsCles: ['amis', 'ami', 'voir mon budget', 'partager', 'partage', 'quelqu un d autre', 'autres personnes', 'famille'],
   },
   {
     id: 'changer-appareil',
     question: 'Que se passe-t-il si je change d’appareil ?',
-    reponse:
-      'Vos données ne passent pas d’un appareil à l’autre toutes seules. Sur l’ancien appareil, exportez une sauvegarde complète (JSON) dans les paramètres. Sur le nouveau, ouvrez SoldeClair et choisissez « Importer une sauvegarde ».',
+    reponse: 'Sur l’ancien appareil, exporte une sauvegarde complète. Sur le nouveau, choisis « Importer une sauvegarde ».',
     action: 'sauvegarde',
     motsCles: [
       'change d appareil',
@@ -574,8 +549,7 @@ export const FICHES: Fiche[] = [
   {
     id: 'sauvegarder',
     question: 'Comment sauvegarder mes données ?',
-    reponse:
-      'Ouvrez les paramètres et choisissez « Sauvegarde complète (JSON) ». Un fichier est enregistré sur votre appareil : gardez-le en lieu sûr. Faites-le régulièrement, par exemple une fois par mois.',
+    reponse: 'Ouvre les paramètres, puis « Sauvegarde complète (JSON) ». Garde le fichier en lieu sûr. Une fois par mois, c’est bien.',
     action: 'sauvegarde',
     motsCles: ['sauvegarder', 'sauvegarde', 'exporter', 'export', 'backup', 'json', 'csv', 'copie de mes donnees'],
     pages: ['parametres'],
@@ -583,8 +557,7 @@ export const FICHES: Fiche[] = [
   {
     id: 'restaurer',
     question: 'Comment restaurer une sauvegarde ?',
-    reponse:
-      'Ouvrez les paramètres, puis « Importer une sauvegarde », et choisissez votre fichier JSON. La sauvegarde remplace les données du profil ouvert : SoldeClair vous demande de confirmer avant.',
+    reponse: 'Ouvre les paramètres, puis « Importer une sauvegarde ». Choisis ton fichier JSON. SoldeClair te demande de confirmer.',
     action: 'parametres',
     motsCles: ['restaurer', 'restaurer une sauvegarde', 'importer', 'import', 'recuperer mes donnees', 'retrouver mes donnees'],
     pages: ['parametres'],
@@ -593,7 +566,7 @@ export const FICHES: Fiche[] = [
     id: 'supprimer-donnees',
     question: 'Comment supprimer toutes mes données ?',
     reponse:
-      'Ouvrez les paramètres, puis « Effacer toutes mes données », tout en bas. Une double confirmation est demandée : il faut taper EFFACER. Exportez d’abord une sauvegarde, car l’effacement est définitif.',
+      'Ouvre les paramètres, puis « Effacer toutes mes données ». Tape EFFACER pour confirmer. Exporte d’abord une sauvegarde : c’est définitif.',
     action: 'parametres',
     motsCles: [
       'supprimer toutes mes donnees',
@@ -613,24 +586,21 @@ export const FICHES: Fiche[] = [
   {
     id: 'tableau-de-bord',
     question: 'Comment revenir au tableau de bord ?',
-    reponse:
-      'Appuyez sur « Accueil » dans la barre du bas sur téléphone, ou sur « Tableau de bord » dans le menu sur ordinateur. Le logo SoldeClair, lui, ouvre la page de présentation et vos profils.',
+    reponse: 'Appuie sur « Accueil » dans la barre du bas, ou « Tableau de bord » sur ordinateur. Le logo ouvre la présentation.',
     action: 'tableau',
     motsCles: ['tableau de bord', 'revenir', 'retour', 'retourner', 'accueil', 'page principale'],
   },
   {
     id: 'changer-mois',
     question: 'Comment changer de mois ?',
-    reponse:
-      'Utilisez les flèches de part et d’autre du nom du mois, en haut du tableau de bord. Vous pouvez ainsi revoir un mois passé ou préparer le mois suivant.',
+    reponse: 'Utilise les flèches autour du nom du mois, en haut du tableau de bord.',
     action: 'tableau',
     motsCles: ['changer de mois', 'mois precedent', 'mois suivant', 'mois dernier', 'autre mois', 'mois passe', 'mois'],
   },
   {
     id: 'mode-sombre',
     question: 'Comment passer en mode sombre ?',
-    reponse:
-      'Ouvrez les paramètres, rubrique « Apparence », et choisissez « Mode sombre ». « Comme mon appareil » suit automatiquement le réglage de votre téléphone ou de votre ordinateur.',
+    reponse: 'Ouvre les paramètres, rubrique « Apparence », puis « Mode sombre ». « Comme mon appareil » suit ton téléphone.',
     action: 'parametres',
     motsCles: ['mode sombre', 'sombre', 'theme', 'nuit', 'fond noir', 'mode clair', 'apparence'],
   },
@@ -638,22 +608,20 @@ export const FICHES: Fiche[] = [
     id: 'demo',
     question: 'Comment utiliser un profil de démonstration ?',
     reponse:
-      'Pour essayer sans toucher à vos données, appuyez sur le logo SoldeClair, choisissez « Créer un nouveau profil », puis chargez une démonstration. Dans les paramètres, « Données de démonstration » remplace les données du profil ouvert, après confirmation. Les profils de démonstration sont entièrement fictifs.',
+      'Appuie sur le logo, puis « Créer un nouveau profil », puis charge une démonstration. Tes données restent intactes. Les profils de démonstration sont fictifs.',
     action: 'parametres',
     motsCles: ['demonstration', 'demo', 'profil de demonstration', 'exemple', 'essayer', 'donnees fictives'],
   },
   {
     id: 'retrouver',
     question: 'Comment retrouver une opération ?',
-    reponse:
-      'Ouvrez « Historique et bilan » et tapez un mot dans « Rechercher » : libellé, catégorie… Vous pouvez aussi filtrer par type et par période. « Mon compte » propose la même recherche.',
+    reponse: 'Ouvre « Historique » et tape un mot dans « Rechercher ». Tu peux filtrer par type et par période.',
     motsCles: ['retrouver', 'retrouver une operation', 'rechercher', 'chercher', 'trouver une operation', 'historique', 'recherche'],
   },
   {
     id: 'signaler',
     question: 'Comment signaler un problème ?',
-    reponse:
-      'Notez la page, ce que vous faisiez et le message affiché, puis prévenez la personne qui vous a fait découvrir SoldeClair. Poksy n’envoie rien : aucune donnée ne quitte votre appareil. Pensez à faire une sauvegarde avant de réessayer.',
+    reponse: 'Note la page et le message affiché. Préviens la personne qui t’a fait découvrir SoldeClair. Poksy n’envoie rien.',
     motsCles: ['signaler', 'signaler un probleme', 'probleme', 'bug', 'ne marche pas', 'ne fonctionne pas', 'plante', 'souci'],
   },
 
@@ -662,53 +630,49 @@ export const FICHES: Fiche[] = [
     id: 'report',
     question: 'Qu’est-ce que le report des mois précédents ?',
     reponse:
-      'Dans le bilan et le détail du mois, le report ajoute ce qui restait les mois précédents, ou retire un dépassement. Le solde du tableau de bord, lui, cumule déjà tout depuis votre première saisie. Vous pouvez désactiver le report dans les paramètres.',
+      'Le report ajoute le reste des mois passés au bilan du mois. Le solde du tableau de bord cumule déjà tout. Désactivable dans les paramètres.',
     action: 'tableau',
     motsCles: ['report', 'mois precedents', 'cumul', 'reste du mois dernier', 'reporter'],
   },
   {
     id: 'estimation',
     question: 'Comment fonctionne l’estimation à 30 jours ?',
-    reponse:
-      'L’estimation part du solde de « Mon compte », ajoute les revenus prévus et retire les charges prévues ainsi que vos dépenses courantes habituelles. Elle donne une idée de votre situation dans 7, 15 et 30 jours. Cette estimation dépend des informations enregistrées.',
+    reponse: 'Ton solde, plus les revenus prévus, moins les charges et dépenses habituelles. Une idée de ta situation à 7, 15 et 30 jours.',
     action: 'tableau',
     motsCles: ['estimation', 'prevision', '30 jours', 'fin du mois', 'dans un mois'],
   },
   {
     id: 'profils',
     question: 'Comment utiliser plusieurs profils ?',
-    reponse:
-      'Appuyez sur le logo SoldeClair pour ouvrir la page de présentation. Vous pouvez y continuer avec un profil, en changer ou en créer un nouveau. Chaque profil a ses propres données sur cet appareil.',
+    reponse: 'Appuie sur le logo SoldeClair. Continue avec un profil, changes-en ou crées-en un. Chaque profil a ses propres données.',
     motsCles: ['profil', 'profils', 'plusieurs profils', 'nouveau profil', 'changer de profil', 'autre profil'],
   },
   {
     id: 'installer',
     question: 'Comment installer SoldeClair comme une application ?',
     reponse:
-      'Sur iPhone, dans Safari, appuyez sur Partager puis « Sur l’écran d’accueil » ; sur Android, ouvrez le menu de Chrome puis « Installer l’application ». Faites d’abord une sauvegarde : l’application installée a sa propre mémoire. Le guide complet est dans les paramètres.',
+      'iPhone : Partager, puis « Sur l’écran d’accueil ». Android : menu de Chrome, puis « Installer l’application ». Fais d’abord une sauvegarde.',
     action: 'parametres',
     motsCles: ['installer', 'application', 'appli', 'app', 'ecran d accueil', 'telecharger'],
   },
   {
     id: 'conseil',
     question: 'Peux-tu me conseiller un placement ou un crédit ?',
-    reponse:
-      'Poksy ne donne pas de conseil en placement, en investissement ou en crédit : il explique seulement SoldeClair. Pour ce type de décision, un conseiller professionnel pourra vous accompagner. SoldeClair vous aide à suivre votre budget et votre épargne.',
+    reponse: 'Poksy ne donne pas de conseil en placement ou en crédit. Il explique SoldeClair. Pour ces décisions, vois un conseiller professionnel.',
     motsCles: ['investir', 'investissement', 'placement', 'placer', 'bourse', 'crypto', 'credit', 'pret', 'emprunt', 'emprunter', 'assurance vie'],
   },
   {
     id: 'qui-es-tu',
     question: 'Qui es-tu ?',
     reponse:
-      'Je suis Poksy, le guide de SoldeClair. Je réponds avec des explications préparées à l’avance, directement sur votre appareil : je ne suis pas une intelligence artificielle. Je ne remplace pas un conseiller financier professionnel.',
+      'Je suis Poksy, le guide de SoldeClair. Mes réponses sont préparées et restent sur ton appareil. Je ne suis pas une intelligence artificielle. Je ne remplace pas un conseiller financier professionnel.',
     motsCles: ['qui es tu', 'poksy', 'intelligence artificielle', 'ia', 'robot', 'chatgpt', 'humain'],
   },
   /* ---------------------- Mon plan d'épargne et profils ---------------------- */
   {
     id: 'plan-quoi',
     question: 'À quoi sert « Mon plan d’épargne » ?',
-    reponse:
-      'Il suit votre objectif principal (par exemple 7 000 € à la fin de votre contrat) : ce que vous avez déjà, ce qu’il faut mettre de côté chaque mois, et une projection mois par mois jusqu’à la date visée. Le statut indique si vous êtes dans les temps, avec l’écart chiffré.',
+    reponse: 'Il suit ton objectif principal mois par mois. Il dit combien mettre de côté. Le statut montre si tu es dans les temps.',
     action: 'plan',
     motsCles: ['mon plan', 'plan epargne', 'plan d epargne', 'projection', 'dans les temps', 'en retard', 'fin de contrat objectif', 'mois par mois'],
     pages: ['plan'],
@@ -716,8 +680,7 @@ export const FICHES: Fiche[] = [
   {
     id: 'epargne-totale-disponible',
     question: 'Épargne totale ou épargne disponible ?',
-    reponse:
-      'L’épargne totale additionne tous vos supports (livrets, PEL, argent mis de côté sur le compte). L’épargne disponible ne compte que ce que vous pouvez retirer tout de suite : un PEL ou de l’épargne salariale bloquée n’en fait pas partie.',
+    reponse: 'L’épargne totale compte tous tes supports. La disponible, seulement ce que tu peux retirer tout de suite. Un PEL n’en fait pas partie.',
     action: 'plan',
     motsCles: ['epargne totale', 'epargne disponible', 'disponible', 'bloquee', 'support', 'supports', 'livret', 'livret a', 'livret jeune', 'ldds'],
     pages: ['plan'],
@@ -725,16 +688,14 @@ export const FICHES: Fiche[] = [
   {
     id: 'pel',
     question: 'Puis-je retirer de l’argent de mon PEL ?',
-    reponse:
-      'Pas partiellement : un retrait sur un PEL entraîne sa clôture. C’est pourquoi SoldeClair le compte dans l’épargne totale, mais pas dans l’épargne disponible. Vérifiez les conditions exactes auprès de votre banque.',
+    reponse: 'Un retrait sur un PEL le clôture. Il compte dans l’épargne totale, pas dans la disponible. Vérifie les conditions auprès de ta banque.',
     motsCles: ['pel', 'plan epargne logement', 'retirer pel', 'retrait pel', 'cloture', 'bloque'],
     pages: ['plan'],
   },
   {
     id: 'revenu-attendu',
     question: 'Qu’est-ce qu’un revenu attendu ?',
-    reponse:
-      'Un revenu possible mais pas encore sûr : prime non confirmée, 13e mois, solde de tout compte… Il n’est compté nulle part (ni solde, ni budget) tant que vous ne l’avez pas confirmé. Cochez-le pour le voir dans la projection optimiste, et appuyez sur « Reçu » quand il arrive.',
+    reponse: 'Un revenu pas encore sûr : prime, 13e mois. Il n’est compté nulle part avant confirmation. Appuie sur « Reçu » quand il arrive.',
     action: 'plan',
     motsCles: ['revenu attendu', 'attendu', 'prime', 'incertain', 'pas sur', 'optimiste', 'projection optimiste', 'montant inconnu', 'fourchette'],
     pages: ['plan'],
@@ -743,23 +704,21 @@ export const FICHES: Fiche[] = [
     id: 'treizieme-mois',
     question: 'Comment compter mon 13e mois ?',
     reponse:
-      'Le 13e mois n’est pas obligatoire : il dépend de votre convention collective, d’un accord ou de votre contrat, et il est souvent calculé au prorata du temps de présence. Tant qu’il n’est pas confirmé, ajoutez-le en revenu attendu dans « Mon plan » ; quand il est versé, appuyez sur « Reçu ».',
+      'Le 13e mois n’est pas obligatoire : il dépend de ta convention ou de ton contrat. Ajoute-le en revenu attendu. Appuie sur « Reçu » quand il arrive.',
     action: 'plan',
     motsCles: ['13e mois', '13eme mois', 'treizieme mois', 'treizieme', 'prime de fin d annee', 'decembre'],
   },
   {
     id: 'fin-de-contrat',
     question: 'Que prévoir pour la fin de mon contrat ?',
-    reponse:
-      'Indiquez la date de fin dans les paramètres (Mon profil) : SoldeClair affiche un compte à rebours. Pensez au solde de tout compte (congés non pris, prorata de prime éventuel) : ajoutez-le en revenu attendu, avec une fourchette si le montant est incertain.',
+    reponse: 'Indique la date de fin dans ton profil : un compte à rebours s’affiche. Ajoute le solde de tout compte en revenu attendu.',
     action: 'plan',
     motsCles: ['fin de contrat', 'fin du contrat', 'solde de tout compte', 'stc', 'conges non pris', 'fin alternance', 'fin apprentissage', 'cdd'],
   },
   {
     id: 'avantage-nature',
     question: 'Les titres-restaurant sont-ils un revenu ?',
-    reponse:
-      'Pas vraiment : c’est du pouvoir d’achat alimentaire. Ils restent sur votre carte restaurant et ne peuvent servir qu’aux repas. SoldeClair les affiche à part des revenus encaissés et ne les compte pas pour votre épargne.',
+    reponse: 'Pas vraiment : c’est du pouvoir d’achat pour les repas. Ils restent sur ta carte restaurant. Ils ne comptent pas pour ton épargne.',
     motsCles: [
       'avantage en nature',
       'avantage',
@@ -776,7 +735,7 @@ export const FICHES: Fiche[] = [
     id: 'somme-bloquee',
     question: 'Une caution est-elle une dépense ?',
     reponse:
-      'Non : une caution ou un dépôt de garantie bloque de l’argent sans le dépenser, puisqu’il vous est rendu. Ajoutez-le dans « Sommes bloquées temporairement » (Mon plan) : il n’est pas compté comme une dépense, et « Mon compte » indique la part bloquée. Appuyez sur « Rendu » quand l’argent revient.',
+      'Non : une caution bloque de l’argent sans le dépenser. Ajoute-la dans « Sommes bloquées » (Mon plan). Appuie sur « Rendu » quand elle revient.',
     action: 'plan',
     motsCles: [
       'caution',
@@ -794,16 +753,14 @@ export const FICHES: Fiche[] = [
   {
     id: 'depense-exceptionnelle',
     question: 'Qu’est-ce qu’une dépense exceptionnelle ?',
-    reponse:
-      'Une grosse dépense ponctuelle (voyage, achat important). Elle compte normalement dans votre solde, mais la projection de « Mon plan » la sépare de vos dépenses courantes. Cochez « Dépense exceptionnelle » dans le formulaire de dépense.',
+    reponse: 'Une grosse dépense ponctuelle : voyage, gros achat. Coche « Dépense exceptionnelle ». « Mon plan » la compte à part.',
     motsCles: ['depense exceptionnelle', 'exceptionnelle', 'voyage', 'gros achat', 'hors budget'],
     pages: ['depenses', 'plan'],
   },
   {
     id: 'bilan-du-mois',
     question: 'Comment faire le bilan du mois ?',
-    reponse:
-      'Dans « Mon plan », appuyez sur « Faire le bilan du mois ». Indiquez ce que vous avez réellement épargné et dépensé, et les revenus attendus reçus. SoldeClair compare avec le prévu et n’ajoute que ce qui manque : rien n’est compté deux fois.',
+    reponse: 'Dans « Mon plan », appuie sur « Faire le bilan du mois ». Indique le réel. SoldeClair ajoute seulement ce qui manque.',
     action: 'plan',
     motsCles: ['bilan du mois', 'bilan', 'saisie mensuelle', 'fin de mois', 'mettre a jour', 'reel'],
     pages: ['plan'],
@@ -811,8 +768,7 @@ export const FICHES: Fiche[] = [
   {
     id: 'bourse-ete',
     question: 'Comment gérer l’été sans bourse ?',
-    reponse:
-      'La bourse sur critères sociaux est versée sur 10 mois : rien en juillet et en août. Mettez un peu de côté pendant l’année, ou ajoutez un job d’été en revenu attendu dans « Mon plan » pour voir son effet.',
+    reponse: 'La bourse est versée sur 10 mois : rien en juillet et en août. Mets un peu de côté pendant l’année.',
     action: 'plan',
     motsCles: ['bourse', 'crous', 'ete', 'juillet', 'aout', 'vacances', 'job d ete', 'etudiant'],
   },
@@ -820,7 +776,7 @@ export const FICHES: Fiche[] = [
     id: 'revenus-irreguliers',
     question: 'Mes revenus sont irréguliers : comment faire ?',
     reponse:
-      'Comptez seulement ce qui est encaissé (une facture en attente peut être un revenu attendu). Visez une réserve de précaution de 3 à 6 mois de charges, disponible tout de suite, et pensez à mettre de côté vos cotisations URSSAF. Le repère « Réserve » de « Mon plan » vous indique où vous en êtes.',
+      'Compte seulement ce qui est encaissé. Vise une réserve de 3 à 6 mois de charges. Le repère « Réserve » de « Mon plan » montre où tu en es.',
     action: 'plan',
     motsCles: [
       'irregulier',
@@ -839,8 +795,7 @@ export const FICHES: Fiche[] = [
   {
     id: 'point-de-depart',
     question: 'Comment revenir à mes données de départ ?',
-    reponse:
-      'Dans les paramètres, carte « Point de départ » : enregistrez l’état actuel comme point de départ (c’est fait automatiquement à chaque import). « Réinitialiser aux données par défaut » y revient, après une double confirmation. Tout reste sur cet appareil.',
+    reponse: 'Dans les paramètres, carte « Point de départ ». Enregistre l’état actuel. « Réinitialiser » y revient après confirmation.',
     action: 'parametres',
     motsCles: ['point de depart', 'reinitialiser', 'donnees par defaut', 'revenir en arriere', 'annuler mes modifications'],
     pages: ['parametres'],
@@ -848,13 +803,13 @@ export const FICHES: Fiche[] = [
   {
     id: 'bonjour',
     question: 'Bonjour',
-    reponse: 'Bonjour ! Choisissez une question ci-dessous ou écrivez la vôtre, par exemple « ajouter une dépense ».',
+    reponse: 'Bonjour ! Choisis une question ou écris la tienne.',
     motsCles: ['bonjour', 'salut', 'hello', 'coucou', 'bonsoir'],
   },
   {
     id: 'merci',
     question: 'Merci',
-    reponse: 'Avec plaisir. N’hésitez pas si vous avez une autre question.',
+    reponse: 'Avec plaisir. N’hésite pas si tu as une autre question.',
     motsCles: ['merci', 'super', 'parfait', 'genial', 'top'],
   },
 ];
@@ -900,7 +855,14 @@ export interface Rubrique {
 export const RUBRIQUES: Rubrique[] = [
   {
     titre: 'Mon compte',
-    questions: [q('solde-banque'), q('ajuster-solde', 'Comment ajuster mon solde réel ?'), q('ajustement-quoi'), q('carte-restaurant'), q('masquer')],
+    questions: [
+      q('solde-banque'),
+      q('ajuster-solde', 'Comment ajuster mon solde réel ?'),
+      q('ajustement-quoi'),
+      q('carte-restaurant'),
+      q('izly'),
+      q('masquer'),
+    ],
   },
   {
     titre: 'Revenus et dépenses',
@@ -952,12 +914,19 @@ export const RUBRIQUES: Rubrique[] = [
 
 /** Questions mises en avant selon la situation (proposées en plus, rien n'est masqué). */
 export const QUESTIONS_PAR_PROFIL: Record<ProfileType, QuestionProposee[]> = {
-  etudiant: [q('bourse-ete')],
+  etudiant: [q('izly'), q('bourse-ete')],
   alternant: [q('fin-de-contrat'), q('treizieme-mois', 'Mon 13e mois, je le compte comment ?')],
   salarie: [q('treizieme-mois'), q('revenu-attendu', 'Une prime pas encore sûre, je fais comment ?')],
   independant: [q('revenus-irreguliers')],
   autre: [],
 };
+
+/** Questions de la même rubrique que la dernière réponse (pour enchaîner naturellement). */
+export function suiteDe(ficheId: string | undefined): QuestionProposee[] {
+  if (!ficheId) return [];
+  const r = RUBRIQUES.find((x) => x.questions.some((q) => q.id === ficheId));
+  return r ? r.questions.filter((q) => q.id !== ficheId) : [];
+}
 
 /** Questions proposées en premier selon la page ouverte. */
 export const QUESTIONS_PAR_PAGE: Partial<Record<PageKey, QuestionProposee[]>> = {
@@ -976,7 +945,7 @@ export const QUESTIONS_PAR_PAGE: Partial<Record<PageKey, QuestionProposee[]>> = 
 
 const MOTS_VIDES = new Set(
   (
-    'a au aux avec ce ces c ca cela cet cette comment d dans de des du elle en est et etre faire fait il ils j je l la le les leur lui m ma me mes moi mon n ne nos notre nous on ou par pas peut peux plus pour pourquoi qu quand que quel quelle quelles quels qui quoi s sa se ses si son sont sur t ta te tes toi ton tu un une vos votre vous y ' +
+    'a au aux avec ce ces c ca cela cet cette comment d dans de des du elle en est et etre faire fait il ils j je l la le les leur lui m ma me mes moi mon n ne nos notre nous on ou par pas peut peux plus pour pourquoi qu quand que quel quelle quelles quels qui quoi s sa se ses si son sont sur t ta te tes toi ton tu un une tes ton t’y ' +
     'est-ce puis-je dois-je comme ici svp stp bien tres faut veux voudrais aimerais aider aide'
   ).split(' '),
 );

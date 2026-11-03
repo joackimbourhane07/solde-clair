@@ -8,7 +8,9 @@ import {
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { Icon } from './Icon';
+import { deverrouillerDefilement, verrouillerDefilement } from '../lib/viewport';
 import { PoksyAvatar } from './poksy/PoksyAvatar';
 import type { BudgetLevel } from '../lib/budget';
 import { BUDGET_LEVEL_LABELS } from '../lib/budget';
@@ -363,6 +365,26 @@ export function MonthSwitcher() {
 
 /* --------------------------------- Modale -------------------------------- */
 
+/** Fenêtres ouvertes, de la plus ancienne à la plus récente (la dernière reçoit Échap et le bouton retour). */
+const pileFenetres: { id: string; fermer: () => void }[] = [];
+let ignorerRetour = 0;
+
+function surRetourNavigateur() {
+  // Bouton retour (Android, navigateur) : ferme d'abord la fenêtre du dessus, sans changer de page
+  if (ignorerRetour > 0) {
+    ignorerRetour -= 1;
+    return;
+  }
+  const dessus = pileFenetres[pileFenetres.length - 1];
+  if (dessus) dessus.fermer();
+}
+
+/**
+ * Fenêtre (unique système du site) : centrée sur ordinateur, « bottom sheet » sur téléphone.
+ * Rendue à la racine du document, au-dessus de tout ; le reste de la page est inactif (inert, défilement bloqué) ;
+ * le focus reste dans la fenêtre et revient sur le bouton d'origine à la fermeture ; la position de défilement
+ * est conservée ; Échap et le bouton retour du téléphone la ferment.
+ */
 export function Modal({
   title,
   onClose,
@@ -384,6 +406,7 @@ export function Modal({
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const node = ref.current;
+    const id = `fenetre-${Math.random().toString(36).slice(2)}`;
     const focusables = () =>
       node
         ? Array.from(
@@ -392,12 +415,28 @@ export function Modal({
             ),
           )
         : [];
-    // Place le focus sur le premier champ (ou bouton) de la fenêtre.
+    // Fond inactif : ni clic, ni focus, ni lecture par les technologies d'assistance
+    const racine = document.getElementById('root');
+    const etaitInerte = racine?.hasAttribute('inert') ?? false;
+    racine?.setAttribute('inert', '');
+    racine?.setAttribute('aria-hidden', 'true');
+    verrouillerDefilement();
+
+    // Bouton retour : une entrée d'historique propre à la fenêtre (même adresse)
+    pileFenetres.push({ id, fermer: () => onCloseRef.current() });
+    try {
+      window.history.pushState({ ...(window.history.state ?? {}), soldeclairFenetre: id }, '');
+    } catch {
+      /* historique indisponible */
+    }
+    if (pileFenetres.length === 1) window.addEventListener('popstate', surRetourNavigateur);
+
+    // Focus sur le premier champ (ou bouton) de la fenêtre, sans faire défiler la page
     const firstField = node?.querySelector<HTMLElement>('[data-autofocus], input, select, textarea') ?? focusables()[0];
-    firstField?.focus();
-    document.body.classList.add('modal-ouverte');
+    firstField?.focus({ preventScroll: true });
 
     const onKey = (e: KeyboardEvent) => {
+      if (pileFenetres[pileFenetres.length - 1]?.id !== id) return;
       if (e.key === 'Escape') {
         e.stopPropagation();
         onCloseRef.current();
@@ -418,21 +457,35 @@ export function Modal({
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.classList.remove('modal-ouverte');
-      previous?.focus?.();
+      const k = pileFenetres.findIndex((f) => f.id === id);
+      if (k >= 0) pileFenetres.splice(k, 1);
+      if (pileFenetres.length === 0) window.removeEventListener('popstate', surRetourNavigateur);
+      // Fermée autrement que par « retour » : on retire son entrée d'historique (si elle est encore la dernière)
+      if ((window.history.state as { soldeclairFenetre?: string } | null)?.soldeclairFenetre === id) {
+        ignorerRetour += 1;
+        window.history.back();
+      }
+      if (pileFenetres.length === 0 && !etaitInerte) {
+        racine?.removeAttribute('inert');
+        racine?.removeAttribute('aria-hidden');
+      }
+      deverrouillerDefilement();
+      previous?.focus?.({ preventScroll: true });
     };
   }, []);
 
-  return (
+  return createPortal(
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className={`modal modal-${size}`} role={role} aria-modal="true" aria-labelledby={titleId} ref={ref}>
+        <span className="modal-poignee" aria-hidden="true" />
         <div className="modal-header">
           <h2 id={titleId}>{title}</h2>
           <IconButton icon="close" label="Fermer" onClick={onClose} />
         </div>
         <div className="modal-body">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

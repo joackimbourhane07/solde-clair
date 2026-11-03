@@ -11,13 +11,13 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   await page.goto('./');
 
   // --- Présentation : premier écran d'un nouveau visiteur ---
-  await expect(page.getByRole('heading', { level: 1, name: 'Votre budget devient enfin clair.' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Ton budget devient enfin clair.' })).toBeVisible();
   await page.getByRole('main').getByRole('button', { name: 'Commencer' }).first().click();
   await expect(page.getByRole('heading', { name: 'Bienvenue sur SoldeClair' })).toBeVisible();
 
   // --- Configuration initiale ---
   await page.getByRole('button', { name: /Continuer/ }).click();
-  await expect(page.getByText('Indiquez un prénom ou un pseudonyme.')).toBeVisible();
+  await expect(page.getByText('Indique un prénom ou un pseudonyme.')).toBeVisible();
   await page.getByLabel('Prénom ou pseudonyme').fill('Léo Test');
   await page.getByText('Étudiant(e)', { exact: true }).click();
   await page.getByRole('button', { name: /Continuer/ }).click();
@@ -46,7 +46,7 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
 
   // --- Tableau de bord : 660,50 − 389,99 = 270,51 € sur 19 jours ---
   await expect(page.getByRole('heading', { name: 'Bonjour Léo Test' })).toBeVisible();
-  expect(norm(await page.locator('.hero-text').innerText())).toBe('Il vous reste 270 € pour terminer le mois, soit environ 14 € par jour.');
+  expect(norm(await page.locator('.hero-text').innerText())).toBe('Il te reste 270 € pour terminer le mois, soit environ 14 € par jour.');
   expect(await stat(page, 'Bilan du mois')).toBe('270,51 €');
   // Une seule carte principale ; les chiffres secondaires sont dans « Détail du mois »
   await expect(page.locator('.hero-figure')).toHaveCount(0);
@@ -59,7 +59,7 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   // --- Bouton « + » central (mobile) depuis une autre page ---
   await aller(page, 'budgets');
   await page.locator('.bottom-nav').getByRole('button', { name: 'Ajouter une dépense' }).click();
-  const fenetre = page.getByRole('dialog', { name: 'Nouvelle dépense' });
+  const fenetre = page.getByRole('dialog', { name: 'Ajouter' });
   await fenetre.getByRole('group', { name: 'Catégories fréquentes' }).getByRole('button').first().click();
   await fenetre.getByLabel('Montant', { exact: true }).fill('1');
   await fenetre.getByRole('button', { name: 'Ajouter la dépense' }).click();
@@ -74,7 +74,7 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
 
   // --- Dépense rapide depuis l'accueil, au pouce ---
   await page.locator('.bottom-nav').getByRole('button', { name: 'Ajouter une dépense' }).click();
-  const rapide = page.getByRole('dialog', { name: 'Nouvelle dépense' });
+  const rapide = page.getByRole('dialog', { name: 'Ajouter' });
   await rapide.getByLabel('Montant', { exact: true }).fill('7,89');
   await rapide.getByRole('button', { name: 'Ajouter la dépense' }).click();
   await expect(rapide).toHaveCount(0);
@@ -93,7 +93,10 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   await page.getByLabel('Nom de la catégorie').fill('Sorties');
   await page.getByLabel('Limite mensuelle').fill('100');
   await page.getByRole('button', { name: 'Enregistrer' }).click();
-  for (const [valeur, badge] of [['90', '90 % atteint'], ['10,01', 'Budget dépassé']]) {
+  for (const [valeur, badge] of [
+    ['90', '90 % atteint'],
+    ['10,01', 'Budget dépassé'],
+  ]) {
     await aller(page, 'depenses');
     await page.locator('main').getByRole('button', { name: 'Ajouter une dépense' }).click();
     await page.getByRole('dialog').getByLabel('Montant', { exact: true }).fill(valeur);
@@ -130,7 +133,7 @@ test('parcours d’un nouvel utilisateur étudiant : configuration, saisies, bud
   await page.getByRole('textbox', { name: 'Confirmation' }).fill('EFFACER');
   await page.getByRole('button', { name: 'Tout effacer définitivement' }).click();
   // Retour à la présentation, comme un nouveau visiteur ; l'import se trouve dans la configuration
-  await expect(page.getByRole('heading', { level: 1, name: 'Votre budget devient enfin clair.' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Ton budget devient enfin clair.' })).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('soldeclair:donnees:v1'))).toBeNull();
   await page.getByRole('contentinfo').getByRole('button', { name: 'Importer une sauvegarde' }).click();
   await expect(page.getByRole('heading', { name: 'Bienvenue sur SoldeClair' })).toBeVisible();

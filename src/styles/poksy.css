@@ -7,7 +7,7 @@
 .poksy {
   --poksy-taille: 56px;
   /* Bas du bouton : au-dessus de la barre du bas sur téléphone et tablette */
-  --poksy-bas: calc(61px + 12px + env(safe-area-inset-bottom));
+  --poksy-bas: calc(var(--barre-bas, 61px) + 12px + env(safe-area-inset-bottom));
   --poksy-creme: #fbf6ef;
   --poksy-vert: #dcebdc;
 }
@@ -156,6 +156,29 @@
     0 2px 6px rgba(25, 25, 25, 0.08);
   transform-origin: calc(100% - 28px) calc(100% + 20px);
   animation: poksy-entree 420ms cubic-bezier(0.2, 0.9, 0.25, 1.15) 600ms both;
+}
+
+/* Paysage sur téléphone : carte compacte, sans le texte secondaire, pour ne pas couvrir la page */
+@media (max-height: 500px) and (orientation: landscape) {
+  .poksy-carte {
+    width: min(280px, calc(100vw - 32px));
+    padding: 10px 12px;
+  }
+
+  .poksy-carte .poksy-bulle-detail,
+  .poksy-carte .poksy-eclats {
+    display: none;
+  }
+
+  .poksy-bienvenue .poksy-bulle-texte {
+    font-size: 0.95rem;
+  }
+
+  /* La taille de l'avatar est fixée dans le composant : on la réduit ici seulement */
+  .poksy-carte .poksy-bulle-tete .poksy-avatar {
+    width: 36px !important;
+    height: 36px !important;
+  }
 }
 
 /* Pointe vers le bouton de Poksy */
@@ -538,7 +561,13 @@
 
 /* La page garde de la place sous le contenu : le bouton ne cache jamais le dernier élément. */
 .main {
-  padding-bottom: calc(144px + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--barre-bas) + env(safe-area-inset-bottom) + 84px);
+}
+
+/* Clavier ouvert : Poksy laisse la place à la saisie */
+:root.clavier-ouvert .poksy-lanceur,
+:root.clavier-ouvert .poksy-carte {
+  display: none;
 }
 
 /* Téléphone et tablette : les notifications s'affichent en haut, le bas de l'écran reste à Poksy */
@@ -579,7 +608,7 @@
     right: 16px;
     bottom: calc(61px + 12px + var(--poksy-taille) + 12px + env(safe-area-inset-bottom));
     width: 390px;
-    height: min(620px, calc(100vh - 61px - 80px - 40px));
+    height: min(620px, calc(100dvh - 61px - 80px - 40px));
     border-radius: 16px;
     padding-bottom: 0;
   }
@@ -604,7 +633,7 @@
   .poksy-panneau {
     right: 24px;
     bottom: calc(24px + 56px + 12px);
-    height: min(640px, calc(100vh - 24px - 68px - 24px));
+    height: min(640px, calc(100dvh - 24px - 68px - 24px));
   }
 
   .main {
@@ -672,4 +701,86 @@
     transform: none;
     opacity: 1;
   }
+}
+
+/* Clavier ouvert sur téléphone : la fenêtre s'arrête au-dessus du clavier, la saisie reste visible */
+@media (max-width: 599px) {
+  .poksy-panneau {
+    bottom: var(--clavier, 0px);
+    top: max(56px, calc(100% - var(--vv-hauteur, 100%) - var(--clavier, 0px) + 8px));
+  }
+}
+
+/* Bulles : largeur de lecture confortable */
+.poksy-bulle {
+  max-width: min(85%, 34rem);
+}
+
+/* « Nouveau message » : apparaît seulement si l'on lit plus haut */
+.poksy-nouveau {
+  position: relative;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: -52px auto 8px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--primary-ink);
+  font: inherit;
+  font-size: var(--dp-typography-supporting);
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(25, 25, 25, 0.2);
+  cursor: pointer;
+  z-index: 2;
+  animation: poksy-entree 200ms ease-out both;
+}
+
+.poksy-nouveau:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Poksy écrit : trois points discrets, une fraction de seconde */
+.poksy-points {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px 2px;
+}
+
+.poksy-points span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  animation: poksy-point 900ms ease-in-out infinite;
+}
+
+.poksy-points span:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.poksy-points span:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes poksy-point {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: none;
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+/* Nouvelle bulle : glisse en place */
+.poksy-conversation .poksy-message:last-child {
+  animation: bloc-entree 200ms cubic-bezier(0.2, 0, 0, 1) both;
 }

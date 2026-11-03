@@ -58,12 +58,7 @@ export interface SimulationResult {
  *   budget de sa catégorie, ou consomme plus de la moitié du solde ;
  * - « confortable » : sinon.
  */
-export function simulatePurchase(
-  data: AppData,
-  amount: Cents,
-  categoryId: string | null,
-  today: ISODate,
-): SimulationResult {
+export function simulatePurchase(data: AppData, amount: Cents, categoryId: string | null, today: ISODate): SimulationResult {
   const month = monthOf(today);
   const s = monthSummary(data, month, today);
   // Point de départ : le solde de « Mon compte », comme le tableau de bord
@@ -100,24 +95,22 @@ export function simulatePurchase(
       goalId: g.id,
       name: g.name,
       monthsOfContribution: g.monthlyContribution > 0 ? Math.round((amount * 10) / g.monthlyContribution) / 10 : null,
-      delayMonths:
-        savingsImpact > 0 && g.monthlyContribution > 0 ? Math.ceil(savingsImpact / g.monthlyContribution) : 0,
+      delayMonths: savingsImpact > 0 && g.monthlyContribution > 0 ? Math.ceil(savingsImpact / g.monthlyContribution) : 0,
     }));
 
   const reasons: string[] = [];
   let verdict: Verdict = 'confortable';
   if (availableAfter < 0) {
     verdict = 'desequilibre';
-    reasons.push('Votre solde deviendrait négatif.');
+    reasons.push('Ton solde deviendrait négatif.');
   } else {
     if (savingsImpact > 0) reasons.push('L’achat réduit l’épargne prévue ce mois-ci.');
     if (category && category.levelAfter === 'depasse' && category.levelBefore !== 'depasse')
       reasons.push(`Le budget « ${category.name} » serait dépassé.`);
-    else if (category && category.levelAfter === 'depasse')
-      reasons.push(`Le budget « ${category.name} » est déjà dépassé.`);
-    if (availableBefore > 0 && amount * 2 > availableBefore) reasons.push('L’achat représente plus de la moitié de votre solde.');
+    else if (category && category.levelAfter === 'depasse') reasons.push(`Le budget « ${category.name} » est déjà dépassé.`);
+    if (availableBefore > 0 && amount * 2 > availableBefore) reasons.push('L’achat représente plus de la moitié de ton solde.');
     if (reasons.length > 0) verdict = 'prudence';
-    else reasons.push('L’achat reste compatible avec votre budget et votre épargne prévue.');
+    else reasons.push('L’achat reste compatible avec ton budget et ton épargne prévue.');
   }
 
   return {

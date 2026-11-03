@@ -32,8 +32,8 @@ import '../styles/accueil.css';
 const ECRANS = [
   {
     src: captureTableau,
-    titre: 'Ce qu’il vous reste',
-    alt: 'Tableau de bord sur téléphone : il vous reste 148 € pour terminer le mois, soit environ 7 € par jour, avec le choix par jour ou par semaine.',
+    titre: 'Ce qu’il te reste',
+    alt: 'Tableau de bord sur téléphone : il te reste 148 € pour terminer le mois, soit environ 7 € par jour, avec le choix par jour ou par semaine.',
   },
   {
     src: captureAjout,
@@ -45,7 +45,7 @@ const ECRANS = [
     titre: 'Ce qui arrive',
     alt: 'Mon compte, onglet À venir : prélèvements et revenus des 30 prochains jours avec leurs dates et le solde prévu.',
   },
-  { src: captureObjectifs, titre: 'Vos objectifs', alt: 'Objectifs d’épargne : 465 € épargnés au total, objectif Ordinateur atteint à 34 %.' },
+  { src: captureObjectifs, titre: 'Tes objectifs', alt: 'Objectifs d’épargne : 465 € épargnés au total, objectif Ordinateur atteint à 34 %.' },
   {
     src: captureSimulateur,
     titre: 'Simuler un achat',
@@ -198,12 +198,9 @@ export default function Accueil() {
         <section className="accueil-intro accueil-conteneur" aria-labelledby="accueil-titre">
           <p className="accueil-surtitre">Budget personnel, gratuit et sans banque</p>
           <h1 id="accueil-titre" ref={titreRef} tabIndex={-1}>
-            Votre budget devient enfin clair.
+            Ton budget devient enfin clair.
           </h1>
-          <p className="accueil-chapeau">
-            Découvrez ce qu’il vous reste réellement pour terminer le mois, suivez vos dépenses et avancez vers vos objectifs sans connecter votre
-            banque.
-          </p>
+          <p className="accueil-chapeau">Ce qu’il te reste vraiment jusqu’à la fin du mois. Sans connecter ta banque.</p>
           {aDesProfils ? (
             <ChoixProfils />
           ) : (
@@ -224,7 +221,7 @@ export default function Accueil() {
               <Icon name="check" size={16} /> Sans compte
             </span>
             <span>
-              <Icon name="check" size={16} /> Données sur votre appareil
+              <Icon name="check" size={16} /> Données sur ton appareil
             </span>
           </p>
         </section>
@@ -237,7 +234,7 @@ export default function Accueil() {
               <div className="ecran">
                 <img
                   src={captureOrdinateur}
-                  alt="Tableau de bord de SoldeClair sur ordinateur : il vous reste 148 € pour terminer le mois, soit environ 7 € par jour ; menu avec Mon plan d’épargne, objectif et repères pour vous."
+                  alt="Tableau de bord de SoldeClair sur ordinateur : il te reste 148 € pour terminer le mois, soit environ 7 € par jour ; menu avec Mon plan d’épargne, objectif et repères pour toi."
                   width={1440}
                   height={900}
                   decoding="async"
@@ -273,13 +270,13 @@ export default function Accueil() {
           <ul className="accueil-avantages">
             <li className="accueil-carte">
               <PictoApercu />
-              <h3>Ce qu’il vous reste, en un coup d’œil</h3>
+              <h3>Ce qu’il te reste, en un coup d’œil</h3>
               <p>Une phrase répond à la vraie question du mois : combien puis-je encore dépenser, aujourd’hui et jusqu’à la fin du mois ?</p>
             </li>
             <li className="accueil-carte">
               <PictoSansBanque />
               <h3>Sans banque, sans compte</h3>
-              <p>Vous saisissez vous-même vos montants. Aucune connexion bancaire, aucune inscription, aucun mot de passe.</p>
+              <p>Tu saisis toi-même tes montants. Aucune connexion bancaire, aucune inscription, aucun mot de passe.</p>
             </li>
             <li className="accueil-carte">
               <PictoDebuter />
@@ -292,9 +289,9 @@ export default function Accueil() {
         {/* 4 bis. Visite en images : défilement horizontal, sans lecture automatique */}
         <section className="accueil-section accueil-conteneur" aria-labelledby="titre-galerie">
           <h2 id="titre-galerie" tabIndex={-1} className="accueil-h2 centre">
-            Faites le tour en cinq écrans.
+            Fais le tour en cinq écrans.
           </h2>
-          <p className="accueil-texte centre">Glissez, ou utilisez les flèches. Les données affichées sont fictives.</p>
+          <p className="accueil-texte centre">Glisse, ou utilise les flèches. Les données affichées sont fictives.</p>
           <GalerieEcrans ecrans={ECRANS} />
         </section>
 
@@ -303,12 +300,9 @@ export default function Accueil() {
           <div className="accueil-colonne-texte">
             <p className="accueil-etiquette">Reste à vivre</p>
             <h2 id="titre-reste" tabIndex={-1} className="accueil-h2">
-              Sachez ce qu’il vous reste, vraiment.
+              Sache ce qu’il te reste, vraiment.
             </h2>
-            <p className="accueil-texte">
-              SoldeClair retire de vos revenus vos charges fixes, vos dépenses et votre épargne du mois, puis répartit le reste sur les jours qui
-              restent.
-            </p>
+            <p className="accueil-texte">Revenus moins charges, dépenses et épargne. Le reste, réparti jour par jour.</p>
             <ul className="accueil-liste">
               <li>
                 <Icon name="check" size={18} /> Un montant pour le mois et un montant par jour
@@ -334,11 +328,9 @@ export default function Accueil() {
           <div className="accueil-colonne-texte">
             <p className="accueil-etiquette">Dépenses et charges</p>
             <h2 id="titre-avenir" tabIndex={-1} className="accueil-h2">
-              Anticipez ce qui arrive.
+              Anticipe ce qui arrive.
             </h2>
-            <p className="accueil-texte">
-              Notez une dépense en trois gestes et voyez les prélèvements des prochains jours avant qu’ils ne tombent : loyer, forfait, abonnements…
-            </p>
+            <p className="accueil-texte">Une dépense en trois gestes. Les prélèvements à venir, avant qu’ils tombent.</p>
             <ol className="accueil-etapes">
               <li>
                 <span>1</span> Le montant
@@ -373,11 +365,9 @@ export default function Accueil() {
           <div className="accueil-colonne-texte">
             <p className="accueil-etiquette">Objectifs d’épargne</p>
             <h2 id="titre-epargne" tabIndex={-1} className="accueil-h2">
-              Avancez vers vos projets, pas à pas.
+              Avance vers tes projets, pas à pas.
             </h2>
-            <p className="accueil-texte">
-              Un ordinateur, un voyage, un fonds d’urgence : fixez un montant et une date, SoldeClair vous indique la prochaine petite étape.
-            </p>
+            <p className="accueil-texte">Un montant, une date. SoldeClair te donne la prochaine étape.</p>
             <ul className="accueil-liste">
               <li>
                 <Icon name="check" size={18} /> La progression en un coup d’œil
@@ -403,18 +393,15 @@ export default function Accueil() {
           <div className="accueil-colonne-texte">
             <p className="accueil-etiquette">Simulateur d’achat</p>
             <h2 id="titre-simulateur" tabIndex={-1} className="accueil-h2">
-              Avant d’acheter, simulez.
+              Avant d’acheter, simule.
             </h2>
-            <p className="accueil-texte">
-              Indiquez un prix : SoldeClair montre l’effet sur votre mois, sur votre épargne et sur vos objectifs. Rien n’est enregistré tant que vous
-              ne le décidez pas.
-            </p>
+            <p className="accueil-texte">Indique un prix : tu vois l’effet sur ton mois et tes objectifs. Rien n’est enregistré.</p>
             <ul className="accueil-liste">
               <li>
                 <Icon name="check" size={18} /> Le solde restant après l’achat
               </li>
               <li>
-                <Icon name="check" size={18} /> L’effet sur votre épargne et vos limites
+                <Icon name="check" size={18} /> L’effet sur ton épargne et tes limites
               </li>
               <li>
                 <Icon name="check" size={18} /> Une appréciation claire, sans jugement
@@ -432,11 +419,9 @@ export default function Accueil() {
         {/* 9. Profils */}
         <section id="profils" className="accueil-section accueil-conteneur" aria-labelledby="titre-profils">
           <h2 id="titre-profils" tabIndex={-1} className="accueil-h2 centre">
-            Adapté à votre situation.
+            Adapté à ta situation.
           </h2>
-          <p className="accueil-texte centre">
-            SoldeClair met en avant ce qui compte pour votre situation. Choisissez un profil pour voir la différence.
-          </p>
+          <p className="accueil-texte centre">SoldeClair met en avant ce qui compte pour ta situation. Choisis un profil pour voir la différence.</p>
           <ProfilsInteractifs />
         </section>
 
@@ -445,11 +430,9 @@ export default function Accueil() {
           <div className="accueil-colonne-texte">
             <p className="accueil-etiquette">Confidentialité</p>
             <h2 id="titre-confidentialite" tabIndex={-1} className="accueil-h2">
-              Vos données restent sur votre appareil.
+              Tes données restent sur ton appareil.
             </h2>
-            <p className="accueil-texte">
-              Tout est enregistré dans votre navigateur. Rien n’est envoyé sur Internet : personne d’autre ne voit vos montants, pas même nous.
-            </p>
+            <p className="accueil-texte">Tout reste dans ton navigateur. Rien n’est envoyé. Personne ne voit tes montants.</p>
             <ul className="accueil-liste">
               <li>
                 <Icon name="check" size={18} /> Aucun compte à créer
@@ -473,23 +456,20 @@ export default function Accueil() {
         {/* 10 bis. Poksy, le guide */}
         <section id="poksy" className="accueil-section accueil-conteneur accueil-alterne inverse" aria-labelledby="titre-poksy">
           <div className="accueil-colonne-texte">
-            <p className="accueil-etiquette">Votre guide</p>
+            <p className="accueil-etiquette">Ton guide</p>
             <h2 id="titre-poksy" tabIndex={-1} className="accueil-h2">
-              Poksy répond à vos questions.
+              Poksy répond à tes questions.
             </h2>
-            <p className="accueil-texte">
-              Poksy, c’est un vrai chat… et le guide de SoldeClair. Il explique vos chiffres avec des mots simples et propose une astuce de temps en
-              temps, sans jamais insister.
-            </p>
+            <p className="accueil-texte">Poksy, c’est un vrai chat. Il explique tes chiffres simplement, sans jamais insister.</p>
             <ul className="accueil-liste">
               <li>
                 <Icon name="check" size={18} /> Des réponses immédiates, préparées à l’avance
               </li>
               <li>
-                <Icon name="check" size={18} /> Tout se passe sur votre appareil, sans intelligence artificielle en ligne
+                <Icon name="check" size={18} /> Tout se passe sur ton appareil, sans intelligence artificielle en ligne
               </li>
               <li>
-                <Icon name="check" size={18} /> Des astuces discrètes, que vous pouvez couper d’un geste
+                <Icon name="check" size={18} /> Des astuces discrètes, que tu peux couper d’un geste
               </li>
             </ul>
             <button
@@ -517,7 +497,7 @@ export default function Accueil() {
             <h2 id="titre-cta" tabIndex={-1} className="accueil-h2">
               Commencer avec SoldeClair
             </h2>
-            <p className="accueil-texte">Deux minutes suffisent pour préparer votre budget. Gratuit, sans compte et sans banque.</p>
+            <p className="accueil-texte">Deux minutes suffisent pour préparer ton budget. Gratuit, sans compte et sans banque.</p>
             {aDesProfils ? (
               <ChoixProfils />
             ) : (
@@ -539,7 +519,7 @@ export default function Accueil() {
         <div className="accueil-conteneur accueil-pied-grille">
           <div className="accueil-pied-marque">
             <Logo />
-            <p>Le budget personnel, simplement. Pour savoir chaque jour ce qu’il vous reste.</p>
+            <p>Le budget personnel, simplement. Pour savoir chaque jour ce qu’il te reste.</p>
           </div>
           <nav aria-label="Découvrir">
             <p className="accueil-pied-titre">Découvrir</p>
@@ -588,7 +568,7 @@ export default function Accueil() {
             <p className="accueil-pied-titre">Confidentialité</p>
             <ul>
               <li>Sans compte, sans banque</li>
-              <li>Données dans votre navigateur</li>
+              <li>Données dans ton navigateur</li>
               <li>Aucune publicité ni suivi</li>
             </ul>
           </div>
@@ -606,7 +586,7 @@ export default function Accueil() {
           </div>
         </div>
         <p className="accueil-conteneur accueil-pied-bas">
-          <Icon name="lock" size={14} /> Version de test : vos données restent dans ce navigateur, sur cet appareil. SoldeClair donne des repères
+          <Icon name="lock" size={14} /> Version de test : tes données restent dans ce navigateur, sur cet appareil. SoldeClair donne des repères
           budgétaires, pas des conseils financiers.
         </p>
       </footer>

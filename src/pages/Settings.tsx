@@ -53,7 +53,7 @@ function ProfileSection() {
     const [v, vErr] = checkAmount(estimate, { allowZero: true, required: false });
     const dateInvalide = (d: string) => (d && !isValidISODate(d) ? 'Date invalide.' : null);
     const errs = {
-      name: name.trim() ? null : 'Indiquez un prénom ou un pseudonyme.',
+      name: name.trim() ? null : 'Indique un prénom ou un pseudonyme.',
       target: tErr,
       estimate: vErr,
       birthDate: dateInvalide(birthDate) ?? (birthDate && birthDate > today ? 'La date de naissance est dans le futur.' : null),
@@ -118,7 +118,7 @@ function ProfileSection() {
             value={estimate}
             onChange={(e) => setEstimate(e.target.value)}
             error={errors.estimate}
-            hint="Utilisée pour la prévision de fin de mois si aucune limite par catégorie n’est fixée."
+            hint="Sert à la prévision sans limite par catégorie."
           />
           <TextField
             label="Date de naissance"
@@ -136,9 +136,7 @@ function ProfileSection() {
         </div>
         <fieldset className="fieldset">
           <legend>{L.titre} (facultatif)</legend>
-          <p className="field-hint">
-            Ces informations adaptent les repères affichés (fin de contrat, revalorisation, été sans bourse…). Elles restent sur cet appareil.
-          </p>
+          <p className="field-hint">Adapte les repères à ta situation. Reste sur cet appareil.</p>
           <div className="form-grid">
             <TextField
               label={L.formation}
@@ -180,7 +178,7 @@ function CalculSection() {
     <Card title="Calcul du disponible">
       <CheckboxField
         label="Reporter le reste d’un mois sur le suivant"
-        hint="Dans le bilan et le détail du mois, ce qui reste à la fin d’un mois (ou ce qui manque) s’ajoute au mois suivant. Le solde du tableau de bord et de « Mon compte », lui, cumule déjà tout."
+        hint="Le reste d’un mois s’ajoute au suivant dans le bilan."
         checked={actif}
         onChange={(e) => {
           dispatch({ type: 'setCarryOver', value: e.target.checked });
@@ -191,7 +189,7 @@ function CalculSection() {
       />
       <CheckboxField
         label="Les revenus reçus en fin de mois comptent pour le mois suivant"
-        hint="Un salaire ou une prime reçus à partir du jour choisi servent au mois suivant et apparaissent dans ses revenus. « Mon compte » les montre toujours à leur vraie date."
+        hint="Reçu à partir de ce jour : compté le mois suivant."
         checked={jour !== null}
         onChange={(e) => {
           dispatch({ type: 'setIncomeShiftDay', value: e.target.checked ? JOUR_BASCULE_DEFAUT : null });
@@ -207,7 +205,7 @@ function CalculSection() {
           label="À partir du"
           value={String(jour)}
           onChange={(e) => dispatch({ type: 'setIncomeShiftDay', value: Number(e.target.value) })}
-          hint="Jour du mois à partir duquel un revenu compte pour le mois suivant."
+          hint="Jour où un revenu passe au mois suivant."
         >
           {Array.from({ length: 14 }, (_, i) => i + 15).map((j) => (
             <option key={j} value={j}>
@@ -271,10 +269,7 @@ function ThemeSection() {
             </label>
           ))}
         </div>
-        <p className="field-hint">
-          « Animations réduites » supprime les mouvements (transitions, apparitions, bonds de Poksy) sans rien retirer : toutes les informations
-          restent affichées. Ce choix vaut pour cet appareil.
-        </p>
+        <p className="field-hint">« Animations réduites » coupe les mouvements. Toutes les informations restent. Vaut pour cet appareil.</p>
       </fieldset>
     </Card>
   );
@@ -288,7 +283,7 @@ function CategoryEditor({ kind, category, onClose }: { kind: CategoryKind; categ
     e.preventDefault();
     const trimmed = name.trim();
     const err = !trimmed
-      ? 'Indiquez un nom.'
+      ? 'Indique un nom.'
       : isDuplicateName(data.categories, kind, trimmed, category?.id)
         ? 'Une catégorie porte déjà ce nom.'
         : null;
@@ -443,7 +438,7 @@ export function DataSection({
     // Le fichier importé devient le point de départ (« Réinitialiser aux données par défaut » y revient)
     const enregistre = saveDepart(imported, today, profilActif);
     setDepartVersion((v) => v + 1);
-    notify(enregistre ? 'Sauvegarde importée : elle devient votre point de départ.' : 'Sauvegarde importée avec succès.');
+    notify(enregistre ? 'Sauvegarde importée : elle devient ton point de départ.' : 'Sauvegarde importée avec succès.');
     navigate('/');
   };
 
@@ -459,15 +454,13 @@ export function DataSection({
     <>
       {parts.includes('export') && (
         <Card title="Sauvegarder mes données">
-          <p className="muted">Les fichiers sont créés sur votre appareil : rien n’est envoyé sur Internet.</p>
+          <p className="muted">Les fichiers sont créés sur ton appareil : rien n’est envoyé sur Internet.</p>
           <p className="backup-status">
             Dernière sauvegarde complète :{' '}
             <strong>{data.settings.lastBackup ? `le ${formatDate(data.settings.lastBackup)}` : 'aucune pour l’instant'}</strong>
           </p>
           {(!data.settings.lastBackup || dayDiff(data.settings.lastBackup, today) > 30) && (
-            <Notice tone="attention">
-              Pensez à télécharger une sauvegarde complète : si les données du navigateur sont effacées, elle permet de tout retrouver.
-            </Notice>
+            <Notice tone="attention">Télécharge une sauvegarde complète. Elle permet de tout retrouver.</Notice>
           )}
           <div className="button-row">
             <Button
@@ -497,7 +490,7 @@ export function DataSection({
 
       {parts.includes('import') && (
         <Card title="Importer une sauvegarde" headingLevel={compact ? 3 : 2}>
-          <p className="muted">Choisissez un fichier JSON exporté depuis SoldeClair.{hasData && ' Il remplacera les données actuelles.'}</p>
+          <p className="muted">Choisis un fichier JSON exporté depuis SoldeClair.{hasData && ' Il remplacera les données actuelles.'}</p>
           <label className="btn btn-secondaire file-button">
             <Icon name="upload" size={18} />
             <span>Choisir un fichier JSON</span>
@@ -508,10 +501,7 @@ export function DataSection({
 
       {parts.includes('depart') && hasData && (
         <Card title="Point de départ">
-          <p className="muted">
-            Un état de référence enregistré sur cet appareil (par exemple vos données du début de mois). Le bouton « Réinitialiser » y revient si vous
-            vous êtes trompé. Il est créé automatiquement à chaque import.
-          </p>
+          <p className="muted">Une copie de référence sur cet appareil, créée à chaque import. « Réinitialiser » y revient en cas d’erreur.</p>
           <p className="backup-status">
             Point de départ :{' '}
             <strong>
@@ -563,7 +553,7 @@ export function DataSection({
       {parts.includes('reset') && (
         <Card title="Effacer toutes les données" className="danger-zone">
           <p>
-            Supprime définitivement {data.profile ? `le profil « ${data.profile.name} »` : 'votre profil'} : transactions, budgets et objectifs, de ce
+            Supprime définitivement {data.profile ? `le profil « ${data.profile.name} »` : 'ton profil'} : transactions, budgets et objectifs, de ce
             navigateur.{profils.length > 1 ? ' Les autres profils de cet appareil sont conservés.' : ''}
           </p>
           <Button variant="danger" icon="trash" onClick={() => setResetStep(1)}>
@@ -575,7 +565,7 @@ export function DataSection({
       {pendingImport && (
         <ConfirmDialog
           title="Remplacer les données actuelles ?"
-          message="Vos données actuelles seront remplacées par la sauvegarde. Pensez à exporter vos données actuelles avant si vous souhaitez les conserver."
+          message="Tes données actuelles seront remplacées par la sauvegarde. Pense à exporter tes données actuelles avant si tu souhaites les conserver."
           confirmLabel="Importer et remplacer"
           onCancel={() => setPendingImport(null)}
           onConfirm={() => applyImport(pendingImport)}
@@ -584,7 +574,7 @@ export function DataSection({
       {confirmDemo && (
         <ConfirmDialog
           title="Charger la démonstration ?"
-          message="Vos données actuelles seront remplacées par des données fictives. Exportez-les avant si vous souhaitez les garder."
+          message="Tes données actuelles seront remplacées par des données fictives. Exporte-les avant si tu souhaites les garder."
           confirmLabel="Charger la démonstration"
           onCancel={() => setConfirmDemo(false)}
           onConfirm={loadDemo}
@@ -593,7 +583,7 @@ export function DataSection({
       {retourDepart === 1 && depart && (
         <ConfirmDialog
           title="Revenir au point de départ ?"
-          message={`Toutes les modifications faites depuis le point de départ${depart.enregistreLe ? ` du ${formatDate(depart.enregistreLe)}` : ''} seront perdues. Pensez à télécharger une sauvegarde avant si besoin.`}
+          message={`Toutes les modifications fais depuis le point de départ${depart.enregistreLe ? ` du ${formatDate(depart.enregistreLe)}` : ''} seront perdues. Pense à télécharger une sauvegarde avant si besoin.`}
           confirmLabel="Continuer"
           onCancel={() => setRetourDepart(0)}
           onConfirm={() => {
@@ -607,7 +597,7 @@ export function DataSection({
           title="Dernière confirmation"
           message={
             <p>
-              Pour confirmer, tapez <strong>RÉINITIALISER</strong> ci-dessous.
+              Pour confirmer, tape <strong>RÉINITIALISER</strong> ci-dessous.
             </p>
           }
           confirmLabel="Revenir au point de départ"
@@ -632,7 +622,7 @@ export function DataSection({
       {resetStep === 1 && (
         <ConfirmDialog
           title="Effacer toutes les données ?"
-          message="Cette action est irréversible. Toutes vos données seront supprimées de ce navigateur."
+          message="Cette action est irréversible. Toutes tes données seront supprimées de ce navigateur."
           confirmLabel="Continuer"
           onCancel={() => setResetStep(0)}
           onConfirm={() => {
@@ -646,7 +636,7 @@ export function DataSection({
           title="Dernière confirmation"
           message={
             <p>
-              Pour confirmer, tapez <strong>EFFACER</strong> ci-dessous.
+              Pour confirmer, tape <strong>EFFACER</strong> ci-dessous.
             </p>
           }
           confirmLabel="Tout effacer définitivement"
@@ -671,20 +661,15 @@ export function DataSection({
 function InstallSection() {
   return (
     <Card title="Installer comme une application">
-      <p className="muted">
-        SoldeClair s’ouvre alors en plein écran depuis son icône, sans barre d’adresse. C’est gratuit et rien n’est envoyé sur Internet.
-      </p>
+      <p className="muted">Plein écran depuis une icône. Gratuit, rien n’est envoyé.</p>
       <details className="disclosure">
         <summary>Sur iPhone ou iPad (Safari)</summary>
         <div className="disclosure-body">
           <ol className="etapes-installation">
-            <li>Faites d’abord une sauvegarde complète (JSON) ci-dessus.</li>
-            <li>Touchez le bouton Partager (le carré avec une flèche), puis « Sur l’écran d’accueil ».</li>
-            <li>Laissez activée l’option qui ouvre le site comme une app web, puis touchez « Ajouter ».</li>
-            <li>
-              Ouvrez SoldeClair depuis la nouvelle icône. L’application installée a sa propre mémoire : si elle est vide, choisissez « Importer une
-              sauvegarde » et sélectionnez le fichier enregistré à l’étape 1.
-            </li>
+            <li>Fais d’abord une sauvegarde complète (JSON) ci-dessus.</li>
+            <li>Touche le bouton Partager (le carré avec une flèche), puis « Sur l’écran d’accueil ».</li>
+            <li>Laisse activée l’option qui ouvre le site comme une app web, puis touche « Ajouter ».</li>
+            <li>Ouvre la nouvelle icône. Si elle est vide, choisis « Importer une sauvegarde » avec le fichier de l’étape 1.</li>
           </ol>
         </div>
       </details>
@@ -692,9 +677,9 @@ function InstallSection() {
         <summary>Sur Android (Chrome)</summary>
         <div className="disclosure-body">
           <ol className="etapes-installation">
-            <li>Faites d’abord une sauvegarde complète (JSON) ci-dessus.</li>
-            <li>Touchez le menu ⋮, puis « Installer l’application » (ou « Ajouter à l’écran d’accueil »).</li>
-            <li>Ouvrez SoldeClair depuis la nouvelle icône ; importez la sauvegarde si l’application est vide.</li>
+            <li>Fais d’abord une sauvegarde complète (JSON) ci-dessus.</li>
+            <li>Touche le menu ⋮, puis « Installer l’application » (ou « Ajouter à l’écran d’accueil »).</li>
+            <li>Ouvre SoldeClair depuis la nouvelle icône ; importe la sauvegarde si l’application est vide.</li>
           </ol>
         </div>
       </details>
@@ -707,8 +692,8 @@ export function SettingsPage() {
     <div className="page">
       <PageHeader title="Paramètres" description="Sauvegarde, profil, apparence et catégories." />
       <Notice>
-        <strong>Confidentialité :</strong> SoldeClair fonctionne sans compte et sans serveur. Vos données sont enregistrées uniquement dans ce
-        navigateur, sur cet appareil. Aucune coordonnée bancaire n’est demandée. Pensez à exporter une sauvegarde régulièrement : vider les données du
+        <strong>Confidentialité :</strong> SoldeClair fonctionne sans compte et sans serveur. Tes données sont enregistrées uniquement dans ce
+        navigateur, sur cet appareil. Aucune coordonnée bancaire n’est demandée. Pense à exporter une sauvegarde régulièrement : vider les données du
         navigateur efface aussi celles de SoldeClair.
       </Notice>
       {/* La sauvegarde d'abord : avec un stockage local, c'est la protection principale des données. */}

@@ -96,7 +96,7 @@ export function Plan() {
     <div className="page page-plan">
       <PageHeader
         title="Mon plan d’épargne"
-        description="Votre objectif, vos supports et la projection mois par mois jusqu’à la date visée."
+        description="Ton objectif et ta projection, mois par mois."
         actions={
           <Button variant="primaire" icon="check" onClick={() => setEdition({ type: 'bilan' })}>
             Faire le bilan du mois
@@ -145,13 +145,13 @@ export function Plan() {
             <Notice tone="attention">
               En retard : la projection prévoit {fmt(p.finale)} à la date visée, soit {fmt(-p.ecart)} de moins que l’objectif.
               {p.ecartOptimiste >= 0
-                ? ` Avec les revenus attendus cochés, vous l’atteindriez (${fmt(p.finaleOptimiste)}).`
+                ? ` Avec les revenus attendus cochés, tu l’atteindrais (${fmt(p.finaleOptimiste)}).`
                 : ` Même avec les revenus attendus cochés : ${fmt(p.finaleOptimiste)}.`}
             </Notice>
           )}
         </Card>
       ) : (
-        <Card title="Votre objectif">
+        <Card title="Ton objectif">
           <EmptyState
             title="Pas encore d’objectif daté"
             action={
@@ -160,15 +160,14 @@ export function Plan() {
               </Button>
             }
           >
-            Fixez un montant et une date (par exemple 7 000 € pour la fin de votre contrat) : SoldeClair calcule ce qu’il faut mettre de côté chaque
-            mois.
+            Un montant et une date. SoldeClair calcule l’effort par mois.
           </EmptyState>
         </Card>
       )}
 
       {/* 2. Repères selon le profil */}
       {reperes.length > 0 && (
-        <Card title="Repères pour vous" className="plan-reperes">
+        <Card title="Repères pour toi" className="plan-reperes">
           <ul className="reperes">
             {reperes.map((r) => (
               <li key={r.id} className="repere">
@@ -209,10 +208,7 @@ export function Plan() {
           />
         </div>
         {supports.length === 0 ? (
-          <p className="muted">
-            Ajoutez vos livrets, plans et l’argent mis de côté sur votre compte : vous verrez la différence entre épargne totale et épargne
-            disponible.
-          </p>
+          <p className="muted">Ajoute tes livrets et ton épargne. Tu vois le total et le disponible.</p>
         ) : (
           <ul className="supports">
             {supports.map((s) => {
@@ -260,8 +256,8 @@ export function Plan() {
           </ul>
         )}
         {supportsProposes.length > 0 && (
-          <div className="chips" role="group" aria-label="Supports suggérés pour votre profil">
-            <span className="chips-titre">Suggérés pour vous :</span>
+          <div className="chips" role="group" aria-label="Supports suggérés pour ton profil">
+            <span className="chips-titre">Suggérés pour toi :</span>
             {supportsProposes.map((k) => (
               <button type="button" key={k} className="chip chip-petit" onClick={() => setEdition({ type: 'support', kind: k })}>
                 + {MODELES_SUPPORT[k].label}
@@ -278,7 +274,7 @@ export function Plan() {
             label="Inclure les revenus attendus (projection optimiste)"
             checked={optimiste}
             onChange={(e) => setOptimiste(e.target.checked)}
-            hint="La projection de base ne compte que les revenus sûrs. Cochez pour ajouter les revenus attendus sélectionnés plus bas."
+            hint="Ajoute les revenus attendus cochés plus bas."
           />
           {/* Téléphone : un mois par ligne, détail dépliable */}
           <p className="projection-entete" aria-hidden="true">
@@ -392,7 +388,7 @@ export function Plan() {
             </table>
           </div>
           <p className="field-hint">
-            De demain jusqu’à la date visée, avec les vraies dates des opérations. Dépenses courantes : votre budget de {fmt(budgetCourant(data))} par
+            De demain jusqu’à la date visée, avec les vraies dates des opérations. Dépenses courantes : ton budget de {fmt(budgetCourant(data))} par
             mois (pour ce mois-ci, ce qu’il en reste). Les titres-restaurant sont du pouvoir d’achat alimentaire : ils ne sont pas comptés dans les
             revenus encaissés. Les sommes bloquées (caution) ne sont pas des dépenses.
           </p>
@@ -408,9 +404,7 @@ export function Plan() {
           </Button>
         }
       >
-        <p className="muted">
-          Primes non confirmées, 13e mois, solde de tout compte… Ils ne sont comptés nulle part tant que vous ne les avez pas confirmés.
-        </p>
+        <p className="muted">Primes, 13e mois, solde de tout compte… Pas comptés avant confirmation.</p>
         {attendus.length > 0 && (
           <ul className="attendus">
             {attendus.map((i) => (
@@ -439,8 +433,8 @@ export function Plan() {
           </ul>
         )}
         {attendusProposes.length > 0 && (
-          <div className="chips" role="group" aria-label="Revenus attendus fréquents pour votre profil">
-            <span className="chips-titre">Fréquents pour vous :</span>
+          <div className="chips" role="group" aria-label="Revenus attendus fréquents pour ton profil">
+            <span className="chips-titre">Fréquents pour toi :</span>
             {attendusProposes.map((s) => (
               <button
                 type="button"
@@ -526,7 +520,7 @@ export function Plan() {
       )}
       {edition?.type === 'recu' && (
         <Modal title={`${edition.initial.name} reçu`} onClose={fermer}>
-          <p className="field-hint">Indiquez le montant réellement reçu : il sera compté dans votre budget et votre solde.</p>
+          <p className="field-hint">Indique le montant réellement reçu : il sera compté dans ton budget et ton solde.</p>
           <IncomeForm initial={edition.initial} confirmerReception defaultDate={today} onDone={fermer} onCancel={fermer} />
         </Modal>
       )}
@@ -655,7 +649,7 @@ function BilanDuMois({ necessaire, onDone, onCancel }: { necessaire: number; onD
           </option>
         ))}
       </SelectField>
-      <p className="field-hint">Comparez le prévu et le réel. SoldeClair n’ajoute que ce qui manque : rien n’est compté deux fois.</p>
+      <p className="field-hint">Compare le prévu et le réel. SoldeClair n’ajoute que ce qui manque : rien n’est compté deux fois.</p>
 
       <fieldset className="fieldset">
         <legend>Épargne</legend>
@@ -686,14 +680,14 @@ function BilanDuMois({ necessaire, onDone, onCancel }: { necessaire: number; onD
           label="Dépensé réellement (total, hors dépenses exceptionnelles)"
           value={depensesReelles}
           onChange={(e) => setDepensesReelles(e.target.value)}
-          hint="La différence avec ce qui est déjà saisi est ajoutée en « Autres dépenses du mois »."
+          hint="L’écart va dans « Autres dépenses du mois »."
         />
       </fieldset>
 
       {attendusDuMois.length > 0 && (
         <fieldset className="fieldset">
           <legend>Revenus attendus</legend>
-          <p className="field-hint">Indiquez le montant reçu ; laissez vide s’il n’est pas encore arrivé.</p>
+          <p className="field-hint">Indique le montant reçu ; laisse vide s’il n’est pas encore arrivé.</p>
           <div className="form-grid">
             {attendusDuMois.map((i) => (
               <MoneyField

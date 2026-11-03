@@ -1,10 +1,17 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { chargerDemo, preparer, problemesDeMiseEnPage } from './outils';
 
 /** Libellé tel qu'affiché (espace insécable avant « ? »). */
 const t = (s: string) => s.replace(/ ([:;!?»])/g, ' $1').replace(/« /g, '« ');
 const LARGEURS = [1440, 1100, 800, 520, 390, 320];
+
+/** Pose une question proposée : parmi les choix rapides, sinon via « Plus de questions ». */
+async function poser(fenetre: Locator, libelle: string) {
+  const bouton = fenetre.getByRole('button', { name: t(libelle) });
+  if ((await bouton.count()) === 0) await fenetre.getByRole('button', { name: 'Plus de questions' }).click();
+  await bouton.first().click();
+}
 
 /** Toutes les requêtes doivent rester sur le site (aucun service externe, aucune IA en ligne). */
 function surveillerRequetes(page: Page): string[] {
@@ -23,7 +30,9 @@ const chevauche = (a: { x: number; y: number; width: number; height: number }, b
 
 for (const largeur of LARGEURS) {
   for (const theme of ['light', 'dark'] as const) {
-    test(`Poksy ${largeur} px, mode ${theme === 'light' ? 'clair' : 'sombre'} : placement, ouverture, accessibilité, aucune erreur`, async ({ page }) => {
+    test(`Poksy ${largeur} px, mode ${theme === 'light' ? 'clair' : 'sombre'} : placement, ouverture, accessibilité, aucune erreur`, async ({
+      page,
+    }) => {
       const hauteur = largeur >= 960 ? 900 : largeur >= 600 ? 1024 : 760;
       await page.setViewportSize({ width: largeur, height: hauteur });
       const erreurs = await preparer(page);
@@ -72,9 +81,14 @@ for (const largeur of LARGEURS) {
       if (largeur < 600) expect(f.height).toBeGreaterThan(hauteur * 0.7); // panneau sur la majeure partie de l'écran
 
       // Une question rapide, puis « Voir plus »
-      await fenetre.getByRole('button', { name: t('Comment ajuster mon solde ?') }).click();
-      await expect(fenetre.getByRole('log')).toContainText('Indiquez le montant réellement affiché par votre banque');
-      await fenetre.getByRole('button', { name: 'Voir plus de questions' }).click();
+      await poser(fenetre, 'Comment ajuster mon solde ?');
+      await expect(fenetre.getByRole('log')).toContainText('Indique le montant réellement affiché par ta banque');
+      // La réponse s'affiche dans la fenêtre, juste sous la question
+      const derniere = (await fenetre.locator('.poksy-message-poksy').last().boundingBox())!;
+      const corps = (await fenetre.locator('.poksy-corps').boundingBox())!;
+      expect(derniere.y).toBeGreaterThanOrEqual(corps.y - 1);
+      expect(derniere.y).toBeLessThan(corps.y + corps.height);
+      await fenetre.getByRole('button', { name: 'Plus de questions' }).click();
       await expect(fenetre.getByRole('region', { name: 'Confidentialité' })).toBeVisible();
       expect(await problemesDeMiseEnPage(page), 'mise en page, Poksy ouvert').toEqual([]);
 
@@ -83,7 +97,7 @@ for (const largeur of LARGEURS) {
       expect(res.violations.map((v) => `${v.id} : ${v.help} (${v.nodes.map((n) => n.target.join(' ')).join(', ')})`)).toEqual([]);
 
       // Fermeture avec Échap : le focus revient sur le bouton
-      await fenetre.getByRole('button', { name: 'Voir moins de questions' }).focus();
+      await fenetre.getByRole('button', { name: 'Moins de questions' }).focus();
       await page.keyboard.press('Escape');
       await expect(fenetre).toBeHidden();
       await expect(lanceur).toBeFocused();
@@ -111,7 +125,7 @@ test('Poksy au clavier : ouverture, question écrite, sans résultat, bouton d�
   const contour = await fenetre.getByRole('button', { name: 'Fermer Poksy' }).evaluate((el) => getComputedStyle(el).outlineStyle);
   expect(contour).not.toBe('none');
 
-  const champ = fenetre.getByLabel('Votre question pour Poksy');
+  const champ = fenetre.getByLabel('Ta question pour Poksy');
   await champ.fill('carte restaurant');
   await page.keyboard.press('Enter');
   await expect(fenetre.getByRole('log')).toContainText('La carte restaurant a son propre solde');
@@ -123,14 +137,14 @@ test('Poksy au clavier : ouverture, question écrite, sans résultat, bouton d�
   await champ.fill('dépense');
   await page.keyboard.press('Enter');
   await fenetre.locator('.poksy-message-poksy').last().getByRole('button', { name: 'Ajouter une dépense' }).click();
-  await expect(page.getByRole('dialog', { name: 'Nouvelle dépense' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Ajouter' })).toBeVisible();
   await expect(fenetre).toBeHidden();
   await page.keyboard.press('Escape');
   expect(await page.evaluate(() => localStorage.getItem('soldeclair:donnees:v1'))).toBe(avant);
 
   // « Ajuster mon solde » : la page « Mon compte » et sa fenêtre d'ajustement
   await page.getByRole('button', { name: 'Ouvrir l’aide de Poksy' }).click();
-  await fenetre.getByRole('button', { name: t('Comment ajuster mon solde ?') }).click();
+  await poser(fenetre, 'Comment ajuster mon solde ?');
   await fenetre.locator('.poksy-message-poksy').last().getByRole('button', { name: 'Ajuster mon solde' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Mon compte' })).toBeVisible();
   await expect(page.getByRole('dialog', { name: 'Ajuster le solde' })).toBeVisible();

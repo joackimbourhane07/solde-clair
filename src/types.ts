@@ -24,7 +24,8 @@ export type ThemeChoice = 'system' | 'light' | 'dark';
 export type ChargeStatus = 'paye' | 'a_venir';
 
 /** Comptes suivis : le compte bancaire et la carte restaurant (titres-restaurant). */
-export type AccountId = 'compte' | 'carte-restaurant';
+/** Comptes suivis : compte bancaire, carte restaurant et porte-monnaie Izly (CROUS), chacun avec son solde. */
+export type AccountId = 'compte' | 'carte-restaurant' | 'izly';
 
 export interface Profile {
   name: string;
@@ -105,6 +106,10 @@ export interface BalanceAdjustment {
   date: ISODate;
   amount: Cents;
   note: string;
+  /** Recharge Izly : deux mouvements liés (sortie du compte bancaire, entrée sur Izly), sans effet sur le total. */
+  recharge?: boolean;
+  /** Identifiant commun aux deux mouvements d'une recharge. */
+  lien?: string;
 }
 
 export interface FixedCharge {

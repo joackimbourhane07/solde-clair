@@ -47,7 +47,7 @@ export function Goals() {
     <div className="page">
       <PageHeader
         title="Objectifs d’épargne"
-        description="Mettez de l’argent de côté pour vos projets, à votre rythme."
+        description="Mets de côté pour tes projets."
         actions={
           <>
             <Button icon="piggy" onClick={() => setDeposit({ goalId: data.goals[0]?.id ?? null })}>
@@ -60,7 +60,7 @@ export function Goals() {
         }
       />
 
-      <section className="epargne-resume" aria-label="Résumé de votre épargne">
+      <section className="epargne-resume" aria-label="Résumé de ton épargne">
         <IllustrationObjectif theme="projet" className="epargne-resume-illustration" />
         <div className="stats-grid stats-compact">
           <Stat
@@ -85,7 +85,7 @@ export function Goals() {
               </Button>
             }
           >
-            Un fonds d’urgence, un voyage, un ordinateur… Fixez un montant et suivez votre progression.
+            Un fonds d’urgence, un voyage, un ordinateur… Fixe un montant et suis ta progression.
           </EmptyState>
           <div className="chips objectifs-idees" role="group" aria-label="Idées d’objectifs">
             {GOAL_EXAMPLES.slice(0, 5).map((nom) => (
@@ -142,9 +142,9 @@ export function Goals() {
       <Card>
         <LineChart
           title="Évolution de l’épargne totale"
-          description="Montant total mis de côté à la fin de chaque mois (6 derniers mois)."
+          description="Total mis de côté, 6 derniers mois."
           valueLabel="Épargne totale"
-          emptyText="Aucune épargne enregistrée pour l’instant. Ajoutez un versement pour suivre son évolution."
+          emptyText="Aucune épargne enregistrée pour l’instant. Ajoute un versement pour suivre son évolution."
           area
           points={evolution.map((e) => ({
             label: monthLabel(e.month),

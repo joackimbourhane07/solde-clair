@@ -55,14 +55,14 @@ describe('création du profil : le solde n’est jamais à 0 par erreur', () => 
     const d = stored();
     expect(d.incomes[0].date).toBe('2026-10-28');
     expect(accountBalance(d, 'compte', TODAY, TODAY)).toBeGreaterThan(0);
-    expect(screen.getByText(/Il vous reste/).textContent).not.toMatch(/Il vous reste 0/);
+    expect(screen.getByText(/Il te reste/).textContent).not.toMatch(/Il te reste 0/);
   });
 
   it('solde actuel indiqué : « Mon compte » part exactement de ce montant', async () => {
     const user = renderApp();
     await configurer(user, async () => {
       await user.type(screen.getAllByLabelText('Montant mensuel')[0], '1200');
-      await user.type(screen.getByLabelText(/^Solde de votre compte aujourd’hui/), '850');
+      await user.type(screen.getByLabelText(/^Solde de ton compte aujourd’hui/), '850');
     });
     const d = stored();
     expect(accountBalance(d, 'compte', TODAY, TODAY)).toBe(85000);

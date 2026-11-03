@@ -120,7 +120,7 @@ describe('Mon plan d’épargne', () => {
 
   it('mettre en avant selon le profil : 13e mois proposé à un alternant, job d’été à un étudiant, rien d’interdit', async () => {
     const user = renderApp(avecPlan('alternant'), '/plan');
-    const frequents = screen.getByRole('group', { name: 'Revenus attendus fréquents pour votre profil' });
+    const frequents = screen.getByRole('group', { name: 'Revenus attendus fréquents pour ton profil' });
     expect(within(frequents).queryByRole('button', { name: '+ 13e mois' })).not.toBeInTheDocument(); // déjà ajouté
     expect(within(frequents).getByRole('button', { name: '+ Solde de tout compte' })).toBeInTheDocument();
     expect(screen.getByText(/Fin du contrat dans/)).toBeInTheDocument();
@@ -133,7 +133,7 @@ describe('Mon plan d’épargne', () => {
     const d = avecPlan('etudiant');
     d.incomes = d.incomes.filter((i) => i.id !== 'i-13');
     const user = renderApp(d, '/plan');
-    const frequents = screen.getByRole('group', { name: 'Revenus attendus fréquents pour votre profil' });
+    const frequents = screen.getByRole('group', { name: 'Revenus attendus fréquents pour ton profil' });
     expect(within(frequents).queryByRole('button', { name: '+ 13e mois' })).not.toBeInTheDocument();
     expect(within(frequents).getByRole('button', { name: '+ Job d’été' })).toBeInTheDocument();
     // Le bouton « Ajouter » reste disponible pour n'importe quel revenu attendu
@@ -173,7 +173,7 @@ describe('Mon plan d’épargne', () => {
     const user = renderApp(avecPlan(), '/compte');
     expect(norm(document.querySelector('.solde-bloque')?.textContent)).toContain('dont 150,00 € bloqués temporairement (Caution)');
     await user.click(screen.getAllByRole('button', { name: 'Ajouter une dépense' })[0]);
-    const dialog = screen.getByRole('dialog', { name: 'Nouvelle dépense' });
+    const dialog = screen.getByRole('dialog', { name: 'Ajouter' });
     await user.type(within(dialog).getByLabelText(/^Montant/), '400');
     await user.click(within(dialog).getByLabelText(/^Dépense exceptionnelle/));
     await user.click(within(dialog).getByRole('button', { name: 'Ajouter la dépense' }));
@@ -183,7 +183,7 @@ describe('Mon plan d’épargne', () => {
   it('accueil : carte « Mon objectif » et repères selon le profil', () => {
     renderApp(avecPlan(), '/');
     expect(screen.getByRole('heading', { name: 'Mon objectif : Fin de contrat' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Repères pour vous' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Repères pour toi' })).toBeInTheDocument();
     expect(screen.getByText(/Fin du contrat dans/)).toBeInTheDocument();
   });
 });

@@ -148,7 +148,7 @@ describe('budgets par catégorie', () => {
     d.expenses.push({ id: 'gros', amount: 30000, categoryId: 'c-sante', date: '2026-11-12', description: '', paymentMethod: '' });
     const alerts = monthAlerts(d, '2026-11', TODAY, fmt);
     const prevision = alerts.find((a) => a.message.includes('même rythme'));
-    expect(prevision?.message).toMatch(/il pourrait manquer environ .* Pour finir le mois à l’équilibre, visez environ .* par jour\./);
+    expect(prevision?.message).toMatch(/il pourrait manquer environ .* Pour finir le mois à l’équilibre, vise environ .* par jour\./);
     expect(alerts.find((a) => a.message.includes('Loisirs'))?.message).toMatch(/il reste 20\.00 €/);
   });
 
@@ -245,7 +245,20 @@ describe('report du reste d’un mois sur le suivant (cumul)', () => {
 
   it('une prime reçue fin octobre et non dépensée compte encore en novembre', () => {
     const d = avecReport();
-    d.incomes = [...d.incomes, { id: 'prime', name: 'Prime', amount: 100000, date: '2026-10-26', categoryId: 'c-autre-rev', recurring: false, frequency: null, endDate: null, note: '' }];
+    d.incomes = [
+      ...d.incomes,
+      {
+        id: 'prime',
+        name: 'Prime',
+        amount: 100000,
+        date: '2026-10-26',
+        categoryId: 'c-autre-rev',
+        recurring: false,
+        frequency: null,
+        endDate: null,
+        note: '',
+      },
+    ];
     const avant = monthSummary(avecReport(), '2026-11', TODAY).available;
     // Règle du 20 (par défaut) : la prime du 26 octobre est un revenu de novembre
     expect(carryOverInto(d, '2026-11', TODAY)).toBe(REPORT_NOVEMBRE);
@@ -259,7 +272,10 @@ describe('report du reste d’un mois sur le suivant (cumul)', () => {
 
   it('un dépassement est reporté aussi', () => {
     const d = avecReport();
-    d.expenses = [...d.expenses, { id: 'gros', amount: 300000, categoryId: 'c-loisirs', date: '2026-10-28', description: 'Voyage', paymentMethod: '' }];
+    d.expenses = [
+      ...d.expenses,
+      { id: 'gros', amount: 300000, categoryId: 'c-loisirs', date: '2026-10-28', description: 'Voyage', paymentMethod: '' },
+    ];
     expect(carryOverInto(d, '2026-11', TODAY)).toBe(REPORT_NOVEMBRE - 300000);
   });
 
@@ -268,4 +284,3 @@ describe('report du reste d’un mois sur le suivant (cumul)', () => {
     expect(monthSummary(fixture(), '2026-11', TODAY).available).toBe(82151);
   });
 });
-

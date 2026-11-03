@@ -24,7 +24,7 @@ interface Line {
   dernierModifie: boolean;
 }
 
-const STEPS = ['Vous', 'Revenus', 'Charges fixes', 'Dépenses et épargne', 'Catégories', 'Récapitulatif'];
+const STEPS = ['Tu', 'Revenus', 'Charges fixes', 'Dépenses et épargne', 'Catégories', 'Récapitulatif'];
 let lineKey = 0;
 const newLine = (name = '', category = '', day = '5', today?: ISODate): Line => ({
   key: (lineKey += 1),
@@ -94,7 +94,7 @@ function LineRow({
             value={line.dernier}
             error={erreurDernier}
             onChange={(e) => onChange({ ...line, dernier: e.target.value, dernierModifie: true })}
-            hint="Compté tout de suite dans votre solde. Videz le champ s’il n’est pas encore arrivé."
+            hint="Compté tout de suite. Vide si pas encore reçu."
           />
         </div>
       )}
@@ -154,7 +154,7 @@ export function Onboarding() {
 
   const validate = (): boolean => {
     const errs: Record<string, string | null> = {};
-    if (step === 0) errs.name = name.trim() ? null : 'Indiquez un prénom ou un pseudonyme.';
+    if (step === 0) errs.name = name.trim() ? null : 'Indique un prénom ou un pseudonyme.';
     if (step === 1) {
       errs.main = checkAmount(mainIncome.amount, { allowZero: true, required: false })[1];
       const dateKo = (l: Line) =>
@@ -226,7 +226,7 @@ export function Onboarding() {
         });
     }
     dispatch({ type: 'replace', data });
-    notify(`Bienvenue ${name.trim()} ! Votre budget est prêt.`);
+    notify(`Bienvenue ${name.trim()} ! Ton budget est prêt.`);
     navigate('/');
   };
 
@@ -262,7 +262,7 @@ export function Onboarding() {
           </span>
         </Link>
         <p className="onboarding-privacy">
-          <Icon name="lock" size={16} /> Sans compte, sans banque : vos données restent sur cet appareil.
+          <Icon name="lock" size={16} /> Sans compte, sans banque : tes données restent sur cet appareil.
         </p>
       </header>
 
@@ -270,7 +270,7 @@ export function Onboarding() {
         {/* Grand écran : énoncé à gauche, parcours encadré à droite (contenus existants uniquement). */}
         <aside className="onboarding-intro" aria-label="À propos de SoldeClair">
           <p className="eyebrow">Budget personnel</p>
-          <p className="onboarding-statement">Gérez votre budget personnel, simplement.</p>
+          <p className="onboarding-statement">Gère ton budget personnel, simplement.</p>
           <ul className="onboarding-facts">
             <li>
               <Icon name="lock" size={18} />
@@ -278,11 +278,11 @@ export function Onboarding() {
             </li>
             <li>
               <Icon name="home" size={18} />
-              <span>Vos données restent enregistrées dans ce navigateur, sur cet appareil.</span>
+              <span>Tes données restent enregistrées dans ce navigateur, sur cet appareil.</span>
             </li>
             <li>
               <Icon name="calendar" size={18} />
-              <span>Quelques questions pour préparer votre budget : comptez environ deux minutes.</span>
+              <span>Quelques questions pour préparer ton budget : compte environ deux minutes.</span>
             </li>
           </ul>
         </aside>
@@ -309,15 +309,15 @@ export function Onboarding() {
             <Card>
               <h1 ref={headingRef} tabIndex={-1} className="onboarding-title">
                 {step === 0 && 'Bienvenue sur SoldeClair'}
-                {step === 1 && 'Vos revenus mensuels'}
-                {step === 2 && 'Vos charges fixes'}
-                {step === 3 && 'Vos dépenses et votre épargne'}
-                {step === 4 && 'Vos catégories'}
+                {step === 1 && 'Tes revenus mensuels'}
+                {step === 2 && 'Tes charges fixes'}
+                {step === 3 && 'Tes dépenses et ton épargne'}
+                {step === 4 && 'Tes catégories'}
                 {step === 5 && 'Tout est prêt !'}
               </h1>
               <p className="muted">
                 Étape {step + 1} sur {STEPS.length}
-                {step > 0 && step < 5 && '. Vous pourrez tout modifier plus tard.'}
+                {step > 0 && step < 5 && '. Tu pourras tout modifier plus tard.'}
               </p>
 
               <form
@@ -331,9 +331,9 @@ export function Onboarding() {
               >
                 {step === 0 && (
                   <>
-                    <p>Quelques questions pour préparer votre budget. Comptez environ deux minutes.</p>
+                    <p>Quelques questions pour préparer ton budget. Compte environ deux minutes.</p>
                     <p className="muted">
-                      Vous préférez d’abord découvrir ?{' '}
+                      Tu préfères d’abord découvrir ?{' '}
                       <button type="button" className="lien-bouton" onClick={() => document.getElementById('alt-titre')?.focus()}>
                         Essayer avec un profil de démonstration
                       </button>
@@ -356,7 +356,7 @@ export function Onboarding() {
                       </SelectField>
                     </div>
                     <fieldset className="fieldset">
-                      <legend>Quelle est votre situation ?</legend>
+                      <legend>Quelle est ta situation ?</legend>
                       <div className="choice-grid">
                         {(Object.keys(PROFILE_LABELS) as ProfileType[]).map((t) => (
                           <label key={t} className={`choice ${type === t ? 'choice-on' : ''}`}>
@@ -365,7 +365,7 @@ export function Onboarding() {
                           </label>
                         ))}
                       </div>
-                      <p className="field-hint">Nous vous proposerons des catégories adaptées à votre situation.</p>
+                      <p className="field-hint">Nous te proposerons des catégories adaptées à ta situation.</p>
                     </fieldset>
                   </>
                 )}
@@ -383,7 +383,7 @@ export function Onboarding() {
                       today={today}
                     />
                     <h2 className="subhead">Revenus complémentaires</h2>
-                    {extras.length === 0 && <p className="muted">Aides, job, aide familiale… Ajoutez-en si besoin.</p>}
+                    {extras.length === 0 && <p className="muted">Aides, job, aide familiale… Ajoute-en si besoin.</p>}
                     {extras.map((l) => (
                       <LineRow
                         key={l.key}
@@ -400,21 +400,21 @@ export function Onboarding() {
                     <Button icon="plus" onClick={() => setExtras([...extras, newLine('', cats.income[1] ?? cats.income[0], '5', today)])}>
                       Ajouter un revenu complémentaire
                     </Button>
-                    <h2 className="subhead">Votre compte aujourd’hui</h2>
+                    <h2 className="subhead">Ton compte aujourd’hui</h2>
                     <MoneyField
-                      label="Solde de votre compte aujourd’hui"
+                      label="Solde de ton compte aujourd’hui"
                       optional
                       value={soldeActuel}
                       onChange={(e) => setSoldeActuel(e.target.value)}
                       error={errors.solde}
-                      hint="Le montant affiché par votre banque. SoldeClair part de ce solde réel ; sinon il part des revenus déjà reçus indiqués ci-dessus."
+                      hint="Le montant affiché par ta banque aujourd’hui."
                     />
                   </>
                 )}
 
                 {step === 2 && (
                   <>
-                    <p className="muted">Laissez le montant vide pour ignorer une ligne.</p>
+                    <p className="muted">Laisse le montant vide pour ignorer une ligne.</p>
                     {charges.map((l) => (
                       <LineRow
                         key={l.key}
@@ -437,7 +437,7 @@ export function Onboarding() {
                   <>
                     <div className="form-grid">
                       <MoneyField
-                        label="Estimation de vos dépenses variables par mois"
+                        label="Estimation de tes dépenses variables par mois"
                         value={variableEstimate}
                         onChange={(e) => setVariableEstimate(e.target.value)}
                         error={errors.variable}
@@ -448,12 +448,12 @@ export function Onboarding() {
                         value={savingsTarget}
                         onChange={(e) => setSavingsTarget(e.target.value)}
                         error={errors.savings}
-                        hint="Ce que vous aimeriez mettre de côté chaque mois."
+                        hint="Ce que tu aimerais mettre de côté chaque mois."
                       />
                     </div>
                     <CheckboxField
                       label="Répartir automatiquement mon estimation en limites par catégorie"
-                      hint="Vous pourrez ajuster chaque limite dans « Budgets »."
+                      hint="Tu pourras ajuster chaque limite dans « Budgets »."
                       checked={splitEstimate}
                       onChange={(e) => setSplitEstimate(e.target.checked)}
                     />
@@ -496,8 +496,7 @@ export function Onboarding() {
                 {step === 4 && (
                   <>
                     <p>
-                      Catégories proposées pour un profil <strong>{PROFILE_LABELS[type].toLowerCase()}</strong>. Décochez celles qui ne vous
-                      concernent pas.
+                      Pour un profil <strong>{PROFILE_LABELS[type].toLowerCase()}</strong>. Décoche ce qui ne te concerne pas.
                     </p>
                     {kinds.map((k) => (
                       <fieldset key={k} className="fieldset">
@@ -588,10 +587,10 @@ export function Onboarding() {
                     </dl>
                     {margin < 0 ? (
                       <Notice tone="attention">
-                        Votre estimation dépasse vos revenus de {fmt(-margin)}. Pas d’inquiétude : SoldeClair vous aidera à repérer où ajuster.
+                        Ton estimation dépasse tes revenus de {fmt(-margin)}. Pas d’inquiétude : SoldeClair t’aidera à repérer où ajuster.
                       </Notice>
                     ) : (
-                      <Notice tone="succes">Votre budget prévisionnel est équilibré.</Notice>
+                      <Notice tone="succes">Ton budget prévisionnel est équilibré.</Notice>
                     )}
                   </>
                 )}

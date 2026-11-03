@@ -77,8 +77,8 @@ export function DemoResteAVivre() {
     };
   }, [lecture, etape]);
 
-  const faites = OPERATIONS.slice(0, etape);
-  const reste = DEPART + faites.reduce((t, o) => t + o.montant, 0);
+  const fais = OPERATIONS.slice(0, etape);
+  const reste = DEPART + fais.reduce((t, o) => t + o.montant, 0);
   const parJour = Math.floor(reste / JOURS);
   const fini = etape >= OPERATIONS.length;
 
@@ -106,7 +106,7 @@ export function DemoResteAVivre() {
         </button>
       </div>
       <p className="demo-phrase">
-        Il vous reste{' '}
+        Il te reste{' '}
         <strong className="demo-valeur">
           <MontantAnime cents={reste} format={eur} brut />
         </strong>{' '}
@@ -120,7 +120,7 @@ export function DemoResteAVivre() {
         <span style={{ width: `${Math.round((reste / 60000) * 100)}%` }} />
       </div>
       <ul className="demo-operations">
-        {faites
+        {fais
           .slice()
           .reverse()
           .map((o) => (
@@ -134,7 +134,7 @@ export function DemoResteAVivre() {
               </span>
             </li>
           ))}
-        {faites.length === 0 && <li className="demo-operation demo-attente">Les opérations du jour apparaissent ici.</li>}
+        {fais.length === 0 && <li className="demo-operation demo-attente">Les opérations du jour apparaissent ici.</li>}
       </ul>
     </div>
   );
@@ -160,7 +160,7 @@ export function DemoSimulateur() {
   return (
     <div className="demo demo-simu" role="group" aria-labelledby={`${id}-titre`}>
       <p id={`${id}-titre`} className="demo-mois">
-        Essayez : un achat de <strong>{eur(prix * 100)}</strong>
+        Essaie : un achat de <strong>{eur(prix * 100)}</strong>
       </p>
       <label htmlFor={`${id}-prix`} className="sr-only">
         Prix de l’achat en euros
@@ -191,7 +191,7 @@ export function DemoSimulateur() {
         <Icon name={verdict.icone} size={18} />
         {verdict.texte}
       </p>
-      <p className="demo-petit">Montants fictifs. Dans SoldeClair, le calcul part de votre vrai solde et de vos objectifs.</p>
+      <p className="demo-petit">Montants fictifs. Dans SoldeClair, le calcul part de ton vrai solde et de tes objectifs.</p>
     </div>
   );
 }
@@ -297,7 +297,7 @@ const PROFILS: { id: string; nom: string; illustration: ReactNode; phrase: strin
     id: 'alternant',
     nom: 'Alternant(e)',
     illustration: <ProfilAlternant />,
-    phrase: 'Salaire d’apprenti, contrat qui se termine, premier logement : un budget qui suit votre rythme.',
+    phrase: 'Salaire d’apprenti, contrat qui se termine, premier logement : un budget qui suit ton rythme.',
     points: [
       'Le compte à rebours jusqu’à la fin du contrat',
       'Le 13e mois et les primes, comptés seulement une fois reçus',
@@ -319,9 +319,9 @@ const PROFILS: { id: string; nom: string; illustration: ReactNode; phrase: strin
     id: 'independant',
     nom: 'Indépendant(e)',
     illustration: <PictoDebuter />,
-    phrase: 'Revenus irréguliers, cotisations à prévoir : SoldeClair vous aide à lisser l’année.',
+    phrase: 'Revenus irréguliers, cotisations à prévoir : SoldeClair t’aide à lisser l’année.',
     points: [
-      'Votre réserve de précaution, en mois de charges',
+      'Ta réserve de précaution, en mois de charges',
       'Les factures en attente, à part tant qu’elles ne sont pas payées',
       'Un rappel pour les cotisations',
     ],
@@ -343,7 +343,7 @@ export function ProfilsInteractifs() {
   const p = PROFILS[actif];
   return (
     <div className="profils-interactifs">
-      <div className="profils-onglets" role="tablist" aria-label="Choisissez une situation" onKeyDown={clavier}>
+      <div className="profils-onglets" role="tablist" aria-label="Choisis une situation" onKeyDown={clavier}>
         {PROFILS.map((pr, i) => (
           <button
             key={pr.id}
@@ -369,7 +369,7 @@ export function ProfilsInteractifs() {
         </div>
         <div>
           <p className="profils-phrase">{p.phrase}</p>
-          <p className="profils-sous-titre">Ce que SoldeClair met en avant pour vous :</p>
+          <p className="profils-sous-titre">Ce que SoldeClair met en avant pour toi :</p>
           <ul className="accueil-liste">
             {p.points.map((pt) => (
               <li key={pt}>
