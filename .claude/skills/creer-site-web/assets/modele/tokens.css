@@ -1,0 +1,232 @@
+/* ==========================================================================
+   Modèle de styles de base (tiré de SoldeClair) : palette validée, rôles,
+   barre du bas, fenêtre unique, mouvement réduit. Mobile d'abord.
+   Les teintes « texte » sont assombries pour atteindre le contraste WCAG AA.
+   Penser à <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* Palette de référence */
+  --c-fond: #ffffff;
+  --c-fond-2: #f7f7f5;
+  --c-fond-survol: #efefed;
+  --c-texte: #191919;
+  --c-bordure: #e9e9e7;
+  --c-bleu: #2383e2;
+  --c-bleu-clair: #e7f3f8;
+  --c-entree: #47d45a; /* argent qui entre : surfaces, pastilles, barres */
+  --c-sortie: #ff0000; /* argent qui sort : surfaces, pastilles, barres */
+
+  /* Rôles */
+  --bg: var(--c-fond);
+  --surface: var(--c-fond);
+  --card: var(--c-fond-2); /* cartes : gris très clair, sans bordure */
+  --surface-hover: var(--c-fond-survol);
+  --text: var(--c-texte);
+  --muted: #6b6a66; /* 5,1:1 sur blanc */
+  --border: var(--c-bordure);
+  --border-strong: #8c8b87; /* contour des champs, 3,4:1 */
+  --primary: #1f6fbf; /* boutons et liens : 5,1:1 avec du blanc */
+  --primary-hover: #195c9f;
+  --primary-soft: var(--c-bleu-clair);
+  --focus: var(--c-bleu);
+  --texte-entree: #1a7f2b; /* montants entrants en texte */
+  --texte-sortie: #d90000; /* montants sortants en texte */
+  --ok: #0b6e61;
+  --ok-bg: #ddedea;
+  --attention: #a35200;
+  --attention-bg: #faebdd;
+  --danger: #c42b2b;
+  --danger-bg: #fbe4e4;
+
+  /* Formes, mouvement, mesures */
+  --rayon-carte: 12px;
+  --rayon-controle: 8px;
+  --duree: 150ms; /* micro-interactions : 120 à 200 ms */
+  --barre-bas: 61px; /* hauteur réelle de la navigation du bas */
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; /* police auto-hébergée de préférence */
+}
+
+/* Mode sombre graphite (exemple de base, à compléter) */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #191919;
+  --surface: #202020;
+  --card: #252525;
+  --surface-hover: #2f2f2f;
+  --text: #ececeb;
+  --muted: #a5a4a0;
+  --border: #373737;
+  --primary: #529cca;
+  --texte-entree: #5fd36f;
+  --texte-sortie: #ff6b6b;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.app {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Le contenu n'est jamais caché sous la barre du bas */
+.main {
+  padding-bottom: calc(var(--barre-bas) + env(safe-area-inset-bottom) + 16px);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.montant {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------- Barre de navigation du bas ------------------------- */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+  transform: translateZ(0); /* calque propre : ne bouge pas avec le contenu */
+  transition: transform 160ms ease;
+}
+
+/* Clavier ouvert (classe posée par suivreEcranVisible) : la barre s'efface */
+:root.clavier-ouvert .bottom-nav {
+  transform: translateY(110%);
+}
+
+@media (min-width: 960px) {
+  .bottom-nav {
+    display: none;
+  }
+  .main {
+    padding-bottom: 48px;
+  }
+}
+
+/* ------------------------------ Fenêtre unique ------------------------------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(3, 5, 9, 0.62);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom) + var(--clavier, 0px));
+  overscroll-behavior: contain;
+  touch-action: none;
+}
+
+.modal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  width: min(560px, 100%);
+  max-height: calc(var(--vv-hauteur, 100dvh) - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  border-radius: 20px;
+  overflow: hidden;
+  touch-action: auto;
+}
+
+.modal-poignee {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-strong);
+  margin: 8px auto 0;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px 10px 16px;
+  flex-shrink: 0;
+}
+
+.modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 16px 16px;
+}
+
+/* Boutons d'action toujours visibles en bas de la fenêtre */
+.modal-body .form-actions {
+  position: sticky;
+  bottom: -16px;
+  margin: 8px -16px -16px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}
+
+.modal-body .form-actions > * {
+  flex: 1 1 0;
+  min-height: 44px;
+}
+
+@media (min-width: 640px) {
+  .modal-backdrop {
+    align-items: center;
+    padding: 24px;
+  }
+  .modal {
+    max-height: calc(var(--vv-hauteur, 100dvh) - 48px);
+    border-radius: var(--rayon-carte);
+  }
+  .modal-poignee {
+    display: none;
+  }
+}
+
+/* Paysage sur téléphone : fenêtre centrée, hauteur utile maximale */
+@media (max-height: 500px) and (orientation: landscape) {
+  .modal-backdrop {
+    align-items: center;
+    padding-top: calc(8px + env(safe-area-inset-top));
+  }
+}
+
+/* ------------------------------ Mouvement réduit ------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:root[data-mouvement='reduit'] *,
+:root[data-mouvement='reduit'] *::before,
+:root[data-mouvement='reduit'] *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+  scroll-behavior: auto !important;
+}
