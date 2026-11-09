@@ -1,4 +1,4 @@
-import type { AccountId, AppData, Category, Cents, ChargeStatus, FixedCharge, Income, ISODate, MonthKey, Transaction } from '../types';
+import type { AccountId, AppData, Category, Cents, ChargeStatus, Expense, FixedCharge, Income, ISODate, MonthKey, Transaction } from '../types';
 import { addDays, addMonths, daysElapsedInMonth, daysInMonth, daysRemainingInMonth, firstDay, lastDay, monthOf, parseISO } from './dates';
 import { divideCents, percent, sum } from './money';
 import { occurrencesInMonth } from './recurrence';
@@ -662,6 +662,29 @@ export function frequentCategories(data: AppData, today: ISODate, count = 4): Ca
     });
   const complement = variables.filter((c) => !stats.has(c.id));
   return [...utilisees, ...complement].slice(0, count);
+}
+
+/**
+ * Dépenses récentes à refaire d'un geste (café, bus, repas…) : les dernières dépenses distinctes des 60 derniers jours
+ * (un même libellé n'apparaît qu'une fois). Les dépenses exceptionnelles sont exclues.
+ */
+export function depensesRecentes(data: AppData, today: ISODate, count = 3, filtre?: (e: Expense) => boolean): Expense[] {
+  const debut = addDays(today, -60);
+  const vues = new Set<string>();
+  const out: Expense[] = [];
+  const triees = data.expenses
+    .map((e, i) => ({ e, i }))
+    .filter(({ e }) => e.date >= debut && e.date <= today && !e.exceptional && (!filtre || filtre(e)))
+    .sort((a, b) => b.e.date.localeCompare(a.e.date) || b.i - a.i);
+  for (const { e } of triees) {
+    // Même libellé = même dépense habituelle : seule la plus récente est proposée (montant ajustable avant validation)
+    const cle = e.description.trim() ? e.description.trim().toLocaleLowerCase('fr') : `${e.categoryId}|${e.amount}`;
+    if (vues.has(cle)) continue;
+    vues.add(cle);
+    out.push(e);
+    if (out.length === count) break;
+  }
+  return out;
 }
 
 /**

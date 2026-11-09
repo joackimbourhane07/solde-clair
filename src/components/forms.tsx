@@ -15,12 +15,12 @@ import type {
   SupportKind,
   TemporaryHold,
 } from '../types';
-import { MODELES_SUPPORT, SUPPORT_KINDS } from '../lib/plan';
+import { messageEtape, MODELES_SUPPORT, SUPPORT_KINDS } from '../lib/plan';
 import { useApp } from '../state/AppState';
 import { centsToInput, parseAmount } from '../lib/money';
 import { isValidISODate, monthLabel, monthOf } from '../lib/dates';
-import { frequentCategories, isCarteRestaurant, isIzly, jourBascule, moisDuRevenu } from '../lib/budget';
-import { accountBalance, usesCarteRestaurant } from '../lib/accounts';
+import { depensesRecentes, frequentCategories, isCarteRestaurant, isIzly, jourBascule, moisDuRevenu } from '../lib/budget';
+import { accountBalance, resteAVivre, usesCarteRestaurant } from '../lib/accounts';
 import { newId } from '../lib/id';
 import { FREQUENCY_LABELS } from '../lib/recurrence';
 import { CATEGORIE_IZLY, DEPENSES_CAMPUS, makeCategory, PAYMENT_METHODS } from '../lib/categories';
@@ -174,8 +174,11 @@ export function ExpenseForm({
   onCancel,
   quick = false,
   izly = false,
+  prerempli,
 }: {
   initial?: Expense;
+  /** Montant et catégorie proposés (ex. achat simulé) : l'utilisateur vérifie puis valide. */
+  prerempli?: { amount: number; categoryId?: string };
   defaultDate: ISODate;
   onDone?: () => void;
   onCancel?: () => void;
@@ -183,13 +186,13 @@ export function ExpenseForm({
   /** Dépense payée avec Izly (raccourcis de campus, compte Izly). */
   izly?: boolean;
 }) {
-  const { data, dispatch, fmt, today } = useApp();
+  const { data, dispatch, fmt, fmtShort, notify, today } = useApp();
   const confirmer = useConfirmation();
   const variableCats = data.categories.filter((c) => c.kind === 'variable');
   // Raccourcis : catégories les plus utilisées ces 90 derniers jours
   const frequentes = useMemo(() => frequentCategories(data, today, 4), [data, today]);
-  const [amount, setAmount] = useState(centsToInput(initial?.amount));
-  const choix = useChoixCategorie('variable', initial?.categoryId ?? frequentes[0]?.id ?? variableCats[0]?.id);
+  const [amount, setAmount] = useState(centsToInput(initial?.amount ?? prerempli?.amount));
+  const choix = useChoixCategorie('variable', initial?.categoryId ?? prerempli?.categoryId ?? frequentes[0]?.id ?? variableCats[0]?.id);
   const { categoryId, setCategoryId } = choix;
   const [date, setDate] = useState(initial?.date ?? defaultDate);
   const [description, setDescription] = useState(initial?.description ?? '');
@@ -207,6 +210,19 @@ export function ExpenseForm({
   };
   const [exceptionnelle, setExceptionnelle] = useState(initial?.exceptional ?? false);
   const [errors, setErrors] = useState<Errors>({});
+  // Ajout express : refaire une dépense récente (préremplit le formulaire ; rien n'est enregistré sans validation)
+  const recentes = useMemo(
+    () => (initial ? [] : depensesRecentes(data, today, 3, izly ? (e) => isIzly(e.paymentMethod) : undefined)),
+    [data, today, initial, izly],
+  );
+  const nomDepense = (e: Expense) => e.description || data.categories.find((c) => c.id === e.categoryId)?.name || 'Dépense';
+  const refaire = (e: Expense) => {
+    setAmount(centsToInput(e.amount));
+    setDescription(e.description);
+    setCategoryId(e.categoryId);
+    setPaymentMethod(e.paymentMethod);
+    setErrors({});
+  };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -218,20 +234,26 @@ export function ExpenseForm({
     };
     setErrors(errs);
     if (hasErrors(errs) || cents === null) return;
-    dispatch({
-      type: 'upsert',
-      collection: 'expenses',
-      item: {
-        id: initial?.id ?? newId('dep'),
-        amount: cents,
-        categoryId: choix.resoudre(),
-        date,
-        description: description.trim(),
-        paymentMethod,
-        ...(exceptionnelle ? { exceptional: true } : {}),
-      },
-    });
-    confirmer(initial ? 'Dépense modifiée et enregistrée.' : `Dépense de ${fmt(cents)} enregistrée.`, date);
+    const item: Expense = {
+      id: initial?.id ?? newId('dep'),
+      amount: cents,
+      categoryId: choix.resoudre(),
+      date,
+      description: description.trim(),
+      paymentMethod,
+      ...(exceptionnelle ? { exceptional: true } : {}),
+    };
+    // Retour immédiat : ce qu'il reste par jour après cette dépense (dépense du jour ou passée, mois en cours)
+    let impact = '';
+    if (!initial && date <= today && monthOf(date) === monthOf(today)) {
+      const apres = resteAVivre({ ...data, expenses: [...data.expenses, item] }, today);
+      if (apres.solde >= 0 && apres.parJour !== null) impact = ` Il te reste environ ${fmtShort(apres.parJour, 'prudent')} par jour.`;
+    }
+    const premiere = !initial && data.expenses.length === 0;
+    dispatch({ type: 'upsert', collection: 'expenses', item });
+    // Toute première dépense : Poksy salue le départ (une seule fois)
+    if (premiere && monthOf(date) === monthOf(today)) notify(`Première dépense notée. C’est parti\u00a0!${impact}`, 'bravo');
+    else confirmer(initial ? 'Dépense modifiée et enregistrée.' : `Dépense de ${fmt(cents)} enregistrée.${impact}`, date);
     if (!initial) {
       setAmount('');
       setDescription('');
@@ -241,6 +263,27 @@ export function ExpenseForm({
 
   return (
     <form onSubmit={submit} noValidate className={quick ? 'form-quick' : 'form'} aria-label={quick ? 'Ajout rapide d’une dépense' : undefined}>
+      {recentes.length > 0 && (
+        <div className="chips chips-recentes" role="group" aria-label="Refaire une dépense récente">
+          <span className="chips-titre" aria-hidden="true">
+            Refaire :
+          </span>
+          {recentes.map((e) => (
+            <button
+              type="button"
+              key={e.id}
+              className="chip chip-petit"
+              aria-label={`Refaire : ${nomDepense(e)}, ${fmt(e.amount)}`}
+              onClick={() => refaire(e)}
+            >
+              <Icon name="repeat" size={14} />
+              <span>
+                {nomDepense(e)} – {fmt(e.amount)}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
       <div className={quick ? 'form-row' : 'form-grid'}>
         <MoneyField label="Montant" value={amount} onChange={(e) => setAmount(e.target.value)} error={errors.amount} required />
         {avecIzly && (
@@ -951,7 +994,7 @@ export function DepositForm({
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const { data, dispatch, notify, fmt } = useApp();
+  const { data, dispatch, notify, fmt, today } = useApp();
   const [amount, setAmount] = useState(centsToInput(initial?.amount));
   const [target, setTarget] = useState(initial?.goalId ?? goalId ?? data.goals[0]?.id ?? '');
   const supports = data.supports ?? [];
@@ -966,19 +1009,19 @@ export function DepositForm({
     const errs: Errors = { amount: amountError, date: checkDate(date) };
     setErrors(errs);
     if (hasErrors(errs) || cents === null) return;
-    dispatch({
-      type: 'upsert',
-      collection: 'savings',
-      item: {
-        id: initial?.id ?? newId('epa'),
-        goalId: target || null,
-        amount: cents,
-        date,
-        note: note.trim(),
-        ...(support ? { supportId: support } : {}),
-      },
-    });
-    notify(initial ? 'Versement modifié.' : `Versement de ${fmt(cents)} enregistré.`);
+    const depot: SavingsDeposit = {
+      id: initial?.id ?? newId('epa'),
+      goalId: target || null,
+      amount: cents,
+      date,
+      note: note.trim(),
+      ...(support ? { supportId: support } : {}),
+    };
+    // Étape franchie (25, 50, 75, 100 %) : Poksy le signale, sans rien enregistrer de plus
+    const etape = messageEtape(data, depot, today);
+    dispatch({ type: 'upsert', collection: 'savings', item: depot });
+    if (etape) notify(etape, 'bravo');
+    else notify(initial ? 'Versement modifié.' : `Versement de ${fmt(cents)} enregistré.`);
     onDone();
   };
 

@@ -266,6 +266,7 @@ export function Stat({
 export function EmptyState({ title, children, action }: { title: string; children?: ReactNode; action?: ReactNode }) {
   return (
     <div className="empty">
+      <PoksyAvatar taille={44} className="empty-poksy" />
       <p className="empty-title">{title}</p>
       {children && <p className="empty-text">{children}</p>}
       {action}
@@ -532,12 +533,12 @@ export function Toasts() {
     <div className="toasts" aria-live="polite" aria-atomic="false">
       {toasts.map((t) => (
         <div key={t.id} className={`toast toast-${t.kind}`} role={t.kind === 'erreur' ? 'alert' : 'status'}>
-          {t.kind === 'succes' ? (
-            // Réussite : Poksy approuve, avec une coche
+          {t.kind === 'succes' || t.kind === 'bravo' ? (
+            // Réussite : Poksy approuve (coche) ; étape franchie : Poksy fête (étincelle)
             <span className="toast-poksy" aria-hidden="true">
               <PoksyAvatar taille={30} />
               <span className="toast-coche">
-                <Icon name="check" size={12} />
+                <Icon name={t.kind === 'bravo' ? 'sparkle' : 'check'} size={12} />
               </span>
             </span>
           ) : (

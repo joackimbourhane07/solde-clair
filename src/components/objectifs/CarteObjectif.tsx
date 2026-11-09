@@ -1,7 +1,7 @@
 import { Icon } from '../Icon';
 import { useId, useState } from 'react';
 import { useApp } from '../../state/AppState';
-import { progressionObjectif, soldesSupports } from '../../lib/plan';
+import { messageEtape, progressionObjectif, soldesSupports } from '../../lib/plan';
 import type { SavingsDeposit, SavingsGoal } from '../../types';
 import { goalTheme, JALONS, PRIORITY_LABELS, simulerContribution } from '../../lib/goals';
 import { formatDate, monthLabel, monthOf } from '../../lib/dates';
@@ -106,6 +106,7 @@ export function CarteObjectif({
   const theme = goalTheme(g);
   const currentMonth = monthOf(today);
   const deposits = data.savings.filter((s) => s.goalId === g.id).sort((a, b) => b.date.localeCompare(a.date));
+  const prochainCap = p.reached ? undefined : JALONS.find((j) => p.pct < j && Math.ceil((g.target * j) / 100) > p.current);
   const verseCeMois = sum(deposits.filter((d) => monthOf(d.date) === currentMonth).map((d) => d.amount));
   // Prochaine petite étape : l'effort du mois (celui qui permet de tenir la date si elle est menacée).
   const etape = p.onTrack === false ? (p.monthlyNeeded ?? 0) : g.monthlyContribution || (p.monthlyNeeded ?? 0);
@@ -113,18 +114,11 @@ export function CarteObjectif({
   /** Versement rapide daté du jour, annulable depuis la notification. */
   const verserRapidement = (montant: number) => {
     const id = newId('vers');
-    dispatch({
-      type: 'upsert',
-      collection: 'savings',
-      item: {
-        id,
-        goalId: g.id,
-        amount: montant,
-        date: today,
-        note: 'Versement rapide',
-      },
-    });
-    notify(`${fmt(montant)} mis de côté pour « ${g.name} ».`, 'succes', {
+    const depot = { id, goalId: g.id, amount: montant, date: today, note: 'Versement rapide' };
+    // Étape franchie (25, 50, 75, 100 %) : Poksy le fête dans la notification
+    const cap = messageEtape(data, depot, today);
+    dispatch({ type: 'upsert', collection: 'savings', item: depot });
+    notify(cap ? `${fmt(montant)} mis de côté. ${cap}` : `${fmt(montant)} mis de côté pour « ${g.name} ».`, cap ? 'bravo' : 'succes', {
       label: 'Annuler',
       onClick: () => dispatch({ type: 'remove', collection: 'savings', id }),
     });
@@ -172,6 +166,13 @@ export function CarteObjectif({
               );
             })}
           </ol>
+          {/* Le prochain cap, concret : combien il manque avant lui */}
+          {prochainCap !== undefined && (
+            <p className="jalon-suivant">
+              Plus que <strong>{fmt(Math.ceil((g.target * prochainCap) / 100) - p.current)}</strong> avant{' '}
+              {prochainCap === 100 ? 'l’objectif' : `${prochainCap}\u00a0%`}.
+            </p>
+          )}
         </div>
 
         {p.reached ? (

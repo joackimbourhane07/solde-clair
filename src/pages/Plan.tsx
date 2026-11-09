@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useApp } from '../state/AppState';
+import { DemanderPoksy } from '../components/poksy/DemanderPoksy';
 import type { Income, SavingsGoal, SavingsSupport, SupportKind, TemporaryHold } from '../types';
 import {
   MODELES_SUPPORT,
@@ -207,6 +208,7 @@ export function Plan() {
             }
           />
         </div>
+        <DemanderPoksy question="Épargne totale ou épargne disponible ?" id="epargne-totale-disponible" libelle="Totale ou disponible ?" />
         {supports.length === 0 ? (
           <p className="muted">Ajoute tes livrets et ton épargne. Tu vois le total et le disponible.</p>
         ) : (

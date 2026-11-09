@@ -60,7 +60,8 @@ export function suggestedActions(data: AppData, today: ISODate, fmt: (c: Cents) 
     actions.push({
       id: `rythme:${month}`,
       priority: 1,
-      title: `À ce rythme, il pourrait manquer environ ${fmt(-s.forecastEndBalance)} à la fin du mois.`,
+      // Sans montant : l'estimation juste en dessous le donne déjà (pas de chiffre répété)
+      title: 'À ce rythme, le mois pourrait finir dans le rouge.',
       detail:
         s.dailyRemaining !== null && s.dailyRemaining > 0
           ? `Pour finir à l’équilibre, vise environ ${fmt(s.dailyRemaining)} par jour.`

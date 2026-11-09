@@ -3,9 +3,10 @@ import { useApp } from '../state/AppState';
 import { simulatePurchase, VERDICT_LABELS } from '../lib/simulator';
 import { parseAmount } from '../lib/money';
 import { BUDGET_LEVEL_LABELS } from '../lib/budget';
-import { Card, CategoryOptions, MoneyField, Notice, PageHeader, SelectField, Stat } from '../components/ui';
+import { Button, Card, CategoryOptions, MoneyField, Notice, PageHeader, SelectField, Stat } from '../components/ui';
 import { Icon } from '../components/Icon';
 import { checkAmount } from '../components/forms';
+import { DemanderPoksy } from '../components/poksy/DemanderPoksy';
 
 export function Simulator() {
   const { data, today, fmt } = useApp();
@@ -47,6 +48,22 @@ export function Simulator() {
                   <li key={r}>{r}</li>
                 ))}
               </ul>
+              <div className="verdict-actions">
+                {/* L'achat est fait : la fenêtre d'ajout s'ouvre déjà remplie (rien n'est enregistré sans validation) */}
+                <Button
+                  variant="secondaire"
+                  className="btn-small"
+                  icon="plus"
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new CustomEvent('soldeclair:ajouter-depense', { detail: { amount: cents, categoryId: categoryId || undefined } }),
+                    )
+                  }
+                >
+                  Ajouter cette dépense
+                </Button>
+                <DemanderPoksy question="Comment est calculé l’impact d’un achat ?" id="impact" libelle="Comment c’est calculé ?" />
+              </div>
             </div>
           </section>
 

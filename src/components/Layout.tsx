@@ -71,7 +71,10 @@ type TypeAjout = 'depense' | 'izly' | 'revenu' | 'epargne';
  * Fenêtre du bouton « + » : « Que veux-tu ajouter ? ». La dépense est choisie d'office (action la plus
  * fréquente) ; Izly, revenu et épargne sont à un geste. Bottom sheet sur téléphone.
  */
-function AjoutRapide({ onClose }: { onClose: () => void }) {
+/** Dépense préremplie (ex. depuis le simulateur) : rien n'est enregistré avant validation. */
+export type DepensePreremplie = { amount: number; categoryId?: string };
+
+function AjoutRapide({ onClose, prerempli }: { onClose: () => void; prerempli?: DepensePreremplie | null }) {
   const { data, month, today } = useApp();
   const [type, setType] = useState<TypeAjout>('depense');
   const proposerIzly = usesIzly(data) || data.profile?.type === 'etudiant' || data.profile?.type === 'alternant';
@@ -102,7 +105,7 @@ function AjoutRapide({ onClose }: { onClose: () => void }) {
         ))}
       </div>
       <div id="ajout-panneau" role="tabpanel" aria-labelledby={`ajout-${type}`} key={type} className="ajout-panneau">
-        {type === 'depense' && <ExpenseForm defaultDate={date} onDone={onClose} onCancel={onClose} />}
+        {type === 'depense' && <ExpenseForm defaultDate={date} prerempli={prerempli ?? undefined} onDone={onClose} onCancel={onClose} />}
         {type === 'izly' && <ExpenseForm izly defaultDate={date} onDone={onClose} onCancel={onClose} />}
         {type === 'revenu' && <IncomeForm defaultDate={date} onDone={onClose} onCancel={onClose} />}
         {type === 'epargne' && <DepositForm defaultDate={date} onDone={onClose} onCancel={onClose} />}
@@ -116,6 +119,17 @@ export function Layout({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   // Ajout rapide d'une dépense depuis n'importe quelle page
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
+  const [prerempli, setPrerempli] = useState<DepensePreremplie | null>(null);
+  // « Ajouter cette dépense » (simulateur…) : ouvre la fenêtre d'ajout déjà remplie
+  useEffect(() => {
+    const surDemande = (e: Event) => {
+      const d = (e as CustomEvent<DepensePreremplie | null>).detail;
+      setPrerempli(d && d.amount > 0 ? d : null);
+      setAjoutOuvert(true);
+    };
+    window.addEventListener('soldeclair:ajouter-depense', surDemande);
+    return () => window.removeEventListener('soldeclair:ajouter-depense', surDemande);
+  }, []);
   const location = useLocation();
   const firstRender = useRef(true);
 
@@ -260,7 +274,15 @@ export function Layout({ children }: { children: ReactNode }) {
           </div>
         </div>
       )}
-      {ajoutOuvert && <AjoutRapide onClose={() => setAjoutOuvert(false)} />}
+      {ajoutOuvert && (
+        <AjoutRapide
+          prerempli={prerempli}
+          onClose={() => {
+            setAjoutOuvert(false);
+            setPrerempli(null);
+          }}
+        />
+      )}
       <Toasts />
     </div>
   );
