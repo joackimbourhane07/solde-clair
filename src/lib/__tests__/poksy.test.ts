@@ -73,7 +73,7 @@ describe('Poksy : questions proposées', () => {
   it('« Plus de questions » : huit rubriques et toutes les questions demandées', () => {
     expect(RUBRIQUES.map((r) => `${r.titre} (${r.questions.length})`)).toEqual([
       'Mon compte (6)',
-      'Revenus et dépenses (6)',
+      'Revenus et dépenses (7)',
       'Budget (6)',
       'Épargne (4)',
       'Mon plan et ma situation (10)',

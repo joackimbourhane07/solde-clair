@@ -78,8 +78,9 @@
 }
 
 @media (min-width: 900px) {
+  /* Un repère seul prend toute la largeur ; deux se partagent la ligne */
   .reperes-accueil {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   }
 }
 

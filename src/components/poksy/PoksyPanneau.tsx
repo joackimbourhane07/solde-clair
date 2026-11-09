@@ -146,11 +146,11 @@ export default function PoksyPanneau({ messages, setMessages, plus, setPlus, onF
       ajouterReponse();
     }, 380);
   };
-  // Astuce d'une page : la question est posée dès l'ouverture (une seule fois)
-  const questionPosee = useRef(false);
+  // Astuce d'une page ou « Demander à Poksy » : la question est posée à l'ouverture (une fois par demande)
+  const questionPosee = useRef<typeof questionInitiale>(null);
   useEffect(() => {
-    if (questionInitiale && !questionPosee.current) {
-      questionPosee.current = true;
+    if (questionInitiale && questionPosee.current !== questionInitiale) {
+      questionPosee.current = questionInitiale;
       repondre(questionInitiale.texte, questionInitiale.id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

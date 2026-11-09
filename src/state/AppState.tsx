@@ -59,6 +59,7 @@ export type Action =
   | { type: 'setLastBackup'; date: ISODate }
   | { type: 'setHideAmounts'; hide: boolean }
   | { type: 'dismissAction'; id: string }
+  | { type: 'resetDismissed' }
   | { type: 'setCarryOver'; value: boolean }
   | { type: 'setIncomeShiftDay'; value: number | null }
   | { type: 'mettreAJourCategories' }
@@ -107,6 +108,9 @@ export function reducer(state: AppData, action: Action): AppData {
       if (deja.includes(action.id)) return state;
       return { ...state, settings: { ...state.settings, dismissedActions: [...deja, action.id].slice(-50) } };
     }
+    case 'resetDismissed':
+      // Repères et actions ignorés : ils peuvent de nouveau s'afficher
+      return { ...state, settings: { ...state.settings, dismissedActions: [] } };
     case 'upsert': {
       const list = (state[action.collection] ?? []) as { id: string }[];
       const exists = list.some((x) => x.id === action.item.id);
@@ -170,7 +174,7 @@ export interface ToastAction {
 export interface Toast {
   id: number;
   message: string;
-  kind: 'succes' | 'erreur' | 'info';
+  kind: 'succes' | 'erreur' | 'info' | 'bravo';
   action?: ToastAction;
 }
 

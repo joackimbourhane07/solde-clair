@@ -63,3 +63,8 @@ export const CLE_ASTUCES = 'soldeclair:poksy-astuces:v1';
 
 /** Seule information mémorisée par Poksy : le message de première visite a été vu (aucune question n'est enregistrée). */
 export const CLE_POKSY = 'soldeclair:poksy:v1';
+
+/** Ouvre Poksy et lui pose une question (depuis n'importe quelle page). Poksy répond seulement : rien n'est modifié. */
+export function demanderAPoksy(texte: string, id: string) {
+  window.dispatchEvent(new CustomEvent('soldeclair:ouvrir-poksy', { detail: { texte, id } }));
+}

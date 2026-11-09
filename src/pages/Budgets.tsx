@@ -2,8 +2,9 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import { categoryBudgets, type CategoryBudgetLine } from '../lib/budget';
-import { formatDate, monthLabel, monthOf } from '../lib/dates';
-import { centsToInput, sum } from '../lib/money';
+import { daysRemainingInMonth, formatDate, monthLabel, monthOf } from '../lib/dates';
+import { DemanderPoksy } from '../components/poksy/DemanderPoksy';
+import { centsToInput, divideCents, sum } from '../lib/money';
 import { isDuplicateName, makeCategory } from '../lib/categories';
 import {
   Button,
@@ -100,8 +101,10 @@ function DepensesDeLaCategorie({ categoryId }: { categoryId: string }) {
 }
 
 export function Budgets() {
-  const { data, month, fmt } = useApp();
+  const { data, month, fmt, fmtShort, today } = useApp();
   const [editing, setEditing] = useState<CategoryBudgetLine | 'new' | null>(null);
+  // Mois en cours : le reste de chaque enveloppe se lit aussi « par jour » jusqu'à la fin du mois
+  const joursRestants = month === monthOf(today) ? daysRemainingInMonth(month, today) : 0;
   const lines = useMemo(() => categoryBudgets(data, month), [data, month]);
   const withBudget = lines.filter((l) => l.budget !== null);
   const totalBudget = sum(withBudget.map((l) => l.budget ?? 0));
@@ -137,10 +140,22 @@ export function Budgets() {
         />
       </div>
       <Notice>
-        Repères : <strong>75 %</strong> (attention), <strong>90 %</strong> (alerte) et <strong>100 %</strong> (dépassement). Chaque état est indiqué
-        par un texte et une icône, en plus de la couleur.
+        Repères : <strong>75 %</strong> attention, <strong>90 %</strong> alerte, <strong>100 %</strong> dépassement. Toujours avec un texte et une
+        icône.
       </Notice>
-      {lines.length === 0 && <EmptyState title="Aucune catégorie de dépenses" />}
+      <DemanderPoksy question="Que signifient les alertes à 75 %, 90 % et 100 % ?" id="alertes" />
+      {lines.length === 0 && (
+        <EmptyState
+          title="Aucune catégorie de dépenses"
+          action={
+            <Button variant="primaire" icon="plus" onClick={() => setEditing('new')}>
+              Créer une catégorie
+            </Button>
+          }
+        >
+          Une catégorie, une limite : tu vois tout de suite ce qu’il reste.
+        </EmptyState>
+      )}
       {avecLimite.length > 0 && (
         <div className="budget-grid">
           {avecLimite.map((l) => (
@@ -173,6 +188,11 @@ export function Budgets() {
                       </>
                     )}
                   </p>
+                  {joursRestants > 0 && (l.remaining ?? 0) > 0 && (
+                    <p className="budget-jour">
+                      Environ <strong>{fmtShort(divideCents(l.remaining ?? 0, joursRestants), 'prudent')}</strong> par jour jusqu’à la fin du mois.
+                    </p>
+                  )}
                   <ProgressBar
                     value={l.spent}
                     max={l.budget}

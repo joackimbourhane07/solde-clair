@@ -573,3 +573,125 @@ details[open] > div:not(.disclosure-body) {
     --izly-texte: #c9b8ff;
   }
 }
+
+/* ==========================================================================
+   Série 12 : accueil plus calme, porte-monnaie, ajout express, Poksy
+   ========================================================================== */
+
+/* Soldes par compte : une pastille par porte-monnaie, un geste ouvre son relevé */
+.porte-monnaie {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 4px 0 12px;
+  padding: 0;
+}
+
+.pm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  font-size: var(--dp-typography-supporting);
+  transition:
+    background-color var(--transition),
+    transform var(--transition);
+}
+
+.pm:hover {
+  background: var(--surface-hover);
+}
+
+.pm:active {
+  transform: scale(0.97);
+}
+
+.pm svg {
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.pm-izly svg {
+  color: var(--izly-texte);
+}
+
+.pm-nom {
+  color: var(--muted);
+}
+
+/* Repère du profil : fermable d'un geste */
+.repere-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin-top: 6px;
+}
+
+/* À faire : la première action, les autres sur demande */
+.actions-autres {
+  margin-top: 8px;
+  max-width: none;
+  border-bottom: 0;
+}
+
+.actions-autres .actions-list {
+  margin-top: 4px;
+}
+
+/* Ajout express : refaire une dépense récente en un geste */
+.chips-recentes .chip {
+  max-width: 100%;
+}
+
+.chips-recentes .chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* États vides : Poksy accompagne la prochaine action */
+.empty-poksy {
+  display: block;
+  margin: 0 auto 10px;
+}
+
+/* Demander à Poksy (explication du calcul) */
+.demander-poksy {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Budgets : le reste de l'enveloppe, par jour */
+.budget-jour {
+  margin: -2px 0 6px;
+  color: var(--muted);
+  font-size: var(--dp-typography-supporting);
+}
+
+/* Simulateur : passer de la simulation à l'ajout réel en un geste */
+.verdict-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.verdict-actions .demander-poksy {
+  margin-top: 0;
+}
+
+/* Objectifs : combien il manque avant le prochain cap */
+.jalon-suivant {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: var(--dp-typography-supporting);
+}

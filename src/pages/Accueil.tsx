@@ -38,7 +38,7 @@ const ECRANS = [
   {
     src: captureAjout,
     titre: 'Ajouter une dépense',
-    alt: 'Ajout d’une dépense : montant avec ajout rapide de 5, 10, 20 ou 50 €, catégories fréquentes en un geste, description et date.',
+    alt: 'Ajout d’une dépense : refaire une dépense récente d’un geste, montant avec ajout rapide de 5, 10, 20 ou 50 €, catégories fréquentes, description et date.',
   },
   {
     src: captureAVenir,
@@ -347,7 +347,7 @@ export default function Accueil() {
             <Telephone
               src={captureAjout}
               className="tel-arriere"
-              alt="Ajout d’une dépense : montant avec ajout rapide de 5, 10, 20 ou 50 €, catégories fréquentes en un geste, description et date."
+              alt="Ajout d’une dépense : refaire une dépense récente d’un geste, montant avec ajout rapide de 5, 10, 20 ou 50 €, catégories fréquentes, description et date."
             />
             <Telephone
               src={captureAVenir}

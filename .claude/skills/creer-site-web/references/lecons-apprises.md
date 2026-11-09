@@ -3,6 +3,10 @@
 Problèmes réels rencontrés pendant SoldeClair et leur solution. Lis cette page avant de déboguer.
 
 ## Interface et CSS
+- **Raccourci clavier à une seule touche** (ex. « N ») : interdit par WCAG 2.1.4 sans moyen de le désactiver ou
+  de le modifier. Préfère un bouton bien placé, ou une combinaison avec une touche de modification.
+- **Même montant affiché deux fois** (action « À faire » et carte « Estimation ») : garde le chiffre à un seul
+  endroit et reformule l'autre sans montant.
 - **Champs qui se chevauchent dans une grille** : un champ avec une longue aide tombait dans une
   colonne « auto » prévue pour un bouton. Mets ce champ sur sa propre ligne (`grid-column: 1 / -1`) et
   teste l'absence de chevauchement de 320 à 1440 px.
@@ -25,6 +29,14 @@ Problèmes réels rencontrés pendant SoldeClair et leur solution. Lis cette pag
   annonce ce qui reste à vérifier sur un vrai téléphone.
 
 ## Tests
+- **Clic Playwright qui fait défiler la page** : `locator.click()` fait défiler pour atteindre la cible (et
+  plus loin si un élément fixe la recouvre). Pour vérifier que l'application ne fait pas défiler, mesure la
+  position **juste après** le clic, puis contrôle qu'elle ne bouge plus pendant la suite.
+- **Vitest avec `css: false`** : un import `?raw` d'une feuille CSS renvoie une chaîne vide (le test passe sans
+  rien vérifier). Lis les fichiers avec `node:fs` (`/// <reference types="node" />` en tête du test) et ajoute
+  un test qui prouve que les fichiers sont bien lus.
+- Une salutation selon l'heure rend les tests dépendants du moment : fige la date dans `src/test/setup.ts`
+  (`vi.useFakeTimers({ toFake: ['Date'], now: ... })`, minuteries réelles).
 - **Test axe instable** : une astuce animée apparaissait pendant l'analyse. Désactive les éléments
   différés dans `preparer()` et réactive-les seulement dans leur test.
 - Attends la fin des animations (`finAnimations`) avant de mesurer ou d'analyser.

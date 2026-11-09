@@ -1,4 +1,4 @@
-import type { AppData, Cents, Income, ISODate, MonthKey, SavingsGoal, SavingsSupport, SupportKind, TemporaryHold } from '../types';
+import type { AppData, Cents, Income, ISODate, MonthKey, SavingsDeposit, SavingsGoal, SavingsSupport, SupportKind, TemporaryHold } from '../types';
 import { categoryMap, isCarteRestaurant, transactionsInRange } from './budget';
 import { addDays, addMonths, firstDay, lastDay, monthOf, parseISO } from './dates';
 import { goalProgress, type GoalProgress } from './goals';
@@ -299,4 +299,30 @@ export function age(birthDate: ISODate | null | undefined, today: ISODate): numb
   let a = t.year - n.year;
   if (t.month < n.month || (t.month === n.month && t.day < n.day)) a -= 1;
   return a;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Étapes d'un objectif (25, 50, 75, 100 %)                                    */
+/* -------------------------------------------------------------------------- */
+
+export const ETAPES_OBJECTIF = [25, 50, 75, 100] as const;
+
+/** Plus haute étape franchie entre deux pourcentages (null si aucune). */
+export function etapeFranchie(avant: number, apres: number): number | null {
+  const franchies = ETAPES_OBJECTIF.filter((e) => avant < e && apres >= e);
+  return franchies.length ? franchies[franchies.length - 1] : null;
+}
+
+/**
+ * Message de Poksy quand un versement fait franchir une étape à son objectif (sinon null).
+ * Calcul en lecture seule : rien n'est enregistré ici.
+ */
+export function messageEtape(data: AppData, depot: SavingsDeposit, today: ISODate): string | null {
+  const g = data.goals.find((x) => x.id === depot.goalId);
+  if (!g) return null;
+  const avant = progressionObjectif(data, g, today).pct;
+  const apres = progressionObjectif({ ...data, savings: [...data.savings.filter((s) => s.id !== depot.id), depot] }, g, today).pct;
+  const e = etapeFranchie(avant, apres);
+  if (e === null) return null;
+  return e === 100 ? `Objectif « ${g.name} » atteint. Bravo !` : `Cap des ${e} % franchi pour « ${g.name} ».`;
 }

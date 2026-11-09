@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { DemanderPoksy } from '../components/poksy/DemanderPoksy';
 import { sommesBloquees } from '../lib/plan';
 import { useApp } from '../state/AppState';
 import type { AccountId, Transaction } from '../types';
@@ -212,11 +213,15 @@ export function Compte() {
   // Recharge Izly proposée aux étudiants et alternants, ou dès qu'Izly sert
   const proposerIzly = avecIzly || data.profile?.type === 'etudiant' || data.profile?.type === 'alternant';
   const [recharger, setRecharger] = useState(false);
-  const [filtre, setFiltre] = useState<FiltreCompte>('tout');
   const [mois, setMois] = useState(1);
   const [recherche, setRecherche] = useState('');
   const [ajuster, setAjuster] = useState(false);
   const [params, setParams] = useSearchParams();
+  // « ?compte=izly » (pastilles de l'accueil) : le relevé s'ouvre directement sur ce porte-monnaie
+  const [filtre, setFiltre] = useState<FiltreCompte>(() => {
+    const c = params.get('compte');
+    return c === 'compte' || c === 'carte-restaurant' || c === 'izly' ? c : 'tout';
+  });
   const vue: Vue = params.get('vue') === 'a-venir' ? 'a-venir' : 'operations';
   const choisirVue = (v: Vue) => setParams(v === 'a-venir' ? { vue: 'a-venir' } : {}, { replace: true });
   // « Ajuster mon solde » depuis Poksy : #/compte?ajuster=1 ouvre la fenêtre (rien n'est enregistré sans validation)
@@ -325,6 +330,7 @@ export function Compte() {
             <Button variant="secondaire" className="btn-small" icon="edit" onClick={() => setAjuster(true)}>
               Indiquer mon solde réel
             </Button>
+            <DemanderPoksy question="Pourquoi mon solde ne correspond-il pas à ma banque ?" id="solde-banque" libelle={'Pourquoi 0\u00a0€\u00a0?'} />
           </div>
         )}
         <p className="solde-prevu">

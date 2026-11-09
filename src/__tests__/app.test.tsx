@@ -100,10 +100,11 @@ describe('tableau de bord', () => {
     await user.type(within(form).getByLabelText(/Description/), 'Pharmacie');
     await user.click(within(form).getByRole('button', { name: 'Ajouter la dépense' }));
 
-    expect(await screen.findByText('Dépense de 21,51 € enregistrée.', { normalizer: norm })).toBeInTheDocument();
+    // Retour immédiat : la notification dit aussi ce qu'il reste par jour (2 569 € ÷ 19 jours)
+    expect(await screen.findByText('Dépense de 21,51 € enregistrée. Il te reste environ 135 € par jour.', { normalizer: norm })).toBeInTheDocument();
     expect(norm(screen.getByText('Bilan du mois').parentElement!.textContent)).toContain('800,00 €');
     // 2 590,52 − 21,51 = 2 569,01 € ÷ 19 jours
-    expect(norm(screen.getByText(/Il te reste/).textContent)).toBe('Il te reste 2 569 € pour terminer le mois, soit environ 135 € par jour.');
+    expect(norm(document.querySelector('.hero-text')!.textContent)).toBe('Il te reste 2 569 € pour terminer le mois, soit environ 135 € par jour.');
     await waitFor(() => expect(stored().expenses.some((e) => e.description === 'Pharmacie' && e.amount === 2151)).toBe(true));
   });
 
@@ -939,8 +940,18 @@ describe('série 3 : onglet Compte, carte restaurant, pourcentages', () => {
     renderApp();
     // 100 € épargnés sur 150 € → 67 %
     expect(screen.getByText(norm('67 % de l’objectif du mois : il te manque 50,00 €.'), { normalizer: norm })).toBeInTheDocument();
+    // L'objectif principal (Voyage) a sa carte « Mon objectif » : il n'est pas répété dans « Épargne du mois »
+    expect(screen.getByRole('heading', { name: 'Mon objectif : Voyage' })).toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Objectifs en cours' })).not.toBeInTheDocument();
+  });
+
+  it('tableau de bord : les autres objectifs en cours restent listés, avec leur pourcentage', () => {
+    const d = fixture();
+    d.goals.push({ ...d.goals[0], id: 'g-ordi', name: 'Ordinateur', target: 100000, initialAmount: 35000, targetDate: null });
+    renderApp(d);
     const objectifs = screen.getByRole('list', { name: 'Objectifs en cours' });
-    expect(norm(objectifs.textContent)).toContain('Voyage');
+    expect(norm(objectifs.textContent)).toContain('Ordinateur');
+    expect(norm(objectifs.textContent)).not.toContain('Voyage');
     expect(norm(objectifs.textContent)).toContain('35 %');
   });
 

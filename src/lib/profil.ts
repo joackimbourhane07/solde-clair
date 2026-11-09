@@ -330,3 +330,8 @@ export function slug(texte: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 }
+
+/** « Bonjour » en journée, « Bonsoir » à partir de 18 h (et la nuit) : un accueil qui suit l'heure. */
+export function salutation(heure: number = new Date().getHours()): 'Bonjour' | 'Bonsoir' {
+  return heure >= 5 && heure < 18 ? 'Bonjour' : 'Bonsoir';
+}

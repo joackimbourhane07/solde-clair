@@ -21,6 +21,8 @@ const PATHS: Record<string, string> = {
   // Campus (Izly / CROUS) : toque d'étudiant, pictogramme générique
   campus: 'M2 9l10-5 10 5-10 5L2 9Zm4 2.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5M22 9v6',
   play: 'M7 4.5v15l12-7.5-12-7.5Z',
+  // Fourchette et couteau (carte restaurant)
+  restaurant: 'M7 3v7m-2.5-7v4.5A2.5 2.5 0 0 0 7 10a2.5 2.5 0 0 0 2.5-2.5V3M7 10v11M17 21V3c-2 1.5-3 4-3 7v3h3',
   alert: 'M12 4 2.5 20h19L12 4Zm0 6v4.5m0 3h.01',
   info: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 8v5m0-8.5h.01',
   stop: 'M8.5 3h7L21 8.5v7L15.5 21h-7L3 15.5v-7L8.5 3ZM12 7.5v5.5m0 3h.01',

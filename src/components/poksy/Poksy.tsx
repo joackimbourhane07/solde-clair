@@ -159,10 +159,12 @@ export function Poksy({
 
   // Bouton « Poser une question à Poksy » de la page d'accueil
   useEffect(() => {
-    const surDemande = () => {
+    // Une question peut accompagner la demande (ex. « Demander à Poksy » sous un calcul)
+    const surDemande = (e: Event) => {
       if (bulle) masquerBulle();
       setAstuce(null);
-      setQuestionInitiale(null);
+      const q = (e as CustomEvent<{ texte: string; id: string } | null>).detail;
+      setQuestionInitiale(q && q.texte && q.id ? { ...q } : null);
       setOuvert(true);
     };
     window.addEventListener('soldeclair:ouvrir-poksy', surDemande);

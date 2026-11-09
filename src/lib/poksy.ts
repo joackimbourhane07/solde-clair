@@ -157,6 +157,13 @@ export const FICHES: Fiche[] = [
     pages: ['depenses'],
   },
   {
+    id: 'refaire',
+    question: 'Comment refaire une dépense récente ?',
+    reponse: 'Appuie sur « + ». Sous « Refaire », touche une dépense récente. Vérifie le montant, puis valide.',
+    action: 'depense',
+    motsCles: ['refaire', 'encore', 'meme depense', 'repeter', 'dupliquer', 'recente', 'habituelle', 'cafe', 'ticket de bus'],
+  },
+  {
     id: 'fixe-variable',
     question: 'Quelle différence entre charge fixe et dépense variable ?',
     reponse: 'Une charge fixe revient chaque mois : loyer, abonnement. Une dépense variable change : courses, sorties.',
@@ -869,6 +876,7 @@ export const RUBRIQUES: Rubrique[] = [
     questions: [
       q('ajouter-revenu'),
       q('ajouter-depense'),
+      q('refaire'),
       q('modifier-operation'),
       q('supprimer-operation'),
       q('revenu-exceptionnel'),

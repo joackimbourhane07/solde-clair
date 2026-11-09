@@ -219,7 +219,8 @@ function CalculSection() {
 }
 
 function ThemeSection() {
-  const { data, dispatch } = useApp();
+  const { data, dispatch, notify } = useApp();
+  const ignores = (data.settings.dismissedActions ?? []).length;
   // Animations : propre à cet appareil (comme le réglage « réduire les animations » du système)
   const [mouvement, setMouvement] = useState<ChoixMouvement>(lireMouvement);
   const options: { value: ThemeChoice; label: string }[] = [
@@ -270,6 +271,23 @@ function ThemeSection() {
           ))}
         </div>
         <p className="field-hint">« Animations réduites » coupe les mouvements. Toutes les informations restent. Vaut pour cet appareil.</p>
+      </fieldset>
+      <fieldset className="fieldset">
+        <legend>Repères et actions ignorés</legend>
+        <p className="field-hint">
+          {ignores === 0 ? 'Aucun pour l’instant.' : `${ignores} masqué${ignores > 1 ? 's' : ''} sur l’accueil. Tu peux les revoir.`}
+        </p>
+        <button
+          type="button"
+          className="btn btn-secondaire btn-small"
+          disabled={ignores === 0}
+          onClick={() => {
+            dispatch({ type: 'resetDismissed' });
+            notify('Repères et actions de nouveau affichés.');
+          }}
+        >
+          Les afficher à nouveau
+        </button>
       </fieldset>
     </Card>
   );

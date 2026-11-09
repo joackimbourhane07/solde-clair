@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../state/AppState';
 import { objectifPrincipal, progressionObjectif, projection, totauxEpargne } from '../lib/plan';
-import { reperesPourVous, sousTitreProfil } from '../lib/profil';
+import { reperesPourVous, salutation, sousTitreProfil } from '../lib/profil';
 import { carryOverEnabled, dailyBalanceSeries, monthAlerts, monthSummary, monthTransactions, signedAmount, spendingByCategory } from '../lib/budget';
 import { balanceForecast } from '../lib/forecast';
 import { accountBalance, ACCOUNT_LABELS, comptesUtilises, JOURS_A_VENIR_ACCUEIL, operationsAVenir, resteAVivre } from '../lib/accounts';
@@ -16,6 +16,7 @@ import { ExpenseForm } from '../components/forms';
 import { CategoryBarsChart, LineChart } from '../components/charts/Charts';
 import { Icon } from '../components/Icon';
 import { MontantAnime } from '../components/mouvement';
+import { DemanderPoksy } from '../components/poksy/DemanderPoksy';
 
 /** Priorité exprimée en mots (pas seulement par la couleur). */
 const PRIORITES = { 1: 'À traiter maintenant', 2: 'Bientôt', 3: 'Quand tu as un moment' } as const;
@@ -97,8 +98,8 @@ export function Dashboard() {
       const apresEpargne = divideCents(principal - s.savingsRemaining, reste.joursRestants);
       subline =
         apresEpargne >= 0
-          ? `En mettant aussi de côté les ${over(s.savingsRemaining)} d’épargne prévus, il te resterait environ ${short(apresEpargne)} par jour.`
-          : `Pour atteindre ton objectif d’épargne (${over(s.savingsRemaining)} restants), il faudrait réduire tes dépenses.`;
+          ? `Après ton épargne prévue (${over(s.savingsRemaining)}) : environ ${short(apresEpargne)} par jour.`
+          : `Ton épargne prévue (${over(s.savingsRemaining)}) dépasse ce reste.`;
     }
   } else {
     headline = (
@@ -106,7 +107,7 @@ export function Dashboard() {
         Ton solde est de <V>− {over(-principal)}</V> aujourd’hui.
       </>
     );
-    subline = 'Les revenus prévus s’ajouteront le jour de leur arrivée. Si ta banque affiche un autre montant, ajuste le solde dans « Mon compte ».';
+    subline = 'Tes revenus prévus s’ajouteront à leur arrivée. Montant différent de ta banque\u00a0? Ajuste le solde dans «\u00a0Mon compte\u00a0».';
   }
 
   const visibles = actions.slice(0, MAX_ACTIONS);
@@ -117,8 +118,7 @@ export function Dashboard() {
     () =>
       sortGoals(data.goals)
         .map((g) => ({ g, p: progressionObjectif(data, g, today) }))
-        .filter(({ p }) => !p.reached)
-        .slice(0, 3),
+        .filter(({ p }) => !p.reached),
     [data.goals, data.savings, today],
   );
   // Résumé de « Mon plan d'épargne » et repères selon le profil
@@ -126,13 +126,42 @@ export function Dashboard() {
     const o = objectifPrincipal(data, today);
     return o ? projection(data, o, today) : null;
   }, [data, today]);
+  // L'objectif principal a déjà sa carte « Mon objectif » : on ne le répète pas dans « Épargne du mois »
+  const autresObjectifs = objectifs.filter(({ g }) => !(plan && courant && g.id === plan.objectif.id)).slice(0, 3);
   const epargneTotale = useMemo(() => totauxEpargne(data, today), [data, today]);
-  const reperes = useMemo(() => reperesPourVous(data, today).slice(0, 2), [data, today]);
+  // Repères du profil : on peut les fermer (« Compris ») ; ils restent dans « Mon plan »
+  const reperes = useMemo(() => {
+    const vus = new Set(data.settings.dismissedActions ?? []);
+    return reperesPourVous(data, today)
+      .filter((r) => !vus.has(`repere:${r.id}`))
+      .slice(0, 1);
+  }, [data, today]);
   const sousTitre = sousTitreProfil(data);
   // Plusieurs comptes (carte restaurant, Izly) : le solde de chacun
   const comptes = comptesUtilises(data);
   const avecCarte = comptes.length > 1;
   const soldes = useMemo(() => comptes.map((c) => [c, accountBalance(data, c, today, today)] as const), [data, today, comptes.join()]);
+
+  const carteAction = (a: (typeof visibles)[number]) => (
+    <li key={a.id} className={`action action-p${a.priority}`}>
+      <span className={`tag tag-priorite-${a.priority}`}>{PRIORITES[a.priority]}</span>
+      <p className="action-titre">{a.title}</p>
+      <p className="action-detail">{a.detail}</p>
+      <div className="action-boutons">
+        <Link to={a.to} className="btn btn-secondaire btn-small">
+          {a.cta}
+        </Link>
+        <Button
+          variant="discret"
+          className="btn-small"
+          onClick={() => dispatch({ type: 'dismissAction', id: a.id })}
+          aria-label={`Ignorer : ${a.title}`}
+        >
+          Ignorer
+        </Button>
+      </div>
+    </li>
+  );
 
   return (
     <div className="page">
@@ -142,7 +171,9 @@ export function Dashboard() {
             {PROFILE_LABELS[profile.type]}
             {sousTitre && ` – ${sousTitre}`}
           </p>
-          <h1>Bonjour {profile.name}</h1>
+          <h1>
+            {salutation()} {profile.name}
+          </h1>
         </div>
         <MonthSwitcher />
       </header>
@@ -244,6 +275,7 @@ export function Dashboard() {
                     ` Divisé par ${reste.joursRestants} jour${reste.joursRestants > 1 ? 's' : ''} restant${reste.joursRestants > 1 ? 's' : ''} (aujourd’hui inclus), cela fait environ ${fmt(reste.parJour)} par jour.`}{' '}
                   Les opérations prévues comptent le jour où elles arrivent.
                 </p>
+                <DemanderPoksy question="Comment est calculé mon reste à vivre ?" id="reste-a-vivre" />
               </>
             ) : (
               <>
@@ -338,11 +370,21 @@ export function Dashboard() {
             <div key={r.id} className="repere repere-accueil">
               <p className="repere-titre">{r.titre}</p>
               <p className="repere-texte">{r.texte}</p>
-              {r.lien && (
-                <Link to={r.lien.to} className="link">
-                  {r.lien.label}
-                </Link>
-              )}
+              <div className="repere-actions">
+                {r.lien && (
+                  <Link to={r.lien.to} className="link">
+                    {r.lien.label}
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-discret btn-small"
+                  aria-label={`Compris : ${r.titre}`}
+                  onClick={() => dispatch({ type: 'dismissAction', id: `repere:${r.id}` })}
+                >
+                  Compris
+                </button>
+              </div>
             </div>
           ))}
         </section>
@@ -395,23 +437,17 @@ export function Dashboard() {
             <Stat label="Total des dépenses" value={fmt(s.totalExpenses)} tone="sortie" detail="Charges fixes + dépenses variables" />
           </div>
           {avecCarte && (
-            <p className="report-ligne">
-              <Icon name="wallet" size={16} />
-              <span>
-                Soldes :{' '}
-                {soldes.map(([c, v], k) => (
-                  <span key={c}>
-                    {k > 0 && ', '}
-                    {ACCOUNT_LABELS[c].toLocaleLowerCase('fr').replace('izly', 'Izly')}{' '}
+            <ul className="porte-monnaie" aria-label="Soldes par compte">
+              {soldes.map(([c, v]) => (
+                <li key={c}>
+                  <Link to={`/compte?compte=${c}`} className={`pm pm-${c}`}>
+                    <Icon name={c === 'izly' ? 'campus' : c === 'carte-restaurant' ? 'restaurant' : 'wallet'} size={16} />
+                    <span className="pm-nom">{ACCOUNT_LABELS[c]}</span>
                     <strong className={v < 0 ? 'montant-moins' : 'montant-plus'}>{v < 0 ? `− ${fmt(-v)}` : fmt(v)}</strong>
-                  </span>
-                ))}
-                .{' '}
-                <Link to="/compte" className="link">
-                  Mon compte
-                </Link>
-              </span>
-            </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
           {recent.length === 0 ? (
             <p className="muted">Aucune opération pour ce mois.</p>
@@ -468,9 +504,9 @@ export function Dashboard() {
           ) : (
             <p className="muted">Aucun objectif d’épargne mensuel. Tu peux en fixer un dans tes paramètres.</p>
           )}
-          {objectifs.length > 0 && (
+          {autresObjectifs.length > 0 && (
             <ul className="objectifs-mini" aria-label="Objectifs en cours">
-              {objectifs.map(({ g, p }) => (
+              {autresObjectifs.map(({ g, p }) => (
                 <li key={g.id}>
                   <p className="epargne-ligne">
                     <span className="objectif-nom">{g.name}</span>
@@ -499,28 +535,15 @@ export function Dashboard() {
                   : 'Rien à faire pour l’instant : ton budget est à jour.'}
               </Notice>
             ) : (
-              <ul className="actions-list">
-                {visibles.map((a) => (
-                  <li key={a.id} className={`action action-p${a.priority}`}>
-                    <span className={`tag tag-priorite-${a.priority}`}>{PRIORITES[a.priority]}</span>
-                    <p className="action-titre">{a.title}</p>
-                    <p className="action-detail">{a.detail}</p>
-                    <div className="action-boutons">
-                      <Link to={a.to} className="btn btn-secondaire btn-small">
-                        {a.cta}
-                      </Link>
-                      <Button
-                        variant="discret"
-                        className="btn-small"
-                        onClick={() => dispatch({ type: 'dismissAction', id: a.id })}
-                        aria-label={`Ignorer : ${a.title}`}
-                      >
-                        Ignorer
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul className="actions-list">{visibles.slice(0, 1).map(carteAction)}</ul>
+                {visibles.length > 1 && (
+                  <details className="disclosure actions-autres">
+                    <summary>{visibles.length === 2 ? 'Voir 1 autre action' : `Voir ${visibles.length - 1} autres actions`}</summary>
+                    <ul className="actions-list">{visibles.slice(1).map(carteAction)}</ul>
+                  </details>
+                )}
+              </>
             )}
             {actions.length > MAX_ACTIONS && (
               <p className="muted actions-plus">
@@ -583,6 +606,7 @@ export function Dashboard() {
                     ))}
                   </ul>
                 )}
+                <DemanderPoksy question="Comment fonctionne l’estimation à 30 jours ?" id="estimation" />
                 <p className="muted">
                   {carryOverEnabled(data)
                     ? 'Estimation indicative fondée sur tes saisies, report des mois précédents compris.'
